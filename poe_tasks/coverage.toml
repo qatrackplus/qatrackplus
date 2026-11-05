@@ -33,10 +33,10 @@ cmd = "pytest --cov-report term-missing --cov ./${module} ${module}"
 
 
 # `cover` with fully-covered files left out of the report. The Makefile has
-# carried this as `cover-mo` since before poe existed and poe had no
-# equivalent, which is the one target that stood in the way of reducing the
-# Makefile to aliases. The name is kept rather than improved: it is what is
-# already in people's shell history.
+# carried this as `cover-mo` since before poe existed, and poe had no
+# equivalent until this task - so the two runners were not comparable, which
+# is the gap it was written to close. The name is kept rather than improved:
+# it is what is already in people's shell history.
 [tasks.cover-mo]
 help = "Like cover, but omits files that are already fully covered"
 cmd = "pytest --reuse-db --cov-report term-missing:skip-covered --cov ./"

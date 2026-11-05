@@ -1,63 +1,33 @@
-# Developer convenience targets - every one of them an alias for a poe task.
-#
-# **poe is the task runner; this file only forwards to it.** Nothing here
-# carries any logic of its own, which is the point: when the Makefile and poe
-# both held full implementations they drifted, and the drift was not cosmetic.
-# `make-test-integration` stopped matching `make test-integration`,
-# `docs-autobuild` served on a different port under each, and the two
-# engine-swap implementations disagreed about whether to refuse a backup left
-# by an interrupted run - so one of them destroyed the developer's settings.
-# An alias cannot drift from what it calls.
+# Developer convenience targets.
 #
 # This file ships in every installation - QATrack+ is installed by `git clone` -
 # so a target here can reach a production database. Nothing in it should be a
-# shorter way to do something irreversible than doing it by hand. That now
-# follows from the poe task it calls, so read the task.
-#
-# `args=` reaches pytest for the test and coverage targets, because those poe
-# tasks are plain commands and poe appends to them:
-#
-#     make test args="-k test_foo"
-#
-# It does **not** reach the engine or integration targets. Those poe tasks are
-# Python bodies that build their own argument list, so poe has nowhere to put
-# extras and they are silently dropped - see the note above `test-engine` in
-# poe_tasks/tests.toml. For a filtered run against one engine, swap
-# qatrack/local_test_settings.py by hand and use `make test args="-k foo"`.
-#
-# `poe help` lists every task, including the ones with no Makefile target.
+# shorter way to do something irreversible than doing it by hand.
 
-POE = uv run poe
-ARGS = $(if $(args),-- $(args))
+VERSION=4.0.2
+
+# The schema diagram covers a minor line, not a patch: the models do not change
+# between 4.0.0 and 4.0.2, and only ever one diagram per x.y has been published
+# (0.3.0, 3.1.0). $(basename) drops the last component, so 4.0.2 gives 4.0.
+SCHEMA_VERSION=$(basename $(VERSION))
+DATETIME=$(shell date '+%Y-%m-%d_%H-%M-%S')
 
 
 # Deliberately a written list rather than a grep over the file. A grep is how
 # the two broken data-deleting targets came to be advertised alongside the
 # working ones: `make help` presented everything, so it presented those too.
 help:
-	@echo "Every target here is an alias for the poe task of the same name."
-	@echo "\`poe help\` lists the tasks that have no target."
-	@echo
 	@echo "Tests"
-	@echo "  test              the suite; GUI/browser tests are skipped"
-	@echo "  test_simple       the same thing - see the note in the Makefile"
-	@echo "  test-sqlite       the suite against qatrack/local_test_settings.sqlite.py"
-	@echo "  test-memory       the suite against qatrack/local_test_settings.memory.py"
-	@echo "  test-postgres     the suite against qatrack/local_test_settings.postgres.py"
-	@echo "  test-mysql        the suite against qatrack/local_test_settings.mysql.py"
-	@echo "  test-mssql        the suite against qatrack/local_test_settings.mssql.py"
-	@echo "  test-integration  provision a fresh sqlite database, then test against it"
+	@echo "  test              the whole suite, including the GUI/browser tests"
+	@echo "  test_simple       the suite without the GUI/browser tests"
 	@echo "  cover             the suite with a coverage report"
 	@echo "  cover-qatrack     coverage for the qatrack package only"
 	@echo "  cover-module      coverage for one module: make cover-module module=qatrack/units"
 	@echo "  cover-mo          coverage, skipping fully-covered files"
 	@echo
-	@echo "  For the GUI tests: uv run poe test-gui-firefox-headless (or -chromium-,"
-	@echo "  or -visible to watch). Plain pytest skips them."
-	@echo
 	@echo "Docs"
 	@echo "  docs              build the Sphinx docs"
-	@echo "  docs-autobuild    serve the docs on :8008 and rebuild as you save"
+	@echo "  docs-autobuild    serve the docs on :8009 and rebuild as you save"
 	@echo
 	@echo "Running"
 	@echo "  run               the development server"
@@ -65,99 +35,202 @@ help:
 	@echo "Data"
 	@echo "  dumpdata          dump the database to a timestamped JSON fixture"
 	@echo
-	@echo "Release and deployment (read the poe task before running it)"
-	@echo "  schema            regenerate the schema diagram - release task"
+	@echo "Release and deployment (read the target before running it)"
+	@echo "  schema            regenerate the schema diagram - see the note in the Makefile"
 	@echo "  nginx.conf        install an nginx site config - sudo, Ubuntu only"
 	@echo "  supervisor.conf   install supervisor configs - sudo, Ubuntu only"
 
 cover:
-	$(POE) cover $(ARGS)
+	uv run pytest --reuse-db --cov-report term-missing --cov ./ ${args}
+
+cover-module:
+	uv run pytest --cov-report term-missing --cov ./${module} ${module}
 
 cover-mo:
-	$(POE) cover-mo $(ARGS)
+	uv run pytest --reuse-db --cov-report term-missing:skip-covered --cov ./ ${args}
 
 cover-qatrack:
-	$(POE) cover-qatrack $(ARGS)
-
-# `module=` is the poe task's positional argument, so it is passed as one
-# rather than through ARGS.
-cover-module:
-	$(POE) cover-module $(module)
+	uv run pytest --reuse-db --cov-report term-missing --cov qatrack ${args}
 
 test:
-	$(POE) test $(ARGS)
+	uv run pytest ${args}
 
-# GUI (Selenium/browser) tests are skipped by default (see conftest.py), so
-# this is identical to `test` - kept only so existing scripts and muscle
+# GUI (Selenium/browser) tests are skipped by default now (see conftest.py),
+# so this is identical to `test` - kept only so existing scripts and muscle
 # memory using `make test_simple` keep working. Use `test` directly, or
-# `uv run poe test-gui-firefox-headless` to run the GUI tests.
+# `uv run pytest --run-selenium` to also run the GUI tests.
 test_simple:
-	$(POE) test $(ARGS)
+	uv run pytest ${args}
 
 # Run the suite against a specific engine's local_test_settings.py, without
 # disturbing whatever you already have set up as your day-to-day one.
-# Requires qatrack/local_test_settings.<engine>.py to already exist - these
-# are gitignored and yours to create, starting from the matching
-# deploy/dev/local_test_settings.<engine>.py template. The poe task backs up
-# your current qatrack/local_test_settings.py, swaps the engine's file in for
-# the run, and restores it afterwards; it refuses up front if a backup from a
-# killed run is still there, rather than writing over your settings.
+# Requires qatrack/local_test_settings.<engine>.py to already exist -
+# these are gitignored and yours to create/customize (with real
+# credentials for postgres/mysql/mssql), starting from the matching
+# deploy/dev/local_test_settings.<engine>.py template. Backs up your
+# current qatrack/local_test_settings.py (if any), swaps the requested
+# engine's file in for the run, then restores it afterward regardless of
+# whether the tests passed.
 test-sqlite:
-	$(POE) test-engine sqlite
+	@$(MAKE) --no-print-directory _test-engine ENGINE=sqlite
 
 test-memory:
-	$(POE) test-engine memory
+	@$(MAKE) --no-print-directory _test-engine ENGINE=memory
 
 test-postgres:
-	$(POE) test-engine postgres
+	@$(MAKE) --no-print-directory _test-engine ENGINE=postgres
 
 test-mysql:
-	$(POE) test-engine mysql
+	@$(MAKE) --no-print-directory _test-engine ENGINE=mysql
 
 test-mssql:
-	$(POE) test-engine mssql
+	@$(MAKE) --no-print-directory _test-engine ENGINE=mssql
 
-# Provisions a database the way a real deployment would - migrate,
-# createcachetable, collectstatic, createsuperuser - and then tests against
-# that, rather than against a disposable test database. The poe task refuses
-# unless your settings point at db/default.db, because otherwise it would
-# migrate your real development database and leave a superuser/superuser
-# account in it.
+_test-engine:
+	@test -f qatrack/local_test_settings.$(ENGINE).py || { \
+		echo "error: qatrack/local_test_settings.$(ENGINE).py not found."; \
+		echo "Create it first - see deploy/dev/local_test_settings.$(ENGINE).py for a starting template."; \
+		exit 1; \
+	}
+	@set -e; \
+	if [ -f qatrack/local_test_settings.py.bak ]; then \
+		echo "error: qatrack/local_test_settings.py.bak already exists."; \
+		echo "An earlier run was interrupted before it could put your settings back."; \
+		echo "Move it to qatrack/local_test_settings.py, or delete it, then try again."; \
+		exit 1; \
+	fi; \
+	SWAPPED=0; \
+	restore() { \
+		[ "$$SWAPPED" = 1 ] || return 0; \
+		if [ -f qatrack/local_test_settings.py.bak ]; then \
+			mv -f qatrack/local_test_settings.py.bak qatrack/local_test_settings.py; \
+		else \
+			rm -f qatrack/local_test_settings.py; \
+		fi; \
+	}; \
+	trap restore EXIT; \
+	trap "exit 130" INT; \
+	trap "exit 143" TERM; \
+	if [ -f qatrack/local_test_settings.py ]; then \
+		cp qatrack/local_test_settings.py qatrack/local_test_settings.py.bak; \
+	fi; \
+	cp qatrack/local_test_settings.$(ENGINE).py qatrack/local_test_settings.py; \
+	SWAPPED=1; \
+	uv run pytest ${args}
+
+# Integration-level test: provisions a brand-new sqlite db exactly the way
+# a fresh deployment would (migrate, createcachetable, collectstatic,
+# createsuperuser), then runs the suite with --reuse-db (pytest-django's
+# equivalent of Django's own --keepdb) directly against that same db,
+# rather than a disposable one - so migrations, cache table creation,
+# static collection, and the initial superuser are all exercised for real
+# before the tests run, not just a fresh empty test db. Backs up any
+# existing db/default.db and qatrack/local_test_settings.py first and
+# restores both afterward regardless of whether the tests passed; the
+# freshly-provisioned db is kept, renamed with a `pytest_` prefix
+# (overwriting the previous integration run), for inspection.
+#
+# This target is the only thing that points the test database at
+# db/default.db, and it does so by appending one line to its own copy of
+# the settings file. The shipped template deliberately names a *separate*
+# test database, because Django deletes a file-based test database before
+# creating it and again at teardown - when the two names matched, a plain
+# `pytest` destroyed the developer's populated db/default.db. The backup
+# and restore below predate that discovery and stay as a second line of
+# defence for this target, which really does want the two to be the same.
 test-integration:
-	$(POE) test-integration
+	@set -e; \
+	mkdir -p db; \
+	SWAPPED=0; \
+	restore() { \
+		[ "$$SWAPPED" = 1 ] || return 0; \
+		if [ -f qatrack/local_test_settings.py.bak ]; then \
+			mv -f qatrack/local_test_settings.py.bak qatrack/local_test_settings.py; \
+		else \
+			rm -f qatrack/local_test_settings.py; \
+		fi; \
+		if [ -f db/default.db.bak ]; then \
+			mv -f db/default.db.bak db/default.db; \
+		fi; \
+	}; \
+	trap restore EXIT; \
+	trap "exit 130" INT; \
+	trap "exit 143" TERM; \
+	DBNAME=$$(uv run python -c "import os, django; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'qatrack.settings'); django.setup(); from django.conf import settings; print(settings.DATABASES['default']['NAME'])"); \
+	if [ "$$DBNAME" != "db/default.db" ]; then \
+		echo "error: this target provisions the database your settings point at, and that is"; \
+		echo "         $$DBNAME"; \
+		echo "not db/default.db. migrate, createcachetable, collectstatic and createsuperuser"; \
+		echo "all read local_settings.py, not local_test_settings.py, so continuing would"; \
+		echo "migrate that database and create a superuser/superuser account in it - while"; \
+		echo "the tests ran somewhere else entirely."; \
+		echo "Point local_settings.py at db/default.db before running this."; \
+		exit 1; \
+	fi; \
+	if [ -f db/default.db.bak ] || [ -f qatrack/local_test_settings.py.bak ]; then \
+		echo "error: a backup from an earlier run is still here:"; \
+		[ -f db/default.db.bak ] && echo "  db/default.db.bak"; \
+		[ -f qatrack/local_test_settings.py.bak ] && echo "  qatrack/local_test_settings.py.bak"; \
+		echo "That run was interrupted before it could put them back. Restore or remove"; \
+		echo "them first - continuing would overwrite them with throwaway copies."; \
+		exit 1; \
+	fi; \
+	if [ -f db/default.db ]; then mv -f db/default.db db/default.db.bak; fi; \
+	if [ -f qatrack/local_test_settings.py ]; then \
+		cp qatrack/local_test_settings.py qatrack/local_test_settings.py.bak; \
+	fi; \
+	cp deploy/dev/local_test_settings.sqlite.py qatrack/local_test_settings.py; \
+	SWAPPED=1; \
+	printf "\n# test-integration only: test the database this target just\n# provisioned, rather than the template's separate test database.\nDATABASES['default']['TEST']['NAME'] = 'db/default.db'\n" \
+		>> qatrack/local_test_settings.py; \
+	uv run python manage.py migrate; \
+	uv run python manage.py createcachetable; \
+	uv run python manage.py collectstatic --noinput; \
+	DJANGO_SUPERUSER_USERNAME=superuser DJANGO_SUPERUSER_PASSWORD=superuser \
+		DJANGO_SUPERUSER_EMAIL=superuser@example.com \
+		uv run python manage.py createsuperuser --noinput; \
+	set +e; uv run pytest --reuse-db ${args}; STATUS=$$?; set -e; \
+	mv -f db/default.db db/pytest_default.db; \
+	exit $$STATUS
 
 dumpdata:
-	$(POE) dumpdata
+	uv run python manage.py dumpdata \
+		-v1 --indent=2 --natural-foreign --natural-primary \
+		--output qatrack-dump-$(DATETIME).json
 
 docs:
-	$(POE) docs
+	cd docs && uv run make html
 
 docs-autobuild:
-	$(POE) docs-autobuild
+	uv run sphinx-autobuild docs docs/_build/html --port 8009
 
 # The two targets below run sudo, write into /etc, and restart services. They
 # are Ubuntu-specific and have never been exercised by CI or by either
-# development machine. Read the poe task before running them on anything you
-# care about. The dotted names are kept; the poe tasks use dashes.
+# development machine. Read them before running them on anything you care about.
 nginx.conf:
-	$(POE) nginx-conf
+	sudo sed 's/YOURUSERNAMEHERE/$(USER)/g' deploy/nginx/qatrack.conf > qatrack.conf
+	sudo mv qatrack.conf /etc/nginx/sites-available/qatrack.conf
+	sudo ln -sf /etc/nginx/sites-available/qatrack.conf /etc/nginx/sites-enabled/qatrack.conf
+	sudo usermod -a -G $(USER) www-data
+	sudo service nginx restart
 
 supervisor.conf:
-	$(POE) supervisor-conf
+	sudo sed 's/YOURUSERNAMEHERE/$(USER)/g' deploy/supervisor/django-q2.conf > django-q2.conf
+	sudo sed 's/YOURUSERNAMEHERE/$(USER)/g' deploy/supervisor/gunicorn.conf > gunicorn.conf
+	sudo mv django-q2.conf /etc/supervisor/conf.d/
+	sudo mv gunicorn.conf /etc/supervisor/conf.d/
+	sudo supervisorctl reread
+	sudo supervisorctl update
 
-# RELEASE TARGET. The schema diagram is distributed documentation, regenerated
-# as part of a release check - not something an ordinary PR should update. The
-# poe task renders to a temp file and only replaces the committed diagram if
-# that worked: django-extensions falls back to pydotplus when pygraphviz is
-# missing, and pydotplus fails by writing a zero-byte file and exiting 0, so
-# the older form destroyed the committed 838KB diagram and reported success.
 schema:
-	$(POE) schema
+	uv run python ./manage.py graph_models -a -g \
+		-X Issue,IssueStatus,IssueType,IssuePriority,IssueTag \
+		-o docs/developer/images/qatrack_schema_$(SCHEMA_VERSION).svg
 
 run:
-	$(POE) run
+	uv run python ./manage.py runserver
 
-.PHONY: cover cover-mo cover-module cover-qatrack docs docs-autobuild \
-	dumpdata help nginx.conf run schema supervisor.conf test \
+.PHONY: _test-engine cover cover-mo cover-module cover-qatrack docs \
+	docs-autobuild dumpdata help nginx.conf run schema supervisor.conf test \
 	test-integration test-memory test-mssql test-mysql test-postgres \
 	test-sqlite test_simple

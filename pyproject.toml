@@ -405,10 +405,22 @@ include = [
 # ==========================================================================
 #
 # The tasks named `make-*` (poe_tasks/make_compat.toml) mirror a Makefile
-# target one-for-one, and are meant to keep doing so while the Makefile is
-# still the primary runner. Do not change those to gain portability;
-# changing them breaks the mirror, which is the only thing making the two
-# runners comparable.
+# target one-for-one, and there is one for every target the Makefile has.
+# Do not change those to gain portability; changing them breaks the mirror,
+# which is the only thing making the two runners comparable. The
+# documentation build is what keeps the set complete - a target with no
+# mirror fails it (docs/_ext/command_tables.py).
+#
+# **The Makefile is frozen, and it is removed in the 4.1 cycle.** It is
+# byte-identical to the one on `develop`; this branch does not touch it.
+# An earlier commit here reduced it to a file of aliases forwarding to poe,
+# and Cody reversed that on 2026-11-05. The reason that matters beyond
+# tidiness: `POE = uv run poe` inside a recipe means a site synced
+# `--no-dev` pulls the whole dev group the moment it runs one - crane
+# measured 112 packages to 200 on Ubuntu 24.04 - and a Makefile with no
+# mention of poe in it cannot do that. So until the Makefile goes, both
+# ways work: `poe <task>` is the cross-platform successor, and
+# `poe make-<target>` is what the Makefile does.
 #
 # Every other task (poe_tasks/dev.toml, poe_tasks/tests.toml,
 # poe_tasks/coverage.toml, poe_tasks/docs.toml, poe_tasks/data.toml) is a

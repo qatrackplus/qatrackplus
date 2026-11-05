@@ -191,8 +191,10 @@ The task runner: poe
 QATrack+ uses `poe <https://poethepoet.natn.io/>`__ (poethepoet) as its task
 runner. It is in the ``dev`` dependency group, so the ``uv sync`` above installed
 it; there is nothing else to set up. It works the same way on Linux, macOS and
-Windows, which is why it is preferred over the ``Makefile`` (which stays, as a
-thin mirror, for anyone with Make muscle memory).
+Windows, which is why it is preferred over the ``Makefile``. The ``Makefile``
+is frozen and is **removed during the 4.1 cycle**; until then every target it
+has is also reachable through poe as ``poe make-<target>``, so either habit
+works and nothing has to be relearned twice.
 
 These are the tasks you need; ``poe`` with no arguments lists the rest, each
 with a one-line description, and :ref:`the appendix <poe_tasks_appendix>` is
@@ -803,9 +805,14 @@ all:
 
     poe
 
-The ``Makefile`` remains as a thin mirror of the same commands for anyone who
-prefers Make (``make help`` lists its targets); new work goes into the ``poe``
-tasks, not the ``Makefile``.
+The ``Makefile`` is unchanged and frozen: it still carries its own
+implementations, ``make help`` still lists its targets, and **it is removed
+during the 4.1 cycle**. Nothing in it calls poe, deliberately - a recipe that
+ran ``uv run poe`` would sync the ``dev`` dependency group into whatever
+checkout it was run in, which on a site installed with ``--no-dev`` means 88
+packages it should not have. New work goes into the ``poe`` tasks, not the
+``Makefile``. Every target it has is mirrored as ``poe make-<target>``, so a
+Make habit keeps working on a host with no Make at all.
 
 .. _adding-a-poe-task:
 
@@ -827,12 +834,33 @@ bound as tasks are added - it changes nothing about how a task runs, or how
 ``poe <task>``/``poe --help`` behave.
 
 ``poe_tasks/make_compat.toml`` is different in kind, not just location: it
-holds the ``make-*`` tasks that deliberately mirror a ``Makefile`` target
-one-for-one (see the comment above ``[tool.poe] include`` in
-``pyproject.toml``). Each is a ``ref`` to the real task and carries no logic
-of its own, so the two cannot drift. Nothing new should be added there - a new task belongs in one of
-the theme files above, and only gets a ``make-*`` mirror if the ``Makefile``
-target it mirrors still exists.
+holds the ``make-*`` tasks that mirror a ``Makefile`` target one-for-one, and
+there is one for **every** target the ``Makefile`` has (see the comment above
+``[tool.poe] include`` in ``pyproject.toml``). The documentation build fails
+if a target has no mirror, so the set stays complete without anyone
+remembering to check.
+
+Most mirrors are a ``ref`` to the successor task and carry no logic of their
+own, because a ``ref`` cannot drift - and it still receives the caller's
+arguments, so ``poe make-cover-module qatrack/units`` works. Three carry a
+body instead, where the ``Makefile``'s behaviour is the thing being mirrored:
+``make-docs`` goes through ``docs/Makefile`` and so needs Make,
+``make-dumpdata`` builds its timestamp with ``date``, and
+``make-docs-autobuild`` serves on the ``Makefile``'s port rather than the
+documented one. Three others deliberately do *not* reproduce what the
+``Makefile`` does, and say why in place: ``make-nginx-conf``,
+``make-supervisor-conf`` and ``make-schema`` delegate, because the
+``Makefile``'s own versions install configs that ``www-data`` can write, or
+can overwrite a committed diagram with a zero-byte file while reporting
+success.
+
+Two names lose a character on the way across: poe validates task names
+against ``^[^\W\d][\w:+-]*$``, which has no ``.`` in it, so ``nginx.conf``
+and ``supervisor.conf`` mirror as ``make-nginx-conf`` and
+``make-supervisor-conf``.
+
+Nothing new should be added there - a new task belongs in one of the theme
+files above, and the ``Makefile`` will not grow a target to mirror.
 
 When adding a task:
 

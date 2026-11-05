@@ -2,63 +2,215 @@
 # comment there for the overall poe/Makefile migration context.
 
 # ==========================================================================
-# Makefile analogs - kept so existing habits keep working
+# The Makefile way, under poe
 #
-# These exist only so that someone who types `make <target>` out of habit finds
-# the same thing under poe. They have an end: when the Makefile is retired,
-# this whole block goes with it in the same change. Nothing new should be added
-# here - a new task belongs in one of the groups above, and gets a Makefile
-# target only if the Makefile still exists.
+# Every target in the Makefile has a `make-<target>` task here, and every one
+# of them is listed in the generated command reference. That completeness is
+# not a convention anyone has to remember: `docs/_ext/command_tables.py`
+# raises on a target with no mirror, so the documentation build fails, and
+# `test_every_makefile_target_has_a_mirror` asserts the same thing without
+# needing Sphinx.
 #
-# Every engine and integration analog is a `ref` and carries no logic of its
-# own. It used to: `make-test-integration` had its own shell copy of the
-# provisioning sequence, and the five engine tasks shared a `_test-engine`
-# shell task. Both copies had drifted from the tasks they mirrored, and the
-# drift was the dangerous kind - neither refused to overwrite a backup left by
-# a killed run, so running one of them after an interruption destroyed the
-# developer's database or settings. @nsmela reproduced both end to end on #868.
-# A `ref` cannot drift.
+# **The Makefile itself is frozen.** An earlier commit on this branch reduced
+# it to a file of aliases that forwarded to poe. Cody reversed that on
+# 2026-11-05: the Makefile is not touched by this pull request at all, it is
+# byte-identical to the one on `develop`, and **it is removed in the 4.1
+# cycle** rather than rewritten now. So for as long as it exists there are two
+# implementations - the Makefile's own, and poe's - and this file is how the
+# two stay comparable: `poe make-<target>` is the Makefile's behaviour, and
+# `poe <task>` is the cross-platform successor.
+#
+# Why that is a better trade than the aliases it replaces: an alias made the
+# Makefile depend on poe, and `POE = uv run poe` in a recipe means a site that
+# synced `--no-dev` pulls the whole dev group in the moment it runs one - crane
+# measured 112 packages to 200 on Ubuntu 24.04. A frozen Makefile with no
+# mention of poe in it cannot do that.
+#
+# **Nothing new belongs here.** A new task goes in one of the theme files, and
+# gets a mirror only if the Makefile grows a target - which it will not,
+# because it is on its way out. When it goes, this whole file goes with it in
+# the same change.
+#
+# **Most mirrors are a `ref`, and that is deliberate.** `make-test-integration`
+# used to carry its own shell copy of the provisioning sequence and the five
+# engine analogs shared a `_test-engine` shell task; both had drifted from the
+# tasks they mirrored, and neither refused to overwrite a backup left by a
+# killed run, so running one after an interruption destroyed the developer's
+# database or settings. @nsmela reproduced both end to end on #868. A `ref`
+# cannot drift. A `ref` also receives the caller's arguments - measured with
+# poe 0.49.0: `ref = "cover-module"` with `qatrack/units` runs
+# `pytest --cov-report term-missing --cov ./qatrack/units qatrack/units` - so a
+# mirror of a task that takes an argument does not need a copy of the command.
+#
+# **Three mirrors do not reproduce what the Makefile does, and say so in
+# place:** `make-nginx-conf`, `make-supervisor-conf` and `make-schema`. The
+# Makefile's versions of those three are known traps, and the Makefile's own
+# header says nothing in it should be a shorter way to do something
+# irreversible than doing it by hand. Copying a trap into a second runner so
+# that the mirror is literal would be the wrong reading of "both ways work".
+#
+# **A dot cannot survive the move.** poe validates task names against
+# `^[^\W\d][\w:+-]*$` (`poethepoet/task/base.py`), which has no `.` in it;
+# `make-nginx.conf` is refused with `Error: Invalid task` - measured, not
+# inferred. So the two dotted targets lose the dot, and only those two names
+# differ from `make-<target>`.
 # ==========================================================================
 
+
+# --------------------------------------------------------------------------
+# Tests
+# --------------------------------------------------------------------------
+
+[tasks.make-test]
+help = "The suite, as `make test` runs it (GUI/Selenium tests skipped)"
+ref = "test"
+
+
+# `make test_simple` has been identical to `make test` since the GUI tests
+# started skipping by default (see conftest.py). The target is kept in the
+# Makefile for scripts and muscle memory, so the mirror is kept too, and both
+# point at the same place rather than at a copy.
+[tasks.make-test_simple]
+help = "The same thing as `make test` - kept because scripts still call it"
+ref = "test"
+
+
+[tasks.make-test-sqlite]
+help = "The suite against qatrack/local_test_settings.sqlite.py, as `make test-sqlite` does it"
+ref = "test-engine sqlite"
+
+
+[tasks.make-test-memory]
+help = "The suite against qatrack/local_test_settings.memory.py, as `make test-memory` does it"
+ref = "test-engine memory"
+
+
+[tasks.make-test-postgres]
+help = "WIP- The suite against qatrack/local_test_settings.postgres.py (needs a postgres server; unverified here)"
+ref = "test-engine postgres"
+
+
+[tasks.make-test-mysql]
+help = "WIP- The suite against qatrack/local_test_settings.mysql.py (needs a mysql server; unverified here)"
+ref = "test-engine mysql"
+
+
+[tasks.make-test-mssql]
+help = "WIP- The suite against qatrack/local_test_settings.mssql.py (needs a SQL Server; unverified here)"
+ref = "test-engine mssql"
+
+
+[tasks.make-test-integration]
+help = "Provision a fresh sqlite database and test against it, as `make test-integration` does"
+ref = "test-integration"
+
+
+# --------------------------------------------------------------------------
+# Coverage
+# --------------------------------------------------------------------------
+
+[tasks.make-cover]
+help = "The suite with a coverage report, as `make cover` runs it"
+ref = "cover"
+
+
+[tasks.make-cover-qatrack]
+help = "Coverage for the qatrack package only, as `make cover-qatrack` runs it"
+ref = "cover-qatrack"
+
+
+[tasks.make-cover-mo]
+help = "Coverage with fully-covered files left out, as `make cover-mo` runs it"
+ref = "cover-mo"
+
+
+# `make cover-module module=qatrack/units` passes the module as a make
+# variable; here it is poe's positional argument, so
+# `poe make-cover-module qatrack/units`. The ref carries it through.
+[tasks.make-cover-module]
+help = "Coverage for one module, e.g. `poe make-cover-module qatrack/units`"
+ref = "cover-module"
+
+
+# --------------------------------------------------------------------------
+# Documentation
+# --------------------------------------------------------------------------
+
+# This one is not a ref, because what it mirrors is the part that differs:
+# `make docs` shells out to `docs/Makefile`, so it needs Make on the host -
+# which is the whole reason the `docs` task calls sphinx-build directly. Anyone
+# reaching for the Makefile way has Make, so the mirror can afford to need it.
 [tasks.make-docs]
-help = "Makefile analog of `docs` - runs `cd docs && make html`, so needs make"
+help = "Build the docs through docs/Makefile, as `make docs` does - needs make"
 shell = '''
 cd docs && make html
 '''
 
 
+# Not a ref either, and the difference is the port: the Makefile serves on
+# 8009 and the `docs-autobuild` task on 8008. That disagreement is the kind of
+# drift this file exists to make visible rather than to hide, and the
+# documentation says 8008, so the successor is the one that is right. The
+# mirror keeps 8009 because that is what `make docs-autobuild` does today.
+[tasks.make-docs-autobuild]
+help = "Serve the docs with live-reload on port 8009, as `make docs-autobuild` does"
+cmd = "sphinx-autobuild docs docs/_build/html --port 8009"
+
+
+# --------------------------------------------------------------------------
+# Data
+# --------------------------------------------------------------------------
+
+# Shell rather than a ref, because the two genuinely differ: the Makefile
+# builds the timestamp with `date`, and the `dumpdata` task builds it in
+# Python so that it also works where `date` is not a command.
 [tasks.make-dumpdata]
-help = "Makefile analog of `dumpdata` - shell based"
+help = "Dump the database to a timestamped JSON fixture, as `make dumpdata` does - shell based"
 shell = '''
 python manage.py dumpdata -v1 --indent=2 --natural-foreign --natural-primary --output qatrack-dump-$(date '+%Y-%m-%d_%H-%M-%S').json
 '''
 
 
-[tasks.make-test-sqlite]
-help = "Makefile analog of `test-engine sqlite`"
-ref = "test-engine sqlite"
+# --------------------------------------------------------------------------
+# Running
+# --------------------------------------------------------------------------
+
+[tasks.make-run]
+help = "The development server, as `make run` starts it"
+ref = "run"
 
 
-[tasks.make-test-memory]
-help = "Makefile analog of `test-engine memory`"
-ref = "test-engine memory"
+# --------------------------------------------------------------------------
+# Release and deployment - the three that deliberately do not mirror
+# --------------------------------------------------------------------------
+
+# `make nginx.conf` writes the config as the invoking user and `sudo mv`s it
+# into place, which keeps the user's ownership: the installed file is then
+# writable by `www-data`, a process that reads it as root. crane measured that
+# on Ubuntu 24.04 on 2026-11-04, in shipped 4.0.x as well as here, and there
+# is a 4.0.3 candidate patch for the Makefile's own copy. Reproducing it here
+# would add a second way to install a world-editable root-read config, so this
+# mirror delegates to the task that writes a root-owned 644 file instead. The
+# name loses the dot because poe refuses one - see the header.
+[tasks.make-nginx-conf]
+help = "WIP- Install the nginx site config (runs sudo) - what `make nginx.conf` does, without the ownership bug; unverified here"
+ref = "nginx-conf"
 
 
-[tasks.make-test-postgres]
-help = "WIP- Makefile analog of `test-engine postgres` - needs a postgres server; unverified here"
-ref = "test-engine postgres"
+# Same as make-nginx-conf: the Makefile's version leaves the two supervisor
+# configs user-owned, and this delegates rather than copying that.
+[tasks.make-supervisor-conf]
+help = "WIP- Install the supervisor configs (runs sudo) - what `make supervisor.conf` does, without the ownership bug; unverified here"
+ref = "supervisor-conf"
 
 
-[tasks.make-test-mysql]
-help = "WIP- Makefile analog of `test-engine mysql` - needs a mysql server; unverified here"
-ref = "test-engine mysql"
-
-
-[tasks.make-test-mssql]
-help = "WIP- Makefile analog of `test-engine mssql` - needs a SQL Server; unverified here"
-ref = "test-engine mssql"
-
-
-[tasks.make-test-integration]
-help = "Makefile analog of `test-integration`"
-ref = "test-integration"
+# `make schema` writes graph_models' output straight over the committed
+# diagram. django-extensions falls back to pydotplus when pygraphviz is not
+# importable, and pydotplus fails by writing a zero-byte file and exiting 0 -
+# so on a machine without pygraphviz the Makefile target destroys the
+# committed 838 KB SVG and reports success. RELEASE_CHECKLIST.md sends the
+# releaser here, which is what made it a live trap. The mirror delegates to
+# the task that renders to a staged file first.
+[tasks.make-schema]
+help = "RELEASE: regenerate the schema diagram - what `make schema` does, without the zero-byte trap"
+ref = "schema"

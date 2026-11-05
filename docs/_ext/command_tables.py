@@ -7,13 +7,27 @@ hand, so none of them can drift from the code:
   ``[tool.poe] include`` in ``pyproject.toml``;
 * ``manage.py`` commands that QATrack+ adds, from the ``help`` attribute of
   each ``Command`` class under ``qatrack/*/management/commands/``;
-* Makefile targets, described by the ``make help`` text where the Makefile
-  gives one, otherwise by the comment directly above the target.
+* Makefile targets, described by the ``help`` line of the target's ``make-*``
+  poe mirror, falling back to the ``make help`` text and then to the comment
+  directly above the target.
 
 The fragments land in ``docs/developer/_*.rst`` (gitignored) and are pulled in
 by ``docs/developer/commands.rst``. A poe task without a ``help`` line, a
-management command without a ``help`` attribute, or a Makefile target with
-neither a ``make help`` entry nor a comment above it fails the build.
+management command without a ``help`` attribute, or a Makefile target with no
+description from any of those three places fails the build.
+
+The mirror is asked first because the Makefile is frozen and its own text
+cannot be corrected: two of its ``make help`` lines are already stale, since
+``test`` claims to include the GUI tests that ``conftest.py`` now skips by
+default, and ``test_simple`` claims to be the one without them. The mirrors
+describe what the targets do today, so the published reference is right even
+though ``make help`` in a terminal is not.
+
+The Makefile table also fails the build when a target has no ``make-*`` poe
+mirror at all. The Makefile is frozen and goes in the 4.1 cycle; until then
+both runners work, and that is only true if the mirror is complete, so the
+documentation build is what holds it complete. A dotted target maps to a
+dashed task name, because poe rejects a dot in one.
 """
 
 import ast
@@ -39,22 +53,40 @@ def table(header, rows, widths, comment):
     return '\n'.join(lines) + '\n'
 
 
-def poe_tasks():
+def load_poe_tasks():
+    """``{task name: (spec, the file it came from)}``, in include order."""
     pyproject = tomllib.loads((ROOT / 'pyproject.toml').read_text(encoding='utf-8'))
-    rows, internal = [], 0
+    tasks = {}
     for rel in pyproject['tool']['poe']['include']:
         data = tomllib.loads((ROOT / rel).read_text(encoding='utf-8'))
-        tasks = data.get('tasks') or data.get('tool', {}).get('poe', {}).get('tasks', {})
-        for name, spec in tasks.items():
-            if name.startswith('_'):
-                internal += 1
-                continue
-            help_text = spec.get('help', '') if isinstance(spec, dict) else ''
-            if not help_text:
-                raise RuntimeError(
-                    f'poe task {name!r} in {rel} has no help line; add one (docs/_ext/command_tables.py)'
-                )
-            rows.append((f'``poe {name}``', cell(help_text), f'``{rel}``'))
+        for name, spec in (data.get('tasks') or data.get('tool', {}).get('poe', {}).get('tasks', {})).items():
+            tasks[name] = (spec, rel)
+    return tasks
+
+
+def mirror_name(target):
+    """The ``make-*`` task that mirrors a Makefile target.
+
+    The dot goes: poe validates task names against ``^[^\W\d][\w:+-]*$``
+    (``poethepoet/task/base.py``), so ``make-nginx.conf`` is refused outright.
+    ``nginx.conf`` and ``supervisor.conf`` are the only two targets this
+    touches.
+    """
+    return 'make-' + target.replace('.', '-')
+
+
+def poe_tasks():
+    rows, internal = [], 0
+    for name, (spec, rel) in load_poe_tasks().items():
+        if name.startswith('_'):
+            internal += 1
+            continue
+        help_text = spec.get('help', '') if isinstance(spec, dict) else ''
+        if not help_text:
+            raise RuntimeError(
+                f'poe task {name!r} in {rel} has no help line; add one (docs/_ext/command_tables.py)'
+            )
+        rows.append((f'``poe {name}``', cell(help_text), f'``{rel}``'))
     rows.sort()
     out = table(
         ('Task', 'What it does', 'Defined in'),
@@ -112,6 +144,13 @@ def manage_commands():
 def make_targets():
     text = (ROOT / 'Makefile').read_text(encoding='utf-8')
     lines = text.splitlines()
+    tasks = load_poe_tasks()
+    # `make help` is the one target with no mirror on purpose: it prints a
+    # hand-written list of Makefile targets, and `poe` with no arguments
+    # already lists every task. A third copy of that list would be a third
+    # thing to fall out of date.
+    no_mirror_needed = ('help',)
+    missing_mirror = []
     # descriptions from the `help:` recipe: lines like   @echo "  target   description"
     from_help = {}
     for m in re.finditer(r'@echo "  ([A-Za-z0-9_.-]+)\s{2,}(.+?)"', text):
@@ -122,7 +161,16 @@ def make_targets():
         if not m or m.group(1) in ('.PHONY', 'help') or m.group(1).startswith('_'):
             continue
         name = m.group(1)
-        desc = from_help.get(name)
+        mirror = tasks.get(mirror_name(name))
+        if not mirror and name not in no_mirror_needed:
+            missing_mirror.append(name)
+        # The mirror first: see the module docstring. The Makefile is frozen,
+        # so a stale line in its own `help` recipe cannot be fixed there.
+        desc = None
+        if mirror and isinstance(mirror[0], dict):
+            desc = mirror[0].get('help')
+        if not desc:
+            desc = from_help.get(name)
         if not desc:
             # the comment block directly above the target: take its first line
             j = i - 1
@@ -133,11 +181,18 @@ def make_targets():
             desc = block[0] if block else None
         if not desc:
             raise RuntimeError(
-                f'Makefile target {name!r} has no `make help` entry and no comment above it; '
-                'add one (docs/_ext/command_tables.py)'
+                f'Makefile target {name!r} has no help line on {mirror_name(name)!r}, no `make help` '
+                'entry and no comment above it; add one (docs/_ext/command_tables.py)'
             )
         desc = cell(desc)
         rows.append((f'``make {name}``', desc))
+    if missing_mirror:
+        raise RuntimeError(
+            'these Makefile targets have no poe mirror: '
+            + ', '.join(f'{n} (expected {mirror_name(n)})' for n in sorted(missing_mirror))
+            + '. Both runners are meant to work until the Makefile goes in the 4.1 cycle; '
+            'add the mirror to poe_tasks/make_compat.toml (docs/_ext/command_tables.py)'
+        )
     rows.sort()
     out = table(
         ('Target', 'What it does'),
