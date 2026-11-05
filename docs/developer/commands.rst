@@ -40,8 +40,17 @@ in front.
 Makefile targets
 ----------------
 
-The ``Makefile`` is a thin mirror of the ``poe`` tasks for anyone who prefers
-Make; new work goes into the tasks. Descriptions come from ``make help`` where
-the Makefile gives one, otherwise from the comment directly above the target.
+The ``Makefile`` is frozen - it carries its own implementations, nothing in it
+calls ``poe``, and it is **removed during the 4.1 cycle**. New work goes into
+the tasks. Every target below is also available as ``poe make-<target>`` (a
+dotted target loses the dot, because poe forbids one in a task name), and the
+documentation build fails if one of them has no mirror.
+
+Descriptions come from the mirror's ``help`` line, falling back to ``make
+help`` and then to the comment above the target. The mirror is asked first
+because the frozen Makefile's own help text cannot be corrected, and two of its
+lines are already stale: ``test`` claims to include the GUI tests that are now
+skipped by default, and ``test_simple`` claims to be the one without them. They
+have done the same thing since the GUI tests started skipping.
 
 .. include:: _make_targets.rst
