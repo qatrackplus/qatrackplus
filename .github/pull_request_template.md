@@ -37,10 +37,13 @@ _Confirm which branch this targets (e.g. master)._
   django-upgrade, django check, plus the yaml/toml/large-file/merge-conflict/
   debug-statement checks), the lockfile check, the strict docs build and the
   full test suite.
-  - `uv run ruff check . --fix` to help resolve linting errors
-  - `uv run ruff format <files you changed>` to auto-format just what you
-    touched — don't run it repo-wide, formatting hasn't been applied across
-    the whole codebase yet (see AGENTS.md).
+  - `uv run poe fix` to apply ruff's automatic lint fixes
+  - `uv run poe format-changed` to format just what you touched. It works the
+    list out from git — this branch's commits plus anything uncommitted — and
+    prints it before formatting, because formatting has never been applied
+    repo-wide and running it that way produces a large unrelated diff (see
+    AGENTS.md). `uv run poe format-changed --check` reports what it would
+    reformat without writing anything.
 - [ ] `uv run python -Wd manage.py check` reviewed for new deprecation warnings.
 - [ ] `uv run pytest` full test suite passes.
 - [ ] `uv run python manage.py makemigrations --dry-run` — if it reports any

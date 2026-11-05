@@ -33,6 +33,97 @@ sequence = ["lint", "deps", "docs", "test", "_ci-reminder"]
 help = "Run the pre-commit suite over every file (ruff, yaml/toml, django checks)"
 cmd = "pre-commit run --all-files"
 
+[tasks.fix]
+help = "Apply ruff's automatic lint fixes across the repo (lint only; formatting is format-changed)"
+cmd = "ruff check . --fix"
+
+
+# `ruff format` is deliberately NOT repo-wide. Formatting has never been applied
+# across this codebase, so `ruff format .` produces a large diff of unrelated
+# files - `AGENTS.md` says so, and the pull request template said it by asking
+# the author to type the file list out themselves, as
+# `ruff format <files you changed>`.
+#
+# Typing it by hand is what this task removes: the list is worked out from git,
+# printed, and handed to ruff. It is printed because the whole point is that it
+# is not the whole repo, and someone filling in the checklist should be able to
+# see that rather than take it on trust.
+#
+# `--check` exists because this can be a big diff even when scoped correctly -
+# measured on the q#868 branch, where the 28 changed Python files came back
+# 2804 insertions and 2597 deletions, since none of them had been formatted
+# before. Looking first is worth one flag.
+#
+# The flag is DECLARED rather than read from the command line: measured with poe
+# 0.49.0, an undeclared argument to a script task is dropped in silence -
+# `sys.argv` is `['']` and nothing warns - so `poe format-changed --check`
+# without this block would quietly reformat everything instead. A declared arg
+# arrives as an environment variable, not as a Python name.
+[tasks.format-changed]
+help = "Format only the Python files this branch changed - never the whole repo (see AGENTS.md)"
+interpreter = "python"
+shell = """
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+
+def git(*args):
+    done = subprocess.run(('git',) + args, capture_output=True, text=True)
+    return done.stdout.splitlines() if done.returncode == 0 else []
+
+
+def integration_base():
+    '''The commit this branch left, so the whole branch is covered.
+
+    Not only uncommitted work: by the time this checklist is being filled in,
+    most of a change is usually committed already. The remotes are tried before
+    the local branch because a local develop is the one most likely to be stale.
+    '''
+    for ref in ('upstream/develop', 'origin/develop', 'develop'):
+        found = git('merge-base', 'HEAD', ref)
+        if found:
+            return found[0]
+    return None
+
+
+base = integration_base()
+paths = set()
+if base:
+    paths.update(git('diff', '--name-only', '--diff-filter=ACMR', base))
+else:
+    print('No develop to compare against; only uncommitted changes were considered.')
+# Uncommitted work as well: unstaged, staged, and files git has not seen yet.
+paths.update(git('diff', '--name-only', '--diff-filter=ACMR'))
+paths.update(git('diff', '--name-only', '--diff-filter=ACMR', '--cached'))
+paths.update(git('ls-files', '--others', '--exclude-standard'))
+
+# --diff-filter already drops deletions, but a path can still be gone by now,
+# and these two suffixes are what ruff format acts on.
+files = sorted(p for p in paths if p.endswith(('.py', '.pyi')) and Path(p).is_file())
+
+if not files:
+    print('No changed Python files to format.')
+    sys.exit(0)
+
+checking = bool(os.environ.get('check'))
+print('%s %d changed Python file(s), not the repo:' % ('Checking' if checking else 'Formatting', len(files)))
+for name in files:
+    print('  %s' % name)
+# Flushed, or ruff's own summary lands above this list: the subprocess writes
+# straight to the terminal while these prints are still buffered.
+sys.stdout.flush()
+argv = ['ruff', 'format'] + (['--check'] if checking else []) + files
+sys.exit(subprocess.run(argv).returncode)
+"""
+
+[[tasks.format-changed.args]]
+name = "check"
+options = ["--check"]
+type = "boolean"
+help = "Report which of them ruff would reformat, and change nothing"
+
 
 # CI's Requirements Test does `uv sync --all-extras --locked` and then
 # `uv pip check`. The sync is left out on purpose: it would rewrite the venv
