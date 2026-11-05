@@ -303,13 +303,67 @@ def test_the_makefile_does_not_depend_on_poe():
     the removal tasks leave all 88 behind. `--no-dev` on the outer command does
     not help either - poe's uv executor wraps each task in its own `uv run`.
 
-    Cody reversed the alias decision on 2026-11-05. The Makefile is
-    byte-identical to develop's and is removed in the 4.1 cycle; this test is
-    what keeps poe out of it until then.
+    Cody reversed the alias decision on 2026-11-05. This test is what keeps poe
+    out of the Makefile's recipes until the file is removed in the 4.1 cycle.
+
+    NAMING poe is fine; CALLING it is not. Since make is retired, a target that
+    was broken now prints the poe task to use instead of running (Cody,
+    2026-11-05), and `make help` says the same at the top. An `@echo` that
+    mentions poe starts no process and syncs no dependency group, so the test
+    looks at what the recipe *executes*.
     """
-    makefile = (REPO_ROOT / 'Makefile').read_text(encoding='utf-8')
-    offenders = [line for line in makefile.splitlines() if 'poe' in line.lower()]
+    offenders = []
+    for line in (REPO_ROOT / 'Makefile').read_text(encoding='utf-8').splitlines():
+        if 'poe' not in line.lower():
+            continue
+        stripped = line.strip().lstrip('@-+')
+        # A comment explains; an echo prints; neither runs anything.
+        if stripped.startswith('#') or stripped.startswith(('echo ', 'echo"')):
+            continue
+        offenders.append(line)
     assert not offenders, offenders
+
+
+def test_a_retired_target_says_so_and_fails_rather_than_pretending():
+    """The one behavioural claim worth making about the Makefile.
+
+    Nothing in the suite runs `make` - every other Makefile test reads the file
+    as text - so a retired target is exactly the kind of thing a well-meaning
+    edit could quietly un-retire, restoring a known trap.
+
+    `schema` is retired because it was broken twice over: it named the diagram
+    from a version hardcoded in the Makefile, and it exited 0 even when the
+    render failed, so it could report success while leaving the committed
+    838 KB diagram corrupted. Measured on Ubuntu 24.04, whose Graphviz 2.42
+    fails `-g` with "trouble in init_rank".
+
+    Three things are asserted, because any one of them alone could be true of a
+    target that still silently does the wrong thing: it does not render, it
+    names the replacement, and it fails rather than reporting success.
+    """
+    recipe = recipe_for('schema')
+    assert 'graph_models' not in recipe, (
+        'the retired schema target renders the diagram again: %r' % recipe
+    )
+    assert 'poe schema' in recipe, (
+        'the retired schema target does not name the task that replaces it'
+    )
+    assert 'exit 1' in recipe, (
+        'the retired schema target exits 0, so a release script that calls it '
+        'cannot tell the diagram was never regenerated'
+    )
+
+
+def recipe_for(target):
+    """A target's recipe lines, without the comments above it."""
+    text = (REPO_ROOT / 'Makefile').read_text(encoding='utf-8')
+    body = text.split('\n%s:\n' % target, 1)[1]
+    lines = []
+    for line in body.splitlines():
+        if line and not line.startswith(('\t', ' ')):
+            break
+        lines.append(line)
+    return '\n'.join(lines)
 
 
 def mirror_for(target):
