@@ -238,6 +238,50 @@ In an activated virtual environment the ``uv run`` prefix is optional - the one
 place it is left off below is the shell-completion snippets above, which the
 shell evaluates itself. To add a task of your own, see :ref:`adding-a-poe-task`.
 
+.. note::
+
+   **If you already have a global poe, you have two of them, and they are not
+   the same version.** ``uv tool install poethepoet`` or a system package puts a
+   ``poe`` on your ``PATH``; the ``uv sync`` above puts another in
+   ``.venv``. Which one answers depends only on how you type the command:
+
+   - ``poe <task>`` runs the **global** one, whatever version that happens to be;
+   - ``uv run poe <task>`` runs the project's, which the lockfile pins.
+
+   On one development machine in November 2026 those were **0.48.0 and 0.49.0**
+   respectively - and ``pyproject.toml`` declares ``poethepoet>=0.49,<1.0``, so
+   the bare ``poe`` was below the project's own floor. Nothing said so.
+
+   **Your tasks still run in the project environment either way.** poe executes
+   each task through ``uv run``, so ``ruff``, ``pytest`` and ``pre-commit`` come
+   from ``.venv`` even when poe itself does not. Measured on that same machine:
+   neither ``ruff`` nor ``pre-commit`` existed anywhere on ``PATH``, and the
+   global poe ran both correctly. So a global install does not give you the
+   wrong Django, the wrong database or the wrong test suite.
+
+   **What it does give you is an unchecked task runner.** The version floor and
+   the ``<1.0`` ceiling in ``pyproject.toml`` apply to the copy in ``.venv``;
+   nothing compares them against a global install. poe is pre-1.0, so a minor
+   release may change task syntax - which is what the ceiling is for. A global
+   poe that is too old silently fails to understand something a task file
+   relies on; one that is too new may read it differently. Neither produces a
+   version error, because no version check happens.
+
+   So: **prefer** ``uv run poe``, which is how this guide writes every command
+   and is always the pinned one. If you want the shorter spelling, either
+   activate the virtual environment - then bare ``poe`` is the project's - or
+   keep your global install inside the declared range and upgrade it when the
+   range moves:
+
+   .. code-block:: bash
+
+       uv tool install 'poethepoet>=0.49,<1.0'   # or: uv tool upgrade poethepoet
+       poe --version                             # check it against pyproject.toml
+
+   There is no need for a global install at all. It used to be the documented
+   way to get poe, which is exactly why poe is now a ``dev`` dependency: a
+   global install left every developer on a different version.
+
 Understanding the Settings Files
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
