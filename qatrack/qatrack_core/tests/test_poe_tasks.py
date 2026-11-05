@@ -269,49 +269,87 @@ def test_i18n_status_delegates_rather_than_parsing_msgfmt():
     assert 'shell' not in task, "i18n-status has a body again - see the docstring"
 
 
-def test_the_autobuild_port_is_the_documented_one():
-    """poe said 8008 and the Makefile said 8009; the docs say 8008 four times.
+def test_the_autobuild_ports_are_each_what_their_runner_documents():
+    """The two runners serve on different ports, and that is now deliberate.
 
-    The Makefile now names no port at all, which is the real fix: there is one
-    place for it to be wrong instead of two.
+    The Makefile serves on 8009 and the docs say 8008 four times, so the
+    successor task is the one that is right. The Makefile is frozen until it
+    goes in the 4.1 cycle, so the disagreement cannot be fixed by editing it -
+    it is made visible instead: `docs-autobuild` keeps 8008, and the mirror
+    keeps whatever `make docs-autobuild` actually does, which is 8009.
+
+    An earlier commit on this branch took the port out of the Makefile
+    altogether. That was part of reducing the Makefile to aliases, which Cody
+    reversed on 2026-11-05.
     """
-    default = TASKS['docs-autobuild']['args'][0]['default']
-    assert default == '8008', default
+    assert TASKS['docs-autobuild']['args'][0]['default'] == '8008'
     makefile = (REPO_ROOT / 'Makefile').read_text(encoding='utf-8')
-    assert '--port' not in makefile, "the Makefile has a port of its own again"
+    assert '--port 8009' in makefile, "the Makefile's own autobuild port has moved"
+    assert '--port 8009' in TASKS['make-docs-autobuild']['cmd'], (
+        "the mirror no longer reproduces the Makefile's port")
 
 
 # --------------------------------------------------------------------------
-# The Makefile holds aliases and nothing else
+# The Makefile is frozen, and poe carries both ways of working
 # --------------------------------------------------------------------------
 
-def makefile_recipe_lines():
-    """Every recipe line - the tab-indented ones - with its target."""
-    target = None
-    for line in (REPO_ROOT / 'Makefile').read_text(encoding='utf-8').splitlines():
-        if line and not line[0].isspace() and ':' in line and not line.startswith('#'):
-            target = line.split(':', 1)[0].strip()
-        elif line.startswith('\t') and target:
-            yield target, line.strip()
+def test_the_makefile_does_not_depend_on_poe():
+    """A Makefile recipe that calls poe drags the dev group into production.
 
+    An earlier commit on this branch made every target an alias for
+    `$(POE) <task>`. crane measured what that costs on Ubuntu 24.04: `make
+    supervisor.conf` on a site synced `--no-dev` took the environment from 112
+    packages to 200, because `uv run poe` syncs the default groups first, and
+    the removal tasks leave all 88 behind. `--no-dev` on the outer command does
+    not help either - poe's uv executor wraps each task in its own `uv run`.
 
-def test_every_makefile_target_only_calls_poe():
-    """Two runners with two implementations drift, and this one did.
-
-    `make-test-integration` stopped matching `make test-integration`,
-    `docs-autobuild` served on a different port under each, and the two
-    engine-swap implementations disagreed about refusing a backup left by an
-    interrupted run - which is how one of them came to destroy a developer's
-    settings. Every recipe line now either prints help or calls poe, so there
-    is one implementation to be wrong.
+    Cody reversed the alias decision on 2026-11-05. The Makefile is
+    byte-identical to develop's and is removed in the 4.1 cycle; this test is
+    what keeps poe out of it until then.
     """
-    offenders = [
-        (target, line) for target, line in makefile_recipe_lines()
-        if target not in ('help', '.PHONY')
-        and not line.startswith('$(POE)')
-        and not line.startswith('@echo')
-    ]
+    makefile = (REPO_ROOT / 'Makefile').read_text(encoding='utf-8')
+    offenders = [line for line in makefile.splitlines() if 'poe' in line.lower()]
     assert not offenders, offenders
+
+
+def mirror_for(target):
+    """The task name mirroring a Makefile target; poe forbids a dot in one."""
+    return 'make-' + target.replace('.', '-')
+
+
+def makefile_targets():
+    """Every target the Makefile defines, in file order."""
+    for line in (REPO_ROOT / 'Makefile').read_text(encoding='utf-8').splitlines():
+        if not line or line[0].isspace() or line.startswith('#') or ':' not in line:
+            continue
+        name = line.split(':', 1)[0].strip()
+        if name.startswith(('.', '_')) or '=' in name or ' ' in name:
+            continue
+        yield name
+
+
+def test_every_makefile_target_has_a_mirror():
+    """Both ways of working are meant to work, which is a claim about coverage.
+
+    `poe <task>` is the cross-platform successor and `poe make-<target>` is the
+    Makefile's own behaviour. The second only means anything if there is one
+    for every target, so this counts them rather than trusting the file.
+
+    `help` is exempt: it prints a hand-written list of Makefile targets, and
+    `poe` with no arguments already lists every task.
+    """
+    missing = [t for t in makefile_targets()
+               if t != 'help' and mirror_for(t) not in TASKS]
+    assert not missing, missing
+
+
+def test_every_mirror_names_a_target_that_exists():
+    """A mirror of a target nobody has is a mirror nobody can check."""
+    targets = set(makefile_targets())
+    orphans = [name for name in TASKS
+               if name.startswith('make-')
+               and not any(mirror_for(t) == name for t in targets)]
+    assert not orphans, orphans
 
 
 def test_the_makefile_has_a_target_for_every_habit_it_used_to_serve():
@@ -325,13 +363,13 @@ def test_the_makefile_has_a_target_for_every_habit_it_used_to_serve():
         assert ('\n%s:' % target) in makefile, "no %s target" % target
 
 
-def test_every_poe_task_a_makefile_target_names_exists():
-    """An alias to a task that does not exist fails at run time, not at edit time."""
+def test_every_mirror_that_delegates_points_at_a_task_that_exists():
+    """A `ref` to a task that does not exist fails at run time, not at edit time."""
     missing = []
-    for target, line in makefile_recipe_lines():
-        if not line.startswith('$(POE)'):
+    for name, task in TASKS.items():
+        if not name.startswith('make-') or not isinstance(task, dict):
             continue
-        task = line.split()[1]
-        if task not in TASKS:
-            missing.append((target, task))
+        ref = task.get('ref')
+        if ref and ref.split()[0] not in TASKS:
+            missing.append((name, ref))
     assert not missing, missing
