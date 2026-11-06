@@ -192,7 +192,14 @@ def review_test_list_instance(test_list_instance, test_instances, status_pks, re
     review_user is the user who performed the review
     """
 
-    review_time = timezone.make_aware(timezone.datetime.now(), timezone.get_current_timezone())
+    # Not make_aware(datetime.now(), ...): `datetime.now()` is the machine's
+    # wall clock, and Django only points that at TIME_ZONE where `time.tzset`
+    # exists - not on Windows, by Django's own choice ("breaks Windows"). So on
+    # a Windows site whose machine zone differs from TIME_ZONE that produced a
+    # correct-looking local time labelled with the wrong zone, and a review
+    # stamped hours out. It also silently picked the first of a repeated hour
+    # when the clocks went back.
+    review_time = timezone.now()
 
     initially_requires_reviewed = not test_list_instance.all_reviewed
     test_list_instance.reviewed = review_time

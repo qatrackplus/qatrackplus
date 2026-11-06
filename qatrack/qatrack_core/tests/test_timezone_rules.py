@@ -19,10 +19,10 @@ went unseen:
   `'America/Winnipeg'` showed times an hour off from 1 November;
 - **Docker** depends on how old the base image was when it was built.
 
-Found and patched by crane on 2026-11-04 against develop `0bbbcf64`, measured on a
-Windows host and in the Docker stack. Reproduced on Linux by emptying `TZPATH`,
-which is the mechanism rather than the platform - unpatched gave Edmonton −07,
-Winnipeg −06 and Inuvik −07; patched gives all four correct.
+Measured on a Windows host and in the Docker stack, and reproduced on Linux by
+emptying `TZPATH`, which is the mechanism rather than the platform: without the
+fix Edmonton came out at −07, Winnipeg at −06 and Inuvik at −07; with it, all four are
+correct.
 
 **These tests read the package, not the operating system.** On a developer's Linux
 box the OS copy is usually current and would mask exactly the defect being guarded
@@ -37,9 +37,8 @@ they would have caught this defect before it shipped.
 **They do not keep the rules current, and the distinction matters.** If IANA
 changes one of these zones again with effect from, say, 2027, a current database
 and a 2026f one both return the same offsets at the instant asserted here, so
-nothing fails. @copilot made this point on c#34 and it is right: a unit test
-cannot know what IANA published this morning without going to the network, which
-is not a thing a test suite should do.
+nothing fails. A unit test cannot know what IANA published this morning without
+going to the network, and that is not a thing a test suite should do.
 
 **What would catch it** is a step at release preparation: check the newest IANA
 release against the pin, bump both together, and say in the commit which release
@@ -48,29 +47,31 @@ is the one above - this file is a regression guard, not a currency check.
 """
 
 import importlib.resources
+import pathlib
 import zoneinfo
 from datetime import datetime
 
 import pytest
-
-tzdata = pytest.importorskip("tzdata")
+import tzdata
 
 # The release carrying IANA 2026f, the first with all four changes above.
+CONFIG_PAGE = pathlib.Path(__file__).resolve().parents[3] / 'docs' / 'install' / 'config.rst'
+
 MINIMUM_TZDATA = (2026, 6)
 
 # Checked at a date after every one of the 2026 transitions, so each expectation
 # is about the permanent rule rather than a seasonal offset.
 AFTER_THE_CHANGES = datetime(2026, 11, 4, 12, 0)
 EXPECTED_OFFSETS = {
-    "America/Vancouver": -7,
-    "America/Edmonton": -6,
-    "America/Inuvik": -6,
-    "America/Winnipeg": -5,
+    'America/Vancouver': -7,
+    'America/Edmonton': -6,
+    'America/Inuvik': -6,
+    'America/Winnipeg': -5,
 }
 
 
 def package_version():
-    return tuple(int(part) for part in tzdata.__version__.split(".")[:2])
+    return tuple(int(part) for part in tzdata.__version__.split('.')[:2])
 
 
 def offset_from_the_package(zone):
@@ -95,20 +96,20 @@ class TestTheBundledRulesAreCurrent:
     def test_the_tzdata_package_is_new_enough(self):
         """The pin, asserted directly, because it is the thing that goes stale."""
         assert package_version() >= MINIMUM_TZDATA, (
-            "tzdata %s is older than %s, the release carrying IANA 2026f. A "
-            "Windows site reads its rules from this package, so Alberta, "
-            "Manitoba and NWT sites will be an hour out. Bump it with "
-            "`uv lock --upgrade-package tzdata --upgrade-package pytz`."
-            % (tzdata.__version__, ".".join(str(p) for p in MINIMUM_TZDATA))
+            'tzdata %s is older than %s, the release carrying IANA 2026f. A '
+            'Windows site reads its rules from this package, so Alberta, '
+            'Manitoba and NWT sites will be an hour out. Bump it with '
+            '`uv lock --upgrade-package tzdata --upgrade-package pytz`.'
+            % (tzdata.__version__, '.'.join(str(p) for p in MINIMUM_TZDATA))
         )
 
-    @pytest.mark.parametrize("zone,expected", sorted(EXPECTED_OFFSETS.items()))
+    @pytest.mark.parametrize('zone,expected', sorted(EXPECTED_OFFSETS.items()))
     def test_the_package_knows_the_2026_canadian_rules(self, zone, expected):
         got = offset_from_the_package(zone)
         assert got == expected, (
-            "%s is %+.0f from the tzdata package, expected %+d. Either the pin "
-            "has gone backwards, or IANA has changed this zone again - in which "
-            "case update this expectation and the pin in the same commit."
+            '%s is %+.0f from the tzdata package, expected %+d. Either the pin '
+            'has gone backwards, or IANA has changed this zone again - in which '
+            'case update this expectation and the pin in the same commit.'
             % (zone, got, expected)
         )
 
@@ -127,11 +128,11 @@ class TestTheBundledRulesAreCurrent:
         the host's copy is current, so it means the same on Windows, where
         `TZPATH` is empty, as on Linux.
         """
-        package = importlib.resources.files("tzdata").joinpath("zoneinfo")
-        planted = tmp_path / "America" / "Edmonton"
+        package = importlib.resources.files('tzdata').joinpath('zoneinfo')
+        planted = tmp_path / 'America' / 'Edmonton'
         planted.parent.mkdir()
-        planted.write_bytes(package.joinpath("Etc", "GMT-14").read_bytes())
-        with package.joinpath("America", "Edmonton").open("rb") as f:
+        planted.write_bytes(package.joinpath('Etc', 'GMT-14').read_bytes())
+        with package.joinpath('America', 'Edmonton').open('rb') as f:
             from_the_package_file = AFTER_THE_CHANGES.replace(
                 tzinfo=zoneinfo.ZoneInfo.from_file(f)).utcoffset().total_seconds() / 3600
 
@@ -140,16 +141,81 @@ class TestTheBundledRulesAreCurrent:
             zoneinfo.reset_tzpath([str(tmp_path)])
             zoneinfo.ZoneInfo.clear_cache()
             from_the_plant = AFTER_THE_CHANGES.replace(
-                tzinfo=zoneinfo.ZoneInfo("America/Edmonton")).utcoffset().total_seconds() / 3600
-            through_the_helper = offset_from_the_package("America/Edmonton")
+                tzinfo=zoneinfo.ZoneInfo('America/Edmonton')).utcoffset().total_seconds() / 3600
+            through_the_helper = offset_from_the_package('America/Edmonton')
         finally:
             zoneinfo.reset_tzpath(previous)
             zoneinfo.ZoneInfo.clear_cache()
 
-        assert from_the_plant == 14, "the planted database was not read, so it shows nothing"
+        assert from_the_plant == 14, 'the planted database was not read, so it shows nothing'
         assert through_the_helper == from_the_package_file, (
             "the helper gave %+.0f for America/Edmonton and the package's own file "
-            "gives %+.0f, so the tests above are reading the host"
+            'gives %+.0f, so the tests above are reading the host'
             % (through_the_helper, from_the_package_file)
         )
-        assert zoneinfo.TZPATH == previous, "TZPATH was not restored"
+        assert zoneinfo.TZPATH == previous, 'TZPATH was not restored'
+
+
+class TestThePageTellsASiteSomethingItCanActOn:
+    """`docs/install/config.rst`'s time-zone section, held to two claims.
+
+    Documentation is the procedure here - there is no command that updates the
+    rules for you - so a sentence that reads like an instruction and does
+    nothing is a defect, not a wording preference. Both of these were found by
+    review rather than by anybody's site going wrong, which is the only cheap
+    way to find them.
+
+    1. **The restart instruction has to restart something.** The note said
+       `docker compose up -d` would do it. That recreates containers when the
+       image or the configuration has changed and does nothing when neither
+       has: it prints `Container Running` and leaves the processes untouched.
+       The reader of that sentence is, by construction, somebody whose rules
+       just changed *underneath* an unchanged image - so the one command given
+       was the one that could not work, and it reports success.
+
+    2. **Docker has to be given somewhere to go between releases.** The
+       section's premise is that stale rules are silent, which invites "what if
+       IANA publishes before the next QATrack+ release?". The page answered that
+       for Linux and for Windows-with-pip and told Docker "there is nothing to
+       do" - true of a release upgrade, and read as a general reassurance.
+    """
+
+    @staticmethod
+    def section():
+        """The time-zone material, not the whole page."""
+        text = CONFIG_PAGE.read_text(encoding='utf8')
+        start = text.index('Keeping the time zone rules current')
+        return text[start:text.index('\nOrganization Logo', start)]
+
+    def test_the_section_is_still_where_this_looks_for_it(self):
+        assert 'PYTHONTZPATH' in self.section(), (
+            'the time-zone section of config.rst has moved or been renamed; the two tests '
+            'below are reading the wrong text'
+        )
+
+    def test_the_docker_restart_is_a_command_that_restarts(self):
+        section = self.section()
+        assert 'docker compose restart' in section, (
+            "config.rst does not give Docker a command that restarts the processes. "
+            "`docker compose up -d` is not one when the image has not changed - it reports "
+            "`Container Running` and does nothing, which is indistinguishable from success."
+        )
+        restart_block = section[section.index('restart QATrack+ after updating'):]
+        assert 'Not ``docker compose up -d``' in restart_block, (
+            "the page no longer says why `docker compose up -d` is the wrong command here. "
+            "Without that, the next person to tidy this will replace `restart` with it again, "
+            "because everywhere else in the Docker documentation `up -d` is right."
+        )
+
+    def test_docker_is_told_how_to_get_new_rules_before_a_release(self):
+        section = self.section()
+        assert 'uv lock --upgrade-package tzdata' in section, (
+            'config.rst does not say how a Docker or uv-based Windows site gets new rules '
+            'between QATrack+ releases. Both take them from uv.lock, so the lockfile is the '
+            'only thing that can move.'
+        )
+        assert 'site-requirements' in section, (
+            "the page does not warn that site-requirements/ cannot serve as that route. It is "
+            "where an administrator will look first, and a newer tzdata there fails the build: "
+            "the Dockerfile constrains site packages to QATrack+'s own frozen versions."
+        )

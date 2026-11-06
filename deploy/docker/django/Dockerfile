@@ -96,8 +96,7 @@ COPY --from=builder /opt/venv /opt/venv
 # heard of. Setting it here makes it true of the image, which it is: this image
 # is only ever run under Docker.
 # PYTHONTZPATH= empties zoneinfo's search path, so `zoneinfo` falls back to the
-# tzdata PACKAGE instead of the operating system's copy. Cody's call,
-# 2026-11-05.
+# tzdata PACKAGE instead of the operating system's copy.
 #
 # Why: Python reads the system database *before* the package, so on Linux the
 # image's apt copy decided what every timestamp meant - and whether it was
@@ -108,8 +107,8 @@ COPY --from=builder /opt/venv /opt/venv
 #
 # With this set, the image behaves like Windows, where there is no system
 # database to read: the version in uv.lock is the single source, it is the
-# version the test suite asserts against, and `poe docs`/CI exercise the same
-# one a site runs. `tzdata` is a declared runtime dependency for exactly this
+# version the test suite asserts against, and CI exercises the same one a site
+# runs. `tzdata` is a declared runtime dependency for exactly this
 # reason - with an empty TZPATH and no tzdata, every zone lookup raises
 # ZoneInfoNotFoundError.
 #
@@ -124,7 +123,6 @@ ENV PATH="/opt/venv/bin:$PATH" \
 WORKDIR /usr/src/qatrackplus
 # The source stays owned by root, so the app cannot modify its own code.
 COPY . .
-
 
 # Make entrypoint executable and move it out of the volume mount. init.sh is
 # what compose.yaml's init service runs, as root, before django starts.
