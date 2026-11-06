@@ -355,8 +355,28 @@ Creating your development database
 Rather than using a full blown database server for development work, You can
 use Sqlite3 which is included with Python.
 
-Once you have the requirements installed, copy the debug `local_settings.py` and `local_test_settings.py`
-files from the deploy subdirectory and then create your database:
+Once you have the requirements installed, one task does the whole thing:
+
+.. code-block:: shell
+
+    uv run poe dev-init
+
+That copies three files out of ``deploy/dev/`` - ``local_settings.dev.py`` to
+``qatrack/local_settings.py``, ``local_test_settings.sqlite.py`` to
+``qatrack/local_test_settings.py``, and ``local_test_settings.memory.py``
+alongside it for the fastest way to run the suite - creates the ``db``
+directory, runs the migrations, and leaves you a superuser called ``superuser``
+whose password is ``superuser``. The database is ``db/default.db``.
+
+It **refuses** if any of those files or that database is already there, rather
+than copying what it can and then failing partway through on *That username is
+already taken*: half a setup and a confusing error is the worst of the
+available outcomes. If a later step fails it removes what that run created, so
+you can fix the problem and simply run it again. To discard an environment on
+purpose, ``uv run poe dev-reset`` deletes those files and the sqlite database
+and then sets up a fresh one.
+
+By hand, without the memory template or the superuser, the same thing is:
 
 .. code-block:: shell
 
@@ -365,12 +385,14 @@ files from the deploy subdirectory and then create your database:
     mkdir db
     uv run python manage.py migrate
 
+``migrate`` is also what creates the cache table QATrack+ reads - the
+``qatrack_core.0002_cache_table`` migration - so a development database needs
+nothing beyond it.
 
-this will put a database called `default.db` in the `db` subdirectory.
 ``deploy/dev/`` has a template per engine if you would rather test against
 something other than sqlite - see :ref:`local_test_settings_templates` below,
-and ``make test-<engine>`` under `Running The Test Suite`_ for running against
-one without touching your usual ``local_test_settings.py``.
+and ``poe test-engine <engine>`` under `Running The Test Suite`_ for running
+against one without touching your usual ``local_test_settings.py``.
 
 .. _local_settings_templates:
 
@@ -560,9 +582,10 @@ Before running the development server, you need to collect all static files to t
       - SQL Server
       - the same, plus ``uv sync --extra mssql`` and ODBC Driver 17 or 18.
 
-``make test-<engine>`` runs the suite against one of these without disturbing
-the ``local_test_settings.py`` you work with day to day; the Makefile's own
-comment says what it swaps and restores.
+``uv run poe test-engine <engine>`` runs the suite against one of these without
+disturbing the ``local_test_settings.py`` you work with day to day: it swaps the
+template in, runs the suite, and puts your own file back however the run ends -
+Ctrl-C included, which the ``Makefile`` target it replaces did not.
 
 For a *deployment* rather than a test run the templates are elsewhere -
 ``deploy/sqlite/``, ``deploy/postgres/``, ``deploy/mysql/`` and ``deploy/win/``
@@ -688,7 +711,9 @@ Before running the development server, you need to collect all static files to t
 Running the development server
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-After the database is created, create a super user so you can log into QATrack+:
+``poe dev-init`` already left you a superuser - ``superuser``, password
+``superuser``. If you set the database up by hand, or want an account of your
+own, create one:
 
 .. code-block:: shell
 
@@ -698,7 +723,7 @@ and then run the development server:
 
 .. code-block:: shell
 
-    uv run python manage.py runserver 
+    uv run poe run
 
 Once the development server is running you should be able to visit
 http://127.0.0.1:8000/ in your browser and log into QATrack+.
@@ -828,14 +853,28 @@ code:
 
     **Format only the files you changed.** The repository has never been formatted
     as a whole, so ``ruff format .`` rewrites hundreds of files and buries your
-    change:
+    change. ``poe format-changed`` formats the ones this branch touched and
+    nothing else:
+
+    .. code-block:: shell
+
+        uv run poe format-changed
+        uv run poe format-changed --check   # report them, change nothing
+
+    It works that set out from git - everything changed since the branch left
+    ``develop``, plus whatever is uncommitted or untracked - narrows it to the
+    ``.py`` and ``.pyi`` files, and prints the list before formatting, so you can
+    see what it decided. Naming a file yourself still works, and is what the task
+    runs underneath:
 
     .. code-block:: shell
 
         uv run ruff format path/to/the/file/you/changed.py
 
-``uv run pre-commit run --all-files`` before opening a pull request runs what CI
-runs.
+``uv run poe lint`` before opening a pull request runs what CI runs: it is
+``pre-commit run --all-files``, which puts ruff, the YAML and TOML checks and
+Django's system checks over every file in the tree, not only the ones you
+changed.
 
 .. note::
 
@@ -1187,7 +1226,15 @@ root QATrack+ directory:
 
 .. code-block:: shell
 
+    uv run poe test
+    # -or-
     uv run pytest
+
+``poe test`` *is* ``pytest`` - a one-line task with nothing added - and anything
+you put after it reaches pytest unchanged, flags included: ``poe test
+--run-selenium -m selenium`` collects exactly what the same pytest line collects.
+The rest of this section writes the plain command, because the flags are
+pytest's and knowing that is what lets you look them up.
 
 **The GUI tests are left out unless you ask for them.** They drive a real
 browser, they are the slowest part of the suite, and they need the setup in
@@ -1204,6 +1251,8 @@ counted either way; it still works and now warns, and goes in 4.2.)
     uv run pytest                        # everything except the GUI tests
     uv run pytest --run-selenium         # those, and the GUI tests as well
     uv run pytest -m selenium --run-selenium   # only the GUI tests
+
+Each of those is also ``uv run poe test`` with the same flags.
 
 The ``poe`` tasks wrap the same commands with the browser and mode chosen for
 you, so nothing has to be edited into a settings file:
@@ -1498,16 +1547,24 @@ browser (at http://127.0.0.1:8008) by running one of the following commands:
 
 The documentation build treats warnings as errors, so a build that reports a
 warning fails. ``poe docs`` is that build, and ``poe ci`` runs it; run one of
-them before you push. The command underneath is:
+them before you push:
 
 .. code-block:: shell
 
-    rm -rf docs/_build
+    uv run poe docs
+
+The command it runs is:
+
+.. code-block:: shell
+
     uv run sphinx-build -W --keep-going -a --fresh-env -b html docs docs/_build/html
 
-Removing ``docs/_build`` matters. Sphinx caches what it has already parsed, and an
-incremental build does not repeat a warning it reported last time - so a warning you
-introduced can be invisible to you and fail for the next person.
+``-a --fresh-env`` is the part of that worth knowing. Sphinx caches what it has
+already parsed, and an incremental build does not repeat a warning it reported
+last time - so a warning you introduced can be invisible to you and fail for the
+next person. Those two flags discard the cache and re-read the whole tree, which
+is why the task needs no ``rm -rf docs/_build``. If you call ``sphinx-build``
+yourself without them, delete that directory first.
 
 Fragments, and the leading underscore
 -------------------------------------

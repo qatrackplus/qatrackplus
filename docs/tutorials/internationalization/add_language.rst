@@ -65,6 +65,12 @@ This command will:
 Specifying the ``djangojs`` domain will have Django's ``makemessages`` command
 search JavaScript files for translatable strings.
 
+There is no poe task for this step, deliberately: ``poe extract-messages`` passes
+``--all``, which updates the catalogues that already exist and cannot create a
+new one. Once ``es`` exists, that task is what you re-run after adding or
+changing a translatable string, and ``poe update-messages`` does it and the
+compile below in one go.
+
 Step 2: Translate the Strings
 -----------------------------
 
@@ -117,23 +123,33 @@ Once you have translated the strings, compile them into Django's binary format:
 
 .. code-block:: bash
 
-    # Compile all languages
-    python manage.py compilemessages
-
-    # Or compile a specific language
-    python manage.py compilemessages --locale=es
+    uv run poe compile-messages
 
 This creates ``.mo`` files that Django uses at runtime.
+
+The task is ``python manage.py compilemessages`` with ``--ignore=.venv
+--ignore=node_modules``, and those are not decoration. ``compilemessages`` walks
+the whole tree from the working directory and, unlike ``makemessages``, has no
+default ignore patterns - so without them it descends into ``.venv`` and
+recompiles every locale of every installed package alongside yours. A format
+error in any of those catalogues then fails the run, reporting somebody else's
+translations as a problem in yours. There is no task for one language at a time;
+call the command directly, with the same ignores:
+
+.. code-block:: bash
+
+    uv run python manage.py compilemessages --locale=es \
+        --ignore=.venv --ignore=node_modules
 
 Checking what is actually translated
 ------------------------------------
 
 ``compilemessages`` tells you it succeeded, not how much of the interface is now in
-your language. ``check_translations`` answers that:
+your language. ``poe check-messages`` answers that:
 
 .. code-block:: bash
 
-    python manage.py check_translations
+    uv run poe check-messages
 
 It reports, for every language in your ``LANGUAGES`` setting, how many strings are
 translated and how many fall back to English, and whether any compiled ``.mo`` is
@@ -153,8 +169,8 @@ To see which strings are still missing for one language:
 
 .. code-block:: bash
 
-    python manage.py check_translations --missing es
-    python manage.py check_translations --missing es --limit 0   # list them all
+    uv run poe check-messages --missing es
+    uv run poe check-messages --missing es --limit 0   # list them all
 
 .. note::
 
@@ -167,8 +183,8 @@ To see which strings are still missing for one language:
     entries marked *fuzzy* by default, so a file can appear finished while the
     compiled catalogue serves far less; and entries with a message context are keyed
     separately, so the same text can need translating more than once.
-    ``check_translations`` counts what the ``.mo`` actually provides, not what the
-    ``.po`` appears to contain.
+    The ``check_translations`` command underneath counts what the ``.mo`` actually
+    provides, not what the ``.po`` appears to contain.
 
 Step 4: Configure Language Settings
 -----------------------------------
