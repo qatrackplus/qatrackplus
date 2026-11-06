@@ -42,19 +42,22 @@
 # `pytest --cov-report term-missing --cov ./qatrack/units qatrack/units` - so a
 # mirror of a task that takes an argument does not need a copy of the command.
 #
-# **Three mirrors do not reproduce what the Makefile does, and say so in
-# place:** `make-nginx-conf`, `make-supervisor-conf` and `make-schema`. The
-# Makefile's versions of those three are known traps, and the Makefile's own
-# header says nothing in it should be a shorter way to do something
-# irreversible than doing it by hand. Copying a trap into a second runner so
-# that the mirror is literal would be the wrong reading of "both ways work".
+# **Two mirrors do not reproduce what the Makefile does, and say so in
+# place:** `make-nginx-conf` and `make-supervisor-conf`. The Makefile's
+# versions of those two are known traps, and the Makefile's own header says
+# nothing in it should be a shorter way to do something irreversible than doing
+# it by hand. Copying a trap into a second runner so that the mirror is literal
+# would be the wrong reading of "both ways work".
 #
-# **`make schema` is now retired in the Makefile itself**, by Cody's decision of
+# **`make schema` is retired in the Makefile itself**, by Cody's decision of
 # 2026-11-05: since make support is going away, a target that was broken prints
-# that it is retired and names the poe task instead of running. So for `schema`
-# the old *name* still works - here, through this mirror - while the old
-# *runner* refuses and explains itself. That is the shape every remaining
-# broken target should take if one is found before the file is deleted.
+# that it is retired and names the poe task instead of running. `make-schema`
+# is retired with it, and prints the same thing: a mirror that kept the
+# withdrawn name working would leave the retirement half done, with every
+# checklist and habit that says `make-schema` carrying on unwarned. That is the
+# shape every remaining broken target should take if one is found before the
+# file is deleted - both runners refuse, and both name the task that replaces
+# them.
 #
 # **A dot cannot survive the move.** poe validates task names against
 # `^[^\W\d][\w:+-]*$` (`poethepoet/task/base.py`), which has no `.` in it;
@@ -211,13 +214,35 @@ help = "WIP- Install the supervisor configs (runs sudo) - what `make supervisor.
 ref = "supervisor-conf"
 
 
-# `make schema` writes graph_models' output straight over the committed
-# diagram. django-extensions falls back to pydotplus when pygraphviz is not
-# importable, and pydotplus fails by writing a zero-byte file and exiting 0 -
-# so on a machine without pygraphviz the Makefile target destroys the
-# committed 838 KB SVG and reports success. RELEASE_CHECKLIST.md sends the
-# releaser here, which is what made it a live trap. The mirror delegates to
-# the task that renders to a staged file first.
+# `make schema` is retired, so this mirror is retired with it.
+#
+# It used to be `ref = "schema"`, which kept the old name working through poe
+# while the Makefile target refused. That made the retirement half a
+# retirement: a release checklist, a script or a habit that said `make-schema`
+# carried on working, and nothing told anyone the name had been withdrawn. A
+# mirror's job in this file is to reproduce its target, and the target now
+# refuses and explains itself - so this one does too, and names the task that
+# replaces it.
+#
+# Why the target was retired, kept here because the Makefile goes away first:
+# it wrote graph_models' output straight over the committed diagram.
+# django-extensions falls back to pydotplus when pygraphviz is not importable,
+# and pydotplus fails by writing a zero-byte file and exiting 0 - so on a
+# machine without pygraphviz it destroyed the committed 838 KB SVG and reported
+# success. RELEASE_CHECKLIST.md sent the releaser there, which is what made it
+# a live trap. `poe schema` renders to a staged file and only moves it into
+# place if the render worked.
 [tasks.make-schema]
-help = "RELEASE: regenerate the schema diagram - the working form of the retired `make schema`"
-ref = "schema"
+help = "RETIRED: this name no longer regenerates the diagram - use `uv run poe schema`"
+interpreter = "python"
+shell = '''
+import sys
+
+# sys.exit(str) writes to stderr and exits 1. Kept to four lines because poe
+# echoes a task's source before running it, so every line here is printed twice.
+sys.exit(
+    "`make schema` is RETIRED, and so is this mirror of it: it wrote the diagram "
+    "under a version hardcoded in the Makefile, and exited 0 even when the render "
+    "failed.\n\nUse instead:   uv run poe schema"
+)
+'''

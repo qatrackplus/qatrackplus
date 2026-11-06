@@ -241,7 +241,6 @@ schema:
 	@echo "'trouble in init_rank'."
 	@echo
 	@echo "Use instead:   uv run poe schema"
-	@echo "or, by this name:  uv run poe make-schema"
 	@exit 1
 
 run:
