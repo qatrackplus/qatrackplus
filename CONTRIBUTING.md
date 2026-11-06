@@ -109,32 +109,27 @@ Selenium setup.
    ```bash
    uv run pre-commit install
    ```
-4. Copy the example settings and configure your local database:
+4. Create the development environment — settings files, the sqlite database,
+   the migrations and a superuser (`superuser` / `superuser`):
    ```bash
-   cp deploy/dev/local_settings.dev.py qatrack/local_settings.py
-   cp deploy/dev/local_test_settings.sqlite.py qatrack/local_test_settings.py
-   # edit qatrack/local_settings.py
+   uv run poe dev-init
    ```
-   `deploy/dev/` has a template per engine (`memory`, `postgres`, `mysql`,
-   `mssql`) if you'd rather test against something else - the developer
-   guide's *`local_test_settings.py` templates* table says what each one
-   needs.
-5. Apply migrations and load fixture data:
+   It refuses rather than writing over an environment that already exists;
+   `uv run poe dev-reset` discards one on purpose and builds a fresh one. Then
+   edit `qatrack/local_settings.py` if you need to. `deploy/dev/` has a
+   template per engine (`postgres`, `mysql`, `mssql`) if you'd rather test
+   against something else - the developer guide's *`local_test_settings.py`
+   templates* table says what each one needs; `sqlite` and `memory` are both
+   in place already.
+5. Load the fixture data and collect the static files, which `dev-init` leaves
+   to you:
    ```bash
-   mkdir db
-   uv run python manage.py migrate
-   uv run python manage.py createcachetable
    uv run python manage.py loaddata fixtures/defaults/*/*.json
    uv run python manage.py collectstatic --noinput
    ```
-   If you also want the in-memory database available (it is the fastest way
-   to run the suite), copy that template alongside the first:
-   ```bash
-   cp deploy/dev/local_test_settings.memory.py qatrack/local_test_settings.memory.py
-   ```
 6. Start the development server:
    ```bash
-   uv run python manage.py runserver
+   uv run poe run
    ```
 There is no frontend build step at the moment, and Node.js is not needed —
 see the note in [AGENTS.md](AGENTS.md#getting-started). One is expected back
@@ -152,12 +147,14 @@ Please attempt your best effort at these guidelines, but don't be afraid if you 
 - Follow existing code style. The project uses [ruff](https://docs.astral.sh/ruff/)
   for linting, formatting, and import ordering:
   ```bash
-  uv run ruff check .                 # lint
-  uv run ruff format <files you changed>   # auto-format
+  uv run ruff check .          # lint
+  uv run poe format-changed    # auto-format, this branch's files only
   ```
   Repo-wide `ruff format` hasn't been applied yet, so don't run it across the
   whole codebase — that would surface a large, unrelated reformatting diff.
-  Scope it to the files you actually touched.
+  `poe format-changed` works out which files to format from git and prints the
+  list; `--check` reports them without writing. `uv run ruff format <a file>`
+  is the same thing done by hand.
 - Write or update tests for every functional change. Tests live alongside the
   application code in `tests/` subdirectories. If you feel that your changes require testing you are unsure of how to implement, reach out. We are here to help
 - Keep commits focused. One logical change per commit makes review easier and history cleaner. PRs aggressively squash commits so lean towards being too clear. 
@@ -168,10 +165,13 @@ Please attempt your best effort at these guidelines, but don't be afraid if you 
 ### Running the tests
 
 ```bash
+uv run poe test
+# -or-
 uv run pytest
 ```
 
-GUI (Selenium/browser) tests are skipped by default, since they need a real
+`poe test` is `pytest`, and passes anything after it straight through, so the
+two are interchangeable. GUI (Selenium/browser) tests are skipped by default, since they need a real
 Chromium or Firefox on the host. Add `--run-selenium` to also run them.
 `python manage.py test` uses Django's own test runner, not pytest, and
 doesn't support marker filtering or `--run-selenium` — prefer `pytest`
