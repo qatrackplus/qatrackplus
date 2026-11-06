@@ -139,11 +139,49 @@ profile:
     ``docker``, ``translations``) after ``--extra``. There's currently no
     way to get that from ``uv`` itself.
 
-    ``poe``'s completion, in contrast, reads ``pyproject.toml`` each time it
-    runs, so ``poe <TAB>`` lists this project's actual task names. It can
-    also complete a task argument's allowed values, but only for arguments
-    that declare a ``choices`` list in ``pyproject.toml`` - none of this
-    project's task arguments do that yet.
+    ``poe``'s completion, in contrast, reads the task definitions each time it
+    runs, so ``poe <TAB>`` lists this project's actual task names. It also
+    completes a task argument's allowed values, for arguments that declare a
+    ``choices`` list - so ``poe test-engine-docker <TAB>`` offers ``postgres``,
+    ``mysql`` and ``mssql``, and the GUI tasks complete their browser argument
+    the same way. An argument without ``choices`` completes nothing, which is
+    the main reason to add one (see :ref:`adding-a-poe-task`).
+
+.. note::
+
+    **Completion attaches to the word you type, and that word is ``poe``, not
+    ``uv run poe``.** This guide writes every command as ``uv run poe <task>``,
+    because that is always the project's pinned copy - but at a prompt,
+    ``uv run poe <TAB>`` asks the shell to complete **uv's** arguments, and uv
+    knows nothing about this project's tasks. The completion set up above does
+    not apply.
+
+    Two ways to have both, neither of which needs anything new installed:
+
+    **Activate the virtual environment.** Bare ``poe`` is then the project's
+    copy, and completion works exactly as above.
+
+    **Or wrap it**, which keeps the ``uv run`` guarantee at every prompt without
+    activating anything:
+
+    .. code-block:: shell
+
+        # bash (~/.bashrc) or zsh (~/.zshrc)
+        poe() { uv run poe "$@"; }
+
+        # fish (~/.config/fish/config.fish)
+        function poe; uv run poe $argv; end
+
+    .. code-block:: powershell
+
+        # PowerShell ($PROFILE)
+        function poe { uv run poe @args }
+
+    The word being completed is then ``poe``, so poe's own completer runs, while
+    the command that actually executes is still ``uv run poe``. It settles a
+    second question at the same time: with the wrapper, ``poe`` is *always* this
+    project's pinned version, never a global install - which is the trap
+    described in the note under :ref:`the task runner <task-runner-poe>`.
 
 Setting up your development environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
