@@ -602,12 +602,25 @@ Generating Sample Data
 
 The default fixtures give you an empty, correctly configured QATrack+. To get a
 database that actually *looks* like a working clinic — useful when developing a
-feature or reviewing someone else's pull request — use the
-``generate_sample_data`` command:
+feature or reviewing someone else's pull request:
 
 .. code-block:: shell
 
-    uv run python manage.py generate_sample_data
+    uv run poe generate-sample-data                 # 90 days of history
+    uv run poe generate-sample-data --days 30       # or as much as you want
+    uv run poe generate-sample-data --clear         # replace what is there
+
+``--clear`` **deletes** the existing QA, unit, service log, fault, parts and
+report data before generating, and asks you to confirm first. The task does not
+offer the underlying command's ``--no-input``, deliberately: the confirmation is
+the only thing standing between a mistyped task name and a developer's
+database, and a task should not be a shorter way to skip it than doing it by
+hand. For an unattended run — a container build, a demo site, a script you have
+thought about — call the command directly:
+
+.. code-block:: shell
+
+    uv run python manage.py generate_sample_data --clear --no-input
 
 This creates a small radiation oncology centre: two linacs and a CT simulator,
 TG-142 style daily and monthly test lists with per unit references and
