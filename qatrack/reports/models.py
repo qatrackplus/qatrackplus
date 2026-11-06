@@ -238,7 +238,8 @@ class ReportSchedule(RecurrenceFieldMixin, models.Model):
         recipients = []
         for fn, ln, e in users:
 
-            e = e.strip()
+            # a group with no members yields a row of Nones
+            e = e.strip() if e else None
 
             if fn and ln and e:
                 recipients.append('"%s %s"<%s>' % (fn, ln, e))

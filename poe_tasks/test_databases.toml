@@ -1,0 +1,208 @@
+# ==========================================================================
+# Throwaway database servers for the per-engine test runs
+# ==========================================================================
+#
+# `poe test-engine postgres` needs a postgres to talk to. These bring the
+# servers up and down so that is one command rather than a docker invocation
+# nobody remembers.
+#
+# --wait is the point of `up`: SQL Server accepts connections roughly a
+# minute after the container starts, and without it the command returns
+# while the server is still initialising, so the first test run fails for
+# reasons that have nothing to do with the code.
+#
+# The servers keep nothing. Every service runs on tmpfs with no volume, so
+# `down` leaves nothing behind and a fresh `up` is a clean slate.
+
+[tasks.test-databases-up]
+help = "Start throwaway database servers and wait until they answer: poe test-databases-up [postgres|mysql|mssql], all three if omitted"
+ref = "_compose-up"
+
+[[tasks.test-databases-up.args]]
+name = "engine"
+positional = true
+choices = ["postgres", "mysql", "mssql"]
+help = "Which one to start; omit it for all three"
+
+[tasks.test-databases-down]
+help = "Stop throwaway database servers and remove their containers: poe test-databases-down [postgres|mysql|mssql], all three if omitted"
+interpreter = "python"
+shell = """
+import os
+import subprocess
+import sys
+
+COMPOSE = ['docker', 'compose', '-f', 'deploy/dev/compose.test-databases.yaml']
+engine = (os.environ.get('engine') or '').strip()
+
+# `down` takes the whole project with its network; one service is stopped and
+# removed with `rm --stop --force` instead, which leaves the others running.
+argv = COMPOSE + (['rm', '--stop', '--force', engine] if engine else ['down'])
+print('stopping %s' % (engine or 'postgres, mysql and mssql'))
+sys.stdout.flush()
+sys.exit(subprocess.run(argv).returncode)
+"""
+
+[[tasks.test-databases-down.args]]
+name = "engine"
+positional = true
+choices = ["postgres", "mysql", "mssql"]
+help = "Which one to stop; omit it to take them all down"
+
+[tasks.test-databases-status]
+help = "Show whether the throwaway database servers are up, and on which ports (takes no arguments)"
+cmd = "docker compose -f deploy/dev/compose.test-databases.yaml ps"
+
+
+# ==========================================================================
+# One engine at a time
+# ==========================================================================
+#
+# `test-databases-up` with no argument starts all three, which is minutes and
+# gigabytes of SQL Server to test PostgreSQL. The argument makes it one.
+#
+# These are bodies rather than `cmd`s because the argument is optional and an
+# empty substitution would leave docker compose an empty service name. The cost
+# is that extra arguments are discarded (see the note above `test-engine`); if
+# you need compose flags, run compose directly - the file is
+# deploy/dev/compose.test-databases.yaml.
+
+[tasks._compose-up]
+help = "(internal) start one throwaway database service, or all of them"
+interpreter = "python"
+shell = """
+import os
+import subprocess
+import sys
+
+COMPOSE = ['docker', 'compose', '-f', 'deploy/dev/compose.test-databases.yaml']
+engine = (os.environ.get('engine') or '').strip()
+
+# --wait is the point: SQL Server accepts connections before it is ready, and
+# the compose file's healthchecks are what --wait waits on.
+argv = COMPOSE + ['up', '-d', '--wait'] + ([engine] if engine else [])
+print('starting %s, and waiting until it answers' % (engine or 'postgres, mysql and mssql'))
+sys.stdout.flush()
+sys.exit(subprocess.run(argv).returncode)
+"""
+
+
+# The shipped template is the whole point of this step. `test-engine` refuses
+# unless qatrack/local_test_settings.<engine>.py exists, which is correct for a
+# real server - it needs credentials only you have - but it is pure friction
+# against a throwaway container whose credentials are already known: the
+# template and compose.test-databases.yaml read the same QATRACK_TEST_*
+# variables with the same defaults.
+#
+# It copies the template ONLY if the file is absent, and says so. A developer
+# who has made their own, pointing at a real server with real credentials, must
+# not have it overwritten by a task that spells "docker" in its name.
+[tasks._engine-settings-from-template]
+help = "(internal) put the shipped test-settings template in place if you have no copy"
+interpreter = "python"
+shell = """
+import os
+import pathlib
+import shutil
+import sys
+
+engine = os.environ['engine']
+mine = pathlib.Path('qatrack/local_test_settings.%s.py' % engine)
+template = pathlib.Path('deploy/dev/local_test_settings.%s.py' % engine)
+
+if mine.exists():
+    print('using your own %s, unchanged' % mine)
+    sys.exit(0)
+if not template.exists():
+    print('error: no template at %s' % template)
+    sys.exit(1)
+
+shutil.copyfile(template, mine)
+print('copied %s -> %s' % (template, mine))
+print('It reads the same QATRACK_TEST_%s_* variables the compose file sets, so it' % engine.upper())
+print('matches the container just started. Edit or delete it as you like - it is')
+print('gitignored, and this task will not touch it again now that it exists.')
+"""
+
+
+# Checked BEFORE a container is started, because starting SQL Server and then
+# failing on a missing driver wastes a minute and reads like a broken task.
+#
+# Without this, the first use of `test-engine-docker postgres` on a venv synced
+# without the extra ends in Django's own message - "Error loading psycopg2 or
+# psycopg module", under a traceback through
+# django/db/backends/postgresql/base.py - which names neither the extra nor the
+# command that installs it. Measured: that is exactly what happened here on
+# 2026-11-06.
+[tasks._engine-driver-check]
+help = "(internal) refuse early, and say which extra to install, if the engine's driver is missing"
+interpreter = "python"
+shell = """
+import os
+import sys
+
+# module names to try, and the extra in pyproject.toml that provides them
+DRIVERS = {
+    'postgres': (('psycopg', 'psycopg2'), 'postgres'),
+    'mysql': (('MySQLdb',), 'mysql'),
+    'mssql': (('mssql',), 'mssql'),
+}
+
+engine = os.environ['engine']
+modules, extra = DRIVERS[engine]
+
+for name in modules:
+    try:
+        __import__(name)
+    except ImportError:
+        continue
+    sys.exit(0)
+
+print('Cannot test against %s: its database driver is not installed here.' % engine)
+print('')
+print('Tried to import: %s' % ', '.join(modules))
+print('')
+print('The driver is an optional extra, so a plain `uv sync` leaves it out:')
+print('')
+print('    uv sync --extra %s' % extra)
+print('')
+print('Then run this again. Nothing has been started, so there is no container')
+print('to clean up.')
+sys.exit(1)
+"""
+
+
+# The public one-liner: a database, the suite against it, and your own settings
+# put back however the run ends.
+#
+# It is a `sequence` rather than a body so that the actual run is the existing
+# `test-engine` task, not a copy of it. That task refuses to start if a
+# leftover .bak is present, swaps your settings in a try/finally and restores
+# them on any Python-level exit including Ctrl-C - and none of that is worth
+# reimplementing here. Measured with poe 0.49.0: a sequence passes its declared
+# argument to every step as an environment variable, which is how all three
+# steps see the same engine.
+#
+# sqlite and memory are not offered, deliberately: they have no container, so
+# `poe test-engine sqlite` is already the whole job.
+#
+# The container is left RUNNING afterwards. The common case is running the suite
+# again, and paying SQL Server's start-up twice is the thing you would notice.
+# `poe test-databases-down` stops them all; `poe test-databases-down <engine>`
+# stops one.
+[tasks.test-engine-docker]
+help = "Start a throwaway database in Docker and run the suite against it: poe test-engine-docker <postgres|mysql|mssql>"
+# `test-engine ${engine}` and not plain `test-engine`: that task declares
+# `engine` as a required positional, and a sequence hands its steps the
+# environment but not the command line - so a bare step name fails argparse
+# with "the following arguments are required: engine". Measured with poe
+# 0.49.0: a sequence item interpolates `${...}` from the sequence's own
+# declared arguments, which is what makes reusing the public task possible.
+sequence = ["_engine-driver-check", "_compose-up", "_engine-settings-from-template", "test-engine ${engine}"]
+
+[[tasks.test-engine-docker.args]]
+name = "engine"
+positional = true
+required = true
+choices = ["postgres", "mysql", "mssql"]
+help = "Which database to start and test against; sqlite and memory need no container"

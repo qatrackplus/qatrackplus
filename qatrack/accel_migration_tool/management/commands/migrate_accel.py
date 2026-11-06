@@ -73,6 +73,10 @@ employees = {}
 
 
 class Command(BaseCommand):
+    help = (
+        "Migrate units, service events, parts and users from an Accel database (Microsoft Access, over ODBC) "
+        "into QATrack+, using the connection settings in accel_migration_settings"
+    )
 
     conn = None
     updating_cursor = None

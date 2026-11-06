@@ -79,13 +79,13 @@ To build the docs locally:
 
 ```bash
 uv sync --dev          # Sphinx and its extensions are part of the dev group
-uv run make docs       # from the repository root
+uv run poe docs        # from the repository root; fails on any warning, as CI does
 # open docs/_build/html/index.html in your browser
 ```
 
-While writing, `uv run make docs-autobuild` serves the docs at
+While writing, `uv run poe docs-serve` serves the docs at
 <http://127.0.0.1:8008> and rebuilds them as you save (add
-`port=8010` to use a different port).
+`--port 8010` to use a different port).
 
 ## Contributing code
 
@@ -109,32 +109,27 @@ Selenium setup.
    ```bash
    uv run pre-commit install
    ```
-4. Copy the example settings and configure your local database:
+4. Create the development environment — settings files, the sqlite database,
+   the migrations and a superuser (`superuser` / `superuser`):
    ```bash
-   cp deploy/dev/local_settings.dev.py qatrack/local_settings.py
-   cp deploy/dev/local_test_settings.sqlite.py qatrack/local_test_settings.py
-   # edit qatrack/local_settings.py
+   uv run poe dev-init
    ```
-   `deploy/dev/` has a template per engine (`memory`, `postgres`, `mysql`,
-   `mssql`) if you'd rather test against something else - the developer
-   guide's *`local_test_settings.py` templates* table says what each one
-   needs.
-5. Apply migrations and load fixture data:
+   It refuses rather than writing over an environment that already exists;
+   `uv run poe dev-reset` discards one on purpose and builds a fresh one. Then
+   edit `qatrack/local_settings.py` if you need to. `deploy/dev/` has a
+   template per engine (`postgres`, `mysql`, `mssql`) if you'd rather test
+   against something else - the developer guide's *`local_test_settings.py`
+   templates* table says what each one needs; `sqlite` and `memory` are both
+   in place already.
+5. Load the fixture data and collect the static files, which `dev-init` leaves
+   to you:
    ```bash
-   mkdir db
-   uv run python manage.py migrate
-   uv run python manage.py createcachetable
    uv run python manage.py loaddata fixtures/defaults/*/*.json
    uv run python manage.py collectstatic --noinput
    ```
-   If you also want the in-memory database available (it is the fastest way
-   to run the suite), copy that template alongside the first:
-   ```bash
-   cp deploy/dev/local_test_settings.memory.py qatrack/local_test_settings.memory.py
-   ```
 6. Start the development server:
    ```bash
-   uv run python manage.py runserver
+   uv run poe run
    ```
 There is no frontend build step at the moment, and Node.js is not needed —
 see the note in [AGENTS.md](AGENTS.md#getting-started). One is expected back
@@ -152,12 +147,14 @@ Please attempt your best effort at these guidelines, but don't be afraid if you 
 - Follow existing code style. The project uses [ruff](https://docs.astral.sh/ruff/)
   for linting, formatting, and import ordering:
   ```bash
-  uv run ruff check .                 # lint
-  uv run ruff format <files you changed>   # auto-format
+  uv run ruff check .          # lint
+  uv run poe format-changed    # auto-format, this branch's files only
   ```
   Repo-wide `ruff format` hasn't been applied yet, so don't run it across the
   whole codebase — that would surface a large, unrelated reformatting diff.
-  Scope it to the files you actually touched.
+  `poe format-changed` works out which files to format from git and prints the
+  list; `--check` reports them without writing. `uv run ruff format <a file>`
+  is the same thing done by hand.
 - Write or update tests for every functional change. Tests live alongside the
   application code in `tests/` subdirectories. If you feel that your changes require testing you are unsure of how to implement, reach out. We are here to help
 - Keep commits focused. One logical change per commit makes review easier and history cleaner. PRs aggressively squash commits so lean towards being too clear. 
@@ -168,10 +165,13 @@ Please attempt your best effort at these guidelines, but don't be afraid if you 
 ### Running the tests
 
 ```bash
+uv run poe test
+# -or-
 uv run pytest
 ```
 
-GUI (Selenium/browser) tests are skipped by default, since they need a real
+`poe test` is `pytest`, and passes anything after it straight through, so the
+two are interchangeable. GUI (Selenium/browser) tests are skipped by default, since they need a real
 Chromium or Firefox on the host. Add `--run-selenium` to also run them.
 `python manage.py test` uses Django's own test runner, not pytest, and
 doesn't support marker filtering or `--run-selenium` — prefer `pytest`
@@ -179,21 +179,26 @@ directly. See
 [AGENTS.md](AGENTS.md#running-the-tests) for more detail.
 
 To test against a specific database engine without touching your usual
-`qatrack/local_test_settings.py`, use `make test-sqlite`/`test-memory`/
-`test-postgres`/`test-mysql`/`test-mssql` (create
+`qatrack/local_test_settings.py`, use `uv run poe test-engine <engine>` with
+`sqlite`, `memory`, `postgres`, `mysql` or `mssql` (create
 `qatrack/local_test_settings.<engine>.py` first from the matching
-`deploy/dev/` template). `make test-integration` provisions a brand-new
-sqlite database the way a real deployment would - that provisioning is what the
-target verifies - and then runs the suite with `--reuse-db` against that same
-database. It is the only target that does: the shipped templates name a separate
-test database on purpose.
+`deploy/dev/` template); it swaps that file in for the run and restores your
+usual settings afterwards, however the run ends.
+`uv run poe test-integration` provisions a brand-new sqlite database the way a
+real deployment would - that provisioning is what the task verifies - and then
+runs the suite with `--reuse-db` against that same database. It is the only task
+that does: the shipped templates name a separate test database on purpose.
 
-Before opening a PR, it's also worth running the full pre-commit suite
-against the whole codebase, not just your changed files:
+Before opening a PR, run the checks CI will run, in one command:
 
 ```bash
-uv run pre-commit run --all-files
+uv run poe ci     # pre-commit over every file, lockfile check, strict docs build, full suite
 ```
+
+`poe` (poethepoet) is the project's task runner, in the `dev` dependency
+group, so the `uv sync` above already installed it; `uv run poe` on its own
+lists every task. The
+developer guide has the full table.
 
 ### Opening a pull request
 

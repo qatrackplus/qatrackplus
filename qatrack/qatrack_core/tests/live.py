@@ -1,4 +1,6 @@
 import os
+import shutil
+import tempfile
 import threading
 import time
 import warnings
@@ -154,7 +156,8 @@ WebElement.send_keys = WebElement_send_keys  # noqa: E305
 # connection on its own thread and serialises only the application call.
 
 
-# Accepted values for SELENIUM_BROWSER, mapped to the two the harness branches on.
+# Accepted values for SELENIUM_BROWSER, mapped to the three the harness
+# branches on.
 #
 # `chrome` is an alias rather than an error because Chrome and Chromium are driven
 # the same way by the same driver, and `chrome` is the natural spelling on Windows,
@@ -163,11 +166,220 @@ SELENIUM_BROWSERS = {
     'firefox': 'firefox',
     'chromium': 'chromium',
     'chrome': 'chromium',
+    'edge': 'edge',
+}
+
+# Chromium-family browsers share every option, flag and preference below, and
+# differ only in which Options/Service/driver classes build them. Edge needs
+# Microsoft's own msedgedriver, which is why it is a separate value rather than
+# another alias of `chromium`: the chromedriver that drives Chrome will not
+# drive Edge.
+CHROMIUM_FAMILY = ('chromium', 'edge')
+
+# How to get each browser, for the message below. Not exhaustive, and not meant
+# to be: the point is to give a reader one concrete next step rather than a
+# search engine.
+BROWSER_INSTALL_HINTS = {
+    'firefox': ('sudo apt install firefox            # Debian/Ubuntu\n'
+                'winget install Mozilla.Firefox      # Windows'),
+    'chromium': ('sudo apt install chromium-browser   # Debian/Ubuntu\n'
+                 'winget install Google.Chrome        # Windows (Chrome drives too)'),
+    'edge': ('sudo apt install microsoft-edge-stable  # Debian/Ubuntu, after adding\n'
+             '                                        # Microsoft\'s apt repository\n'
+             'flatpak install flathub com.microsoft.Edge\n'
+             '# Windows: already installed on every supported release'),
 }
 
 
+def browser_missing_error(browser_setting, binary_setting, binary_path, exc):
+    """Turn Selenium's report into one that names the actual problem.
+
+    Selenium blames the driver for a missing browser. Measured on 4.45.0:
+    pointing `binary_location` at a path that does not exist raises
+    `NoSuchDriverException: Unable to obtain driver for MicrosoftEdge`, with a
+    link to documentation about drivers - because Selenium Manager cannot read
+    the version of a browser that is not there, and reports that as a driver it
+    could not obtain. Asking for a browser the platform has no build of (safari
+    on Linux) is worse: `WebDriverException: Unsuccessful command executed:
+    /path/to/selenium-manager`, which is a subprocess error with no sentence in
+    it.
+
+    Neither tells a reader to install a browser or to set a path, which are the
+    only two things that fix it. This does, and chains the original so nothing
+    is lost.
+    """
+
+    lines = ['Could not start %s for the GUI tests.' % browser_setting, '']
+
+    if binary_path:
+        exists = os.path.exists(binary_path)
+        lines.append('settings.%s points at:' % binary_setting)
+        lines.append('    %s' % binary_path)
+        lines.append('and that path %s.' % ('exists, so the browser is there but '
+                                            'could not be started' if exists else
+                                            'DOES NOT EXIST'))
+        lines.append('')
+        if not exists:
+            lines.append('Correct that setting, or clear it to let Selenium find the')
+            lines.append('browser itself.')
+    else:
+        lines.append('Selenium looked for it on PATH and in the usual places and did')
+        lines.append('not find a working install. Either install it:')
+        lines.append('')
+        for hint in BROWSER_INSTALL_HINTS.get(browser_setting, '').splitlines():
+            lines.append('    %s' % hint)
+        lines.append('')
+        lines.append('or, if it is installed somewhere unusual - a Flatpak, or a')
+        lines.append('tarball under /opt - name the binary explicitly:')
+        lines.append('')
+        lines.append('    settings.%s = \'/path/to/the/binary\'' % binary_setting)
+
+    lines.append('')
+    lines.append('To use a different browser instead, set SELENIUM_BROWSER to one of:')
+    lines.append('    %s' % ', '.join(sorted(SELENIUM_BROWSERS)))
+    lines.append('')
+    lines.append('Selenium reported: %s: %s' % (type(exc).__name__,
+                                                str(exc).strip().splitlines()[0]))
+    return ImproperlyConfigured('\n'.join(lines))
+
+
+def _browser_under_driver(driver):
+    """The browser executable running beneath this driver, from /proc.
+
+    Linux only, and deliberately narrow: the driver's own pid is the root, and
+    only its descendants are considered, so another browser on the machine
+    cannot be mistaken for the one under test. Returns ('', '') when it cannot
+    say, which the caller prints as "not reported".
+    """
+
+    try:
+        pid = driver.service.process.pid
+    except Exception:  # noqa: BLE001 - no service, a remote driver, anything
+        return '', ''
+
+    # pid -> ppid for every process we can see, then everything under `pid`.
+    parents = {}
+    for entry in os.listdir('/proc'):
+        if not entry.isdigit():
+            continue
+        try:
+            with open('/proc/%s/stat' % entry, 'rb') as handle:
+                fields = handle.read().rsplit(b') ', 1)[1].split()
+            parents[int(entry)] = int(fields[1])
+        except (OSError, IndexError, ValueError):
+            continue
+
+    family, frontier = set(), {pid}
+    while frontier:
+        child = {p for p, parent in parents.items() if parent in frontier} - family
+        family |= child
+        frontier = child
+
+    found = set()
+    for child in family:
+        try:
+            target = os.readlink('/proc/%d/exe' % child)
+        except OSError:
+            continue
+        base = os.path.basename(target).lower()
+        # The driver itself, and the crash reporter it spawns, are not it.
+        if 'driver' in base or 'crashpad' in base:
+            continue
+        if any(word in base for word in ('msedge', 'chrome', 'chromium', 'firefox')):
+            found.add(target)
+
+    if len(found) == 1:
+        return found.pop(), 'from /proc, under this driver'
+    if found:
+        return ' | '.join(sorted(found)), 'from /proc, under this driver'
+    return '', ''
+
+
+# Printed once per test process, before the first browser test runs.
+_BROWSER_ANNOUNCED = False
+
+
+def announce_browser(driver, configured_binary):
+    """Say which browser *instance* is driving, in one human-readable block.
+
+    This exists because a version number is not an identity. On 2026-11-05 this
+    machine had Microsoft Edge 156.0.4314.58 installed twice - once from a .deb
+    under /opt and once as a Flatpak - the same build shipped two ways, so
+    `browserVersion` could not tell which one a run had used. The same is true
+    of any machine with Chrome and Chromium, or a distribution Firefox beside a
+    tarball one.
+
+    Every line labels where its value came from, because the sources differ in
+    how much they prove:
+
+    - `binary_location`, when a setting named it, is what the driver was told
+      to launch - authoritative;
+    - `moz:executablePath` is Firefox's own report of what it is running -
+      also authoritative, and Chromium-family drivers report no equivalent;
+    - /proc is the kernel's account of a running process, used as the fallback
+      that closes the Chromium-family gap, and only works on Linux.
+
+    Nothing here is allowed to fail a test run: a diagnostic that can raise is
+    worse than no diagnostic, so the whole thing is wrapped.
+    """
+
+    global _BROWSER_ANNOUNCED
+    if _BROWSER_ANNOUNCED:
+        return
+    _BROWSER_ANNOUNCED = True
+
+    try:
+        caps = driver.capabilities or {}
+        name = caps.get('browserName', '?')
+        version = caps.get('browserVersion', '?')
+
+        # Driver version, under whichever vendor key this browser uses.
+        driver_version = '?'
+        for key in ('chrome', 'msedge', 'moz'):
+            holder = caps.get(key)
+            if isinstance(holder, dict):
+                for field in ('chromedriverVersion', 'msedgedriverVersion', 'geckodriverVersion'):
+                    if holder.get(field):
+                        driver_version = holder[field]
+                        break
+            if caps.get('moz:geckodriverVersion'):
+                driver_version = caps['moz:geckodriverVersion']
+
+        binary, source = '', ''
+        if configured_binary:
+            binary, source = configured_binary, 'from your settings'
+        elif caps.get('moz:executablePath'):
+            binary, source = caps['moz:executablePath'], 'reported by the browser'
+        else:
+            # Chromium-family drivers do not report the binary, so ask the
+            # kernel - but only about processes under THIS driver. A first
+            # attempt scanned all of /proc for anything named like a browser
+            # and reported five paths, four of them nothing to do with the
+            # test run: 1Password's crashpad handler, LM Studio's, the Claude
+            # desktop app's, and Chrome itself. A diagnostic that lists the
+            # wrong answer among the right one is worse than none.
+            binary, source = _browser_under_driver(driver)
+
+        print('')
+        print('Browser for the GUI tests')
+        print('  %-9s %s %s' % ('browser:', name, version))
+        print('  %-9s %s' % ('driver:', driver_version))
+        if binary:
+            print('  %-9s %s  (%s)' % ('binary:', binary, source))
+        else:
+            print('  %-9s not reported by this driver, and /proc is not readable here' % 'binary:')
+        print('')
+    except Exception as exc:  # noqa: BLE001 - a diagnostic must not fail a run
+        print('Browser for the GUI tests: could not be determined (%s)' % exc)
+
+
 def resolve_browser_setting(value):
-    """Map SELENIUM_BROWSER onto 'firefox' or 'chromium', or refuse to run.
+    """Map SELENIUM_BROWSER onto a browser the harness drives, or refuse to run.
+
+    The values it can return are the values of SELENIUM_BROWSERS - today
+    'firefox', 'chromium' and 'edge'. `chrome` is an alias of 'chromium'
+    because they share a driver; `edge` is not an alias, because it needs
+    Microsoft's own.
 
     Every branch in this module tested `== 'chromium'`, so **any** other value ran
     Firefox - including `chrome`, which a Windows reader guessed on 2026-11-01 and
@@ -421,9 +633,13 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
         # platform. It is kept as a cheap belt-and-braces, not as the fix.
         browser_env = {**os.environ, 'TZ': settings.TIME_ZONE}
 
-        if browser_setting == 'chromium':
-            from selenium.webdriver.chrome.options import Options as ChromeOptions
-            from selenium.webdriver.chrome.service import Service as ChromeService
+        if browser_setting in CHROMIUM_FAMILY:
+            if browser_setting == 'edge':
+                from selenium.webdriver.edge.options import Options as ChromeOptions
+                from selenium.webdriver.edge.service import Service as ChromeService
+            else:
+                from selenium.webdriver.chrome.options import Options as ChromeOptions
+                from selenium.webdriver.chrome.service import Service as ChromeService
 
             chrome_options = ChromeOptions()
 
@@ -463,6 +679,43 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
                 },
             )
             chrome_options.add_argument('--disable-features=PasswordLeakDetection')
+            # Explicit, unique profile directory - not merely a headless
+            # nicety. Without it, a launch with no other Chrome running
+            # falls back to the caller's own default profile, and if a
+            # real Chrome window using that same profile is already open,
+            # Chrome's single-instance-per-profile behaviour forwards this
+            # session's startup request to that already-running window
+            # instead of launching an independent process - --headless=new
+            # never gets a say, because no new browser process launches.
+            # Confirmed: this is what made "headless" runs pop up a real,
+            # visible window on a machine that already had Chrome open,
+            # while the same run stayed headless with Chrome closed. A
+            # dedicated temp profile removes the dependency on whatever a
+            # given Chrome/chromedriver version does by default, and
+            # applies whether or not this run is headless - the same
+            # collision would otherwise let a "visible" run reuse the
+            # developer's actual browser session (cookies, logins) instead
+            # of a clean one.
+            cls.chrome_profile_dir = tempfile.mkdtemp(prefix='qatrack-selenium-chrome-')
+            # Registered the moment it exists, not left to tearDownClass.
+            # Everything below this line can raise - the driver launch, the
+            # viewport call, the live server - and tearDownClass does not run
+            # when setUpClass does not finish. Class cleanups do, which is the
+            # difference between one leaked profile directory and one per test
+            # class for the rest of the run.
+            cls.addClassCleanup(shutil.rmtree, cls.chrome_profile_dir, ignore_errors=True)
+            chrome_options.add_argument(f'--user-data-dir={cls.chrome_profile_dir}')
+
+            # A fresh profile is also, genuinely, a first run - and unlike
+            # a long-lived developer profile (which cleared this the first
+            # time it was ever opened, long before this suite existed),
+            # every one of these now hits it. Headless doesn't render this
+            # either way, but `poe test-gui-visible chromium` would otherwise
+            # show a real "make Chrome your default browser" infobar on
+            # every single run, which is exactly the kind of thing that
+            # steals focus or covers an element mid-test.
+            chrome_options.add_argument('--no-first-run')
+            chrome_options.add_argument('--no-default-browser-check')
 
             if headless:
                 # The "new" headless mode (Chrome 109+) - the old
@@ -473,7 +726,18 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
                 chrome_options.add_argument('--disable-dev-shm-usage')
                 chrome_options.add_argument('--disable-gpu')
 
-            binary_path = getattr(settings, 'SELENIUM_CHROMIUM_BINARY_PATH', '')
+            # Each browser in the family has its own pair of settings, because
+            # pointing Edge at a Chrome binary, or at chromedriver, fails in
+            # ways that read like a broken test rather than a misconfiguration.
+            if browser_setting == 'edge':
+                binary_setting, driver_setting = (
+                    'SELENIUM_EDGE_BINARY_PATH', 'SELENIUM_EDGE_DRIVER_PATH')
+            else:
+                binary_setting, driver_setting = (
+                    'SELENIUM_CHROMIUM_BINARY_PATH', 'SELENIUM_CHROMIUM_DRIVER_PATH')
+
+            binary_path = getattr(settings, binary_setting, '')
+            cls._configured_binary = binary_path
             if binary_path:
                 # For installs with no plain binary on PATH, such as Flatpak.
                 # settings.py documents the TMPDIR caveat that comes with it.
@@ -482,11 +746,21 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
             # A Service is always constructed, even with no explicit path, so
             # browser_env applies either way; Selenium Manager still resolves
             # the driver when executable_path is None.
-            driver_path = getattr(settings, 'SELENIUM_CHROMIUM_DRIVER_PATH', '') or None
-            cls.driver = webdriver.Chrome(
-                service=ChromeService(executable_path=driver_path, env=browser_env),
-                options=chrome_options,
-            )
+            driver_path = getattr(settings, driver_setting, '') or None
+            driver_class = webdriver.Edge if browser_setting == 'edge' else webdriver.Chrome
+            try:
+                cls.driver = driver_class(
+                    service=ChromeService(executable_path=driver_path, env=browser_env),
+                    options=chrome_options,
+                )
+            except Exception as exc:  # noqa: BLE001 - re-raised with the cause named
+                raise browser_missing_error(
+                    browser_setting, binary_setting, binary_path, exc) from exc
+            # As above, and more expensive to get wrong: a leaked driver is a
+            # browser process still running. Registered after the profile
+            # cleanup, so that it runs before it - class cleanups are LIFO, and
+            # the browser must be gone before its profile directory is.
+            cls.addClassCleanup(cls.driver.quit)
         else:
             from selenium.webdriver.firefox.options import Options as FirefoxOptions
             from selenium.webdriver.firefox.service import Service as FirefoxService
@@ -525,6 +799,13 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
             # enabled by default. Set so the two browsers behave the same way
             # about credentials rather than because Firefox was observed asking.
             ff_options.set_preference('signon.rememberSignons', False)
+            binary_path = getattr(settings, 'SELENIUM_FIREFOX_BINARY_PATH', '')
+            cls._configured_binary = binary_path
+            if binary_path:
+                # Only needed when plain discovery finds the wrong
+                # Firefox-based browser - see the setting's own comment in
+                # settings.py.
+                ff_options.binary_location = binary_path
 
             # An explicit setting or nothing, symmetric with the chromium
             # branch above. This used to fall back to
@@ -535,14 +816,20 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
             # skipped that check, and geckodriver then picks the browser on its
             # own - which is how a run drove a Firefox-derived fork instead of
             # Firefox and still reported a pass. Set SELENIUM_FIREFOX_DRIVER_PATH
-            # to pin a specific driver.
+            # to pin a specific driver, or SELENIUM_FIREFOX_BINARY_PATH above to
+            # pin the browser.
             # As above: always a Service, so browser_env applies. Selenium
             # Manager resolves geckodriver when executable_path is None.
             driver_path = getattr(settings, 'SELENIUM_FIREFOX_DRIVER_PATH', '') or None
-            cls.driver = webdriver.Firefox(
-                service=FirefoxService(executable_path=driver_path, env=browser_env),
-                options=ff_options,
-            )
+            try:
+                cls.driver = webdriver.Firefox(
+                    service=FirefoxService(executable_path=driver_path, env=browser_env),
+                    options=ff_options,
+                )
+            except Exception as exc:  # noqa: BLE001 - re-raised with the cause named
+                raise browser_missing_error(
+                    browser_setting, 'SELENIUM_FIREFOX_BINARY_PATH', binary_path, exc) from exc
+            cls.addClassCleanup(cls.driver.quit)
 
         # Chromium gets longer because it renders these JS-heavy pages less
         # predictably, not because it is slower overall - it finishes the
@@ -550,7 +837,11 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
         # a different few each time. One value feeds all three waits below,
         # including the cls.wait that nearly every self.wait.until() uses.
         # Set before the find_element patch, which needs it.
-        cls.timeout = 10 if browser_setting == 'chromium' else 5
+        # Before anything else this class does, so it is near the top of the
+        # output rather than buried under a failure.
+        announce_browser(cls.driver, getattr(cls, '_configured_binary', ''))
+
+        cls.timeout = 10 if browser_setting in CHROMIUM_FAMILY else 5
 
         cls.driver.find_element = explicit_find_element(
             cls.driver, cls.driver.find_element, cls.timeout
@@ -741,7 +1032,7 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
         height = min(height, real_size['height'])
         global _VIEWPORT_OVERRIDE_WORKS
 
-        if cls.browser_setting == 'chromium':
+        if cls.browser_setting in CHROMIUM_FAMILY:
             cls.driver.execute_cdp_cmd(
                 'Emulation.setDeviceMetricsOverride',
                 {'width': width, 'height': height, 'deviceScaleFactor': 1, 'mobile': False},
@@ -784,7 +1075,15 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.quit()
+        """Nothing of ours left to do - the driver and the profile directory
+        are class cleanups, registered where they are created.
+
+        They used to be here, which meant they only happened when setUpClass
+        had finished. One consequence of moving them: cleanups run *after*
+        tearDownClass, so the live server now stops before the browser quits
+        rather than after. The browser is idle by then, so the order does not
+        matter; the leak did.
+        """
         super().tearDownClass()
 
     def tearDown(self):

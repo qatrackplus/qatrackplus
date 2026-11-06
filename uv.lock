@@ -1648,6 +1648,18 @@ wheels = [
 ]
 
 [[package]]
+name = "poethepoet"
+version = "0.49.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pyyaml" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/4e/7e/160d391368d359f7dd6dd647575499c395687beb4a6b2ebfbfbf8a20b817/poethepoet-0.49.0.tar.gz", hash = "sha256:256b72c057b5f60341bbe09498212939e558341fac4ab59d0ce478aca04f0d2a", size = 157750, upload-time = "2026-10-15T06:08:57.094Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a1/f5/a2404b9cb3c299cd148533d07e1a378b60aa4ae640c69fb522596ca157ae/poethepoet-0.49.0-py3-none-any.whl", hash = "sha256:97b456f3c52c9af75d4bc504e0f5cfee44545a84f446ba645a0a8f6a0131422f", size = 195985, upload-time = "2026-10-15T06:08:55.332Z" },
+]
+
+[[package]]
 name = "polib"
 version = "1.2.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1899,6 +1911,19 @@ wheels = [
 ]
 
 [[package]]
+name = "pygraphviz"
+version = "2.0.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/b9/bf/66361b6c75e97d80e294d8642a258167315a2128d06bdc947cebddf5edf7/pygraphviz-2.0.2.tar.gz", hash = "sha256:e3a0a0da443af50277f98de0a73932a8f3fc3dc39685911e94b58111e153a8cc", size = 82229, upload-time = "2026-09-16T16:32:06.508Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/94/af/7d3f884e81e2486dadbcb8d32a41a379d86487769259244c26f7598fa434/pygraphviz-2.0.2-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:9e0ccc8488a58552756b08dd12bd7cc0ae5627f6e20809f714dfe5d6830b9909", size = 1412225, upload-time = "2026-09-16T16:31:32Z" },
+    { url = "https://files.pythonhosted.org/packages/bb/03/42e4dd3973858160a6a34f1e66f9ef91e93f35c15a82690ea2d7235c0ea0/pygraphviz-2.0.2-cp312-cp312-macosx_11_0_x86_64.whl", hash = "sha256:47b69f7c90def3eedb990228f69159240333ee978b7422b53d7f5e3eee0a30de", size = 1585017, upload-time = "2026-09-16T16:31:33.781Z" },
+    { url = "https://files.pythonhosted.org/packages/17/76/f1974fa760f840e8fc1a3c843cfa7836d5ba204f1e033d78096c296ea411/pygraphviz-2.0.2-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:453c9024e7c1331ed95ebc2389035ba038976645d16f80a0b8f69849379583d3", size = 5156244, upload-time = "2026-09-16T16:31:35.818Z" },
+    { url = "https://files.pythonhosted.org/packages/26/e5/00e5e0349d6a37876785bffb599d6ebf8aeb71a20f80a69fb4088eccf8ba/pygraphviz-2.0.2-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:1a460bfd55e8c3b0794982745ffb0fada2853332d5baf9d5d28ab85f3b43cec8", size = 5503273, upload-time = "2026-09-16T16:31:37.474Z" },
+    { url = "https://files.pythonhosted.org/packages/b3/48/6f5fb1217b113df916d3bfe920ee2c96c5b27f8f8b7a5a89764aad2c7b7d/pygraphviz-2.0.2-cp312-cp312-win_amd64.whl", hash = "sha256:c81e283a621e912f0531223baf0c411bbe1a0cc8737794f0356ab78c0647f3b2", size = 6842617, upload-time = "2026-09-16T16:31:39.137Z" },
+]
+
+[[package]]
 name = "pyjwt"
 version = "2.13.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2057,6 +2082,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/13/2b/db9a193df89e5660137f5428063bcc2ced7ad790003b26974adf5c5ceb3b/pytest_django-4.12.0.tar.gz", hash = "sha256:df94ec819a83c8979c8f6de13d9cdfbe76e8c21d39473cfe2b40c9fc9be3c758", size = 91156, upload-time = "2026-02-14T18:40:49.235Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/83/a5/41d091f697c09609e7ef1d5d61925494e0454ebf51de7de05f0f0a728f1d/pytest_django-4.12.0-py3-none-any.whl", hash = "sha256:3ff300c49f8350ba2953b90297d23bf5f589db69545f56f1ec5f8cff5da83e85", size = 26123, upload-time = "2026-02-14T18:40:47.381Z" },
+]
+
+[[package]]
+name = "pytest-randomly"
+version = "3.16.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pytest" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/c0/68/d221ed7f4a2a49a664da721b8e87b52af6dd317af2a6cb51549cf17ac4b8/pytest_randomly-3.16.0.tar.gz", hash = "sha256:11bf4d23a26484de7860d82f726c0629837cf4064b79157bd18ec9d41d7feb26", size = 13367, upload-time = "2024-10-25T15:45:34.274Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/22/70/b31577d7c46d8e2f9baccfed5067dd8475262a2331ffb0bfdf19361c9bde/pytest_randomly-3.16.0-py3-none-any.whl", hash = "sha256:8633d332635a1a0983d3bba19342196807f6afb17c3eef78e02c2f85dade45d6", size = 8396, upload-time = "2024-10-25T15:45:32.78Z" },
 ]
 
 [[package]]
@@ -2290,10 +2327,13 @@ dev = [
     { name = "ipdb" },
     { name = "ipython" },
     { name = "jinja2" },
+    { name = "poethepoet" },
     { name = "pre-commit" },
+    { name = "pygraphviz" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-django" },
+    { name = "pytest-randomly" },
     { name = "pytest-sugar" },
     { name = "pytest-xdist" },
     { name = "ruff" },
@@ -2388,10 +2428,13 @@ dev = [
     { name = "ipdb" },
     { name = "ipython" },
     { name = "jinja2", specifier = "==3.1.2" },
+    { name = "poethepoet", specifier = ">=0.49,<1.0" },
     { name = "pre-commit", specifier = ">=4.2.0" },
+    { name = "pygraphviz", specifier = ">=2.0.2" },
     { name = "pytest", specifier = ">=7.0,<8.0" },
     { name = "pytest-cov", specifier = ">=4.0,<5.0" },
     { name = "pytest-django", specifier = ">=4.5.0,<5.0" },
+    { name = "pytest-randomly", specifier = ">=3.12,<4.0" },
     { name = "pytest-sugar", specifier = ">=0.9.6,<1.0" },
     { name = "pytest-xdist", specifier = ">=3.0,<4.0" },
     { name = "ruff" },

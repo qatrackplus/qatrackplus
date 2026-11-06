@@ -1,0 +1,201 @@
+# ==========================================================================
+# CI checks
+# ==========================================================================
+#
+# `ci` exists so that "will CI pass?" has an answer you can get before
+# pushing. It is deliberately not all of CI: the workflow also runs the suite
+# against postgres/mysql/mssql, on Windows, against a built Docker stack, and
+# through Selenium on two browsers. Those need services, another operating
+# system or a browser, so they stay where they are and get their own tasks
+# (test-engine, test-integration, test-gui-*). What is left - lint, the
+# dependency check and the suite on the default database - is the part that
+# catches most red runs, and it runs anywhere.
+#
+# Keep the steps in this order. It is CI's order, and it is also cheapest-first:
+# lint fails in seconds, the dependency check in one, the docs build in a few,
+# and only then do you wait on the suite.
+#
+# `docs` is here because nothing in GitHub Actions builds the documentation -
+# only the Docker image does, and it does not fail on a warning. So a broken
+# cross-reference or a malformed heading reaches a release unless somebody
+# happens to build locally.
+
+[tasks.ci]
+help = "Run the CI checks that work on a dev machine: lint, deps, docs, then the suite"
+sequence = ["lint", "deps", "docs", "test", "_ci-reminder"]
+
+
+# CI pins this to pre-commit 4.6.0 via `uvx pre-commit@4.6.0`; here it is
+# whatever the dev group resolved, which uv.lock also holds at 4.6.0. If the
+# two ever disagree, the lockfile is the one to change - pinning a tool in two
+# places is how they drift.
+[tasks.lint]
+help = "Run the pre-commit suite over every file (ruff, yaml/toml, django checks)"
+cmd = "pre-commit run --all-files"
+
+[tasks.lint-fix]
+help = "Apply ruff's automatic lint fixes across the repo (lint only; formatting is format-changed)"
+cmd = "ruff check . --fix"
+
+
+# `ruff format` is deliberately NOT repo-wide. Formatting has never been applied
+# across this codebase, so `ruff format .` produces a large diff of unrelated
+# files - `AGENTS.md` says so, and the pull request template said it by asking
+# the author to type the file list out themselves, as
+# `ruff format <files you changed>`.
+#
+# Typing it by hand is what this task removes: the list is worked out from git,
+# printed, and handed to ruff. It is printed because the whole point is that it
+# is not the whole repo, and someone filling in the checklist should be able to
+# see that rather than take it on trust.
+#
+# `--check` exists because this can be a big diff even when scoped correctly -
+# measured on the q#868 branch, where the 28 changed Python files came back
+# 2804 insertions and 2597 deletions, since none of them had been formatted
+# before. Looking first is worth one flag.
+#
+# The flag is DECLARED rather than read from the command line: measured with poe
+# 0.49.0, an undeclared argument to a script task is dropped in silence -
+# `sys.argv` is `['']` and nothing warns - so `poe format-changed --check`
+# without this block would quietly reformat everything instead. A declared arg
+# arrives as an environment variable, not as a Python name.
+[tasks.format-changed]
+help = "Format only the Python files this branch changed - never the whole repo (see AGENTS.md)"
+interpreter = "python"
+shell = """
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+
+def git(*args):
+    done = subprocess.run(('git',) + args, capture_output=True, text=True)
+    return done.stdout.splitlines() if done.returncode == 0 else []
+
+
+def integration_base():
+    '''The commit this branch left, so the whole branch is covered.
+
+    Not only uncommitted work: by the time this checklist is being filled in,
+    most of a change is usually committed already. The remotes are tried before
+    the local branch because a local develop is the one most likely to be stale.
+    '''
+    for ref in ('upstream/develop', 'origin/develop', 'develop'):
+        found = git('merge-base', 'HEAD', ref)
+        if found:
+            return found[0]
+    return None
+
+
+base = integration_base()
+paths = set()
+if base:
+    paths.update(git('diff', '--name-only', '--diff-filter=ACMR', base))
+else:
+    print('No develop to compare against; only uncommitted changes were considered.')
+# Uncommitted work as well: unstaged, staged, and files git has not seen yet.
+paths.update(git('diff', '--name-only', '--diff-filter=ACMR'))
+paths.update(git('diff', '--name-only', '--diff-filter=ACMR', '--cached'))
+paths.update(git('ls-files', '--others', '--exclude-standard'))
+
+# --diff-filter already drops deletions, but a path can still be gone by now,
+# and these two suffixes are what ruff format acts on.
+files = sorted(p for p in paths if p.endswith(('.py', '.pyi')) and Path(p).is_file())
+
+if not files:
+    print('No changed Python files to format.')
+    sys.exit(0)
+
+checking = bool(os.environ.get('check'))
+print('%s %d changed Python file(s), not the repo:' % ('Checking' if checking else 'Formatting', len(files)))
+for name in files:
+    print('  %s' % name)
+# Flushed, or ruff's own summary lands above this list: the subprocess writes
+# straight to the terminal while these prints are still buffered.
+sys.stdout.flush()
+argv = ['ruff', 'format'] + (['--check'] if checking else []) + files
+sys.exit(subprocess.run(argv).returncode)
+"""
+
+[[tasks.format-changed.args]]
+name = "check"
+options = ["--check"]
+type = "boolean"
+help = "Report which of them ruff would reformat, and change nothing"
+
+
+# CI's Requirements Test does `uv sync --all-extras --locked` and then
+# `uv pip check`. The sync is left out on purpose: it would rewrite the venv
+# you are working in, and --all-extras pulls python-ldap, which wants
+# libldap2-dev and libsasl2-dev on the machine. `uv lock --check` answers the
+# question the sync was really asking - is the lockfile still current for this
+# pyproject.toml - without touching anything.
+[tasks.deps]
+help = "Check the lockfile is current and the installed packages agree"
+sequence = [
+    { cmd = "uv lock --check" },
+    { cmd = "uv pip check" },
+]
+
+
+[tasks._ci-reminder]
+help = "(internal) printed after a green `poe ci`"
+interpreter = "python"
+shell = """
+print()
+print('Locally green. Still only run by CI:')
+print('  - the suite on postgres / mysql / mssql   (poe test-engine <engine>)')
+print('  - the suite on Windows                     (no local equivalent)')
+print('  - the Selenium suite, firefox and chromium (poe test-gui-*)')
+print('  - the Docker build-and-run check           (deploy/docker)')
+"""
+
+
+# The two checks the pull request template asks an author to run by hand. They
+# are deliberately NOT in the `ci` sequence: `ci` is the part of GitHub Actions
+# you can reproduce locally, and the workflow runs neither of these. Both are
+# named `check-<thing>` after `check-messages`, and both report rather than
+# merely exit.
+[tasks.check-deprecations]
+help = "Django's system checks with deprecation warnings visible (python -Wd)"
+cmd = "python -Wd manage.py check"
+
+
+# Two invocations of the same command, because neither form answers the whole
+# question on its own:
+#
+# - plain `--dry-run` prints the operations it would write, and **always exits
+#   0**, so it cannot gate anything;
+# - `--check --dry-run` exits 1 when a migration is missing and prints
+#   **nothing**, which reads exactly like "no migrations needed" - which is why
+#   the pull request template used to warn authors off it.
+#
+# Running one for the listing and the other for the status is what makes this
+# both readable and usable as a gate, and removes a trap that until now only a
+# comment protected anyone from.
+[tasks.check-migrations]
+help = "Report any model change that still needs a migration, and fail if there is one"
+interpreter = "python"
+shell = """
+import subprocess
+import sys
+
+MANAGE = [sys.executable, 'manage.py', 'makemigrations', '--dry-run']
+
+listing = subprocess.run(MANAGE, capture_output=True, text=True)
+sys.stdout.write(listing.stdout)
+sys.stderr.write(listing.stderr)
+if listing.returncode != 0:
+    # makemigrations itself failed - a bad model, an import error - and that is
+    # the answer, not a verdict about pending migrations.
+    sys.exit(listing.returncode)
+
+status = subprocess.run(MANAGE + ['--check'], capture_output=True, text=True)
+if status.returncode != 0:
+    print()
+    print('Pending migrations. They belong in this pull request, and the change')
+    print('should be marked Breaking.')
+sys.stdout.flush()
+sys.exit(status.returncode)
+"""
