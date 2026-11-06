@@ -120,7 +120,7 @@ help = "sqlite, memory, postgres, mysql or mssql"
 
 
 [tasks.test-engine]
-help = "Run the suite against one engine, restoring your settings afterwards"
+help = "Run the suite against one engine, restoring your settings afterwards: poe test-engine <sqlite|memory|postgres|mysql|mssql>"
 interpreter = "python"
 shell = """
 import os, pathlib, shutil, subprocess, sys
