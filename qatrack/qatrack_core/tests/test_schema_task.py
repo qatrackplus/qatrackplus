@@ -107,23 +107,52 @@ class TestTheSchemaNameHasOneSource:
         assert "split('.')[:2]" in task, "the poe task does not truncate"
         assert "docs/developer/images/qatrack_schema_" in task
 
-    def test_the_make_schema_mirror_delegates_instead_of_copying_the_target(self):
-        """`poe make-schema` is one of the three deliberate non-mirrors.
+    def make_schema_block(self):
+        compat = read(os.path.join(REPO_ROOT, "poe_tasks", "make_compat.toml"))
+        return compat.split("[tasks.make-schema]", 1)[1].split("\n[tasks.", 1)[0]
 
-        Every other `make-*` task reproduces what its target does. This one
-        delegates to `poe schema`, which is now the only implementation there
-        is: the Makefile target it is named after no longer renders anything.
-        So the old *name* still works, through poe, while the old *runner*
-        refuses and explains itself.
+    def test_the_make_schema_mirror_is_retired_like_its_target(self):
+        """`make schema` refuses and explains itself, so the mirror does too.
+
+        A mirror that kept the withdrawn name working would leave the
+        retirement half done: every checklist, script or habit that says
+        `make-schema` would carry on unwarned.
         """
 
-        compat = read(os.path.join(REPO_ROOT, "poe_tasks", "make_compat.toml"))
-        block = compat.split("[tasks.make-schema]", 1)[1].split("\n[tasks.", 1)[0]
-        assert re.search(r'^ref\s*=\s*"schema"\s*$', block, re.M), (
-            "poe make-schema no longer delegates to the schema task: %r" % block
+        block = self.make_schema_block()
+        assert not re.search(r'^ref\s*=\s*"schema"\s*$', block, re.M), (
+            "poe make-schema still delegates to the schema task, so the retired "
+            "name keeps working: %r" % block
         )
-        assert "VERSION" not in block, (
-            "the make-schema mirror has acquired its own version handling"
+        assert re.search(r'sys\.exit\(', block), (
+            "poe make-schema does not fail, so a caller cannot tell it refused: %r" % block
+        )
+
+    def test_the_make_schema_mirror_names_its_replacement(self):
+        """Refusing without saying what to run instead is the failure this is
+        meant to prevent, not a smaller version of it."""
+
+        block = self.make_schema_block()
+        assert "uv run poe schema" in block, (
+            "poe make-schema refuses without naming `uv run poe schema`: %r" % block
+        )
+
+    def test_the_make_schema_mirror_has_no_version_handling(self):
+        """It must not acquire a second copy of the name the diagram is
+        written under - that duplication is what made the two runners disagree
+        in the first place."""
+
+        assert "VERSION" not in self.make_schema_block()
+
+    def test_the_makefile_no_longer_points_at_the_retired_mirror(self):
+        """`make schema` used to end with "or, by this name: uv run poe
+        make-schema". That now names a task that refuses."""
+
+        makefile = read(os.path.join(REPO_ROOT, "Makefile"))
+        target = makefile.split("\nschema:", 1)[1].split("\n\n", 1)[0]
+        assert "uv run poe schema" in target, "the target no longer names the replacement"
+        assert "poe make-schema" not in target, (
+            "`make schema` still sends the reader to the retired mirror: %r" % target
         )
 
     def test_the_diagram_stays_gitignored(self):
