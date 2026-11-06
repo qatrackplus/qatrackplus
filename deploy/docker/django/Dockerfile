@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
     libsasl2-dev \
     && rm -rf /var/lib/apt/lists/*
 
-COPY --from=ghcr.io/astral-sh/uv:0.11 /uv /usr/local/bin/uv
+COPY --from=ghcr.io/astral-sh/uv:0.12 /uv /usr/local/bin/uv
 
 ENV UV_PROJECT_ENVIRONMENT=/opt/venv \
     UV_LINK_MODE=copy \
@@ -58,6 +58,12 @@ FROM python:3.12-slim-bookworm
 # Directory sign-in over LDAPS trust a directory whose certificate comes from a
 # public CA, with no AD_CERT_FILE. libldap-2.5-0 only recommends it, so it is
 # listed here to keep it if recommended packages are ever left out.
+#
+# tzdata is here for the container's own tooling - `date`, the postgres client,
+# anything reading /usr/share/zoneinfo. **Python does not read it**: this image
+# sets PYTHONTZPATH= below, so `zoneinfo` uses the tzdata *package* pinned in
+# uv.lock. That is deliberate, and it is why this layer being cached no longer
+# matters - see the ENV block.
 RUN apt-get update && apt-get install -y \
     postgresql-client \
     cifs-utils \
@@ -68,6 +74,7 @@ RUN apt-get update && apt-get install -y \
     libldap-2.5-0 \
     libldap-common \
     libsasl2-2 \
+    tzdata \
     && rm -rf /var/lib/apt/lists/*
 
 # QATrack+ runs as this unprivileged user. The nginx and backup images use the
@@ -88,8 +95,28 @@ COPY --from=builder /opt/venv /opt/venv
 # "No module named 'qatrack.local_settings'", naming a file its admin has never
 # heard of. Setting it here makes it true of the image, which it is: this image
 # is only ever run under Docker.
+# PYTHONTZPATH= empties zoneinfo's search path, so `zoneinfo` falls back to the
+# tzdata PACKAGE instead of the operating system's copy.
+#
+# Why: Python reads the system database *before* the package, so on Linux the
+# image's apt copy decided what every timestamp meant - and whether it was
+# current depended on when the image happened to be built and whether a layer
+# was cached. An image carrying tzdata 2026c was seen on 2026-11-04 with
+# Manitoba still falling back on 1 November, which it no longer does. That made
+# Docker the one platform where the rules were neither pinned nor tested.
+#
+# With this set, the image behaves like Windows, where there is no system
+# database to read: the version in uv.lock is the single source, it is the
+# version the test suite asserts against, and CI exercises the same one a site
+# runs. `tzdata` is a declared runtime dependency for exactly this
+# reason - with an empty TZPATH and no tzdata, every zone lookup raises
+# ZoneInfoNotFoundError.
+#
+# Measured: with PYTHONTZPATH empty, zoneinfo.TZPATH is () and
+# America/Winnipeg gives -0500 at 2026-11-04 from the package.
 ENV PATH="/opt/venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
+    PYTHONTZPATH="" \
     USE_DOCKER=true \
     MPLCONFIGDIR=/home/qatrack/.config/matplotlib
 

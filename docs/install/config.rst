@@ -206,6 +206,136 @@ where 'America/Toronto' is replaced with your local timezone (e.g. `TIME_ZONE =
 timezones on Wikipedia
 <http://en.wikipedia.org/wiki/List_of_tz_database_time_zones>`_.
 
+.. _time_zone_rules:
+
+Keeping the time zone rules current
+...................................
+
+The name in ``TIME_ZONE`` tells QATrack+ *where* you are. *When* your clocks
+change - or whether they still do - comes from a database of time zone rules,
+and governments change those rules more often than you might expect. In 2026
+British Columbia, Alberta, Manitoba and the Northwest Territories all stopped
+changing their clocks. The zone names stay the same (``America/Vancouver``,
+``America/Edmonton``, ``America/Winnipeg``, and ``America/Inuvik`` or
+``America/Yellowknife`` in the Northwest Territories); only the rules behind
+them change.
+
+A server with out-of-date rules shows times an hour off for part of the year
+and gives no warning, so it is worth knowing where your copy comes from:
+
+* **Linux:** from the operating system's ``tzdata`` package. Your normal
+  system updates keep it current - but refresh the package indexes first, or
+  ``apt`` upgrades from a list that may predate the new rules and leaves the
+  old ones installed:
+
+  .. code-block:: console
+
+      sudo apt update && sudo apt upgrade     # Debian/Ubuntu
+      sudo dnf upgrade                        # Fedora/RHEL, which refreshes its own
+
+  If a change-control process will not let you upgrade the whole machine to
+  correct a clock, that package alone is enough:
+
+  .. code-block:: console
+
+      sudo apt update && sudo apt install --only-upgrade tzdata   # Debian/Ubuntu
+      sudo dnf upgrade tzdata                                     # Fedora/RHEL
+
+  Restart QATrack+ afterwards, for the reason in the note below.
+
+  QATrack+ also installs a ``tzdata`` *Python* package, and on Linux **it is
+  not the one in use**: Python reads the operating system's copy first. So
+  finding a current ``tzdata`` in the virtual environment tells you nothing
+  about the rules your site is applying - check the system package.
+* **Windows:** from the ``tzdata`` Python package in QATrack+'s virtual
+  environment, not from Windows itself. Each QATrack+ release pins the copy it
+  was tested with, and ``uv sync`` during an upgrade installs it.
+
+  Two cases where that is not the whole story. If you installed with ``pip``
+  rather than ``uv`` - the fallback in :doc:`the Windows guide <win>` - then
+  running ``pip install`` again **leaves the copy you already have**, and you
+  update it yourself with ``pip install --upgrade tzdata``. And on either path,
+  if the rules for your zone change before the next QATrack+ release, see
+  *Getting new rules before the next release* below.
+* **Docker:** from the ``tzdata`` **package** pinned in ``uv.lock``, the same
+  one Windows uses - not from the image's operating system copy. The image sets
+  ``PYTHONTZPATH=``, which empties the search path Python would otherwise
+  consult first, so the pinned and tested version is the one that decides.
+
+  This is why an ordinary Docker upgrade asks nothing of you about time zones:
+  the rules arrive with the release, as any other dependency does. Before this,
+  they came from whatever the image happened to install when it was built, which
+  made Docker the one platform where they were neither pinned nor tested.
+
+  Containers that are already running keep the image they started with, so the
+  new rules reach your site when the image is rebuilt and the containers are
+  recreated - which is what :ref:`the update steps <docker_updating>` already
+  tell you to do. Rebuilding recreates both ``django`` and ``django-q``, and the
+  second matters: scheduled notices and reports come from it.
+
+  The ``django`` image still installs the operating system's ``tzdata`` for its
+  own tooling - ``date``, the postgres client - but nothing in QATrack+ reads
+  it.
+
+  **The backup container is a separate matter.** The ``backup`` service is a
+  different image, and
+  it does read its own operating-system copy, selected by ``TZ`` (which
+  ``compose.yaml`` sets from your ``TIME_ZONE``). That copy is not pinned in
+  ``uv.lock``; it is whatever was current when that image was built. It decides
+  what hour the nightly backup runs at and the timestamps in the backup file
+  names, so a stale copy there shifts your backup window by an hour rather than
+  changing anything QATrack+ records. Rebuilding the stack refreshes it.
+
+.. note::
+
+    **Whichever platform you are on, restart QATrack+ after updating the
+    rules.** Python caches time-zone data per process: asking for a zone twice
+    returns the same object, so a process that started before the update keeps
+    the rules it loaded and goes on being wrong.
+
+    On Linux and Windows that means restarting the web server and the Django Q
+    cluster. On Docker:
+
+    .. code-block:: console
+
+        docker compose restart django django-q
+
+    Not ``docker compose up -d``. That recreates containers when the image or
+    the configuration has changed, and does **nothing** when neither has - it
+    reports ``Container Running`` and leaves the processes exactly as they were,
+    which is a success-shaped message for a restart that did not happen. After a
+    rebuild, ``up -d`` does recreate them and no separate restart is needed; it
+    is updating the rules *underneath* an unchanged image, as a system package
+    upgrade does, that needs the command above.
+
+
+Getting new rules before the next release
+.........................................
+
+Governments do not time their announcements to QATrack+ releases. If the rules
+for your zone change and you cannot wait, each platform has a route:
+
+* **Linux** needs nothing from QATrack+ - upgrade the system package, above.
+* **Windows** with the ``pip`` fallback: ``pip install --upgrade tzdata``.
+* **Windows** with ``uv``, and **Docker**, both take their rules from
+  ``uv.lock``, so the lockfile is what has to move:
+
+  .. code-block:: console
+
+      uv lock --upgrade-package tzdata
+
+  On Windows follow it with ``uv sync``; on Docker, rebuild and recreate as
+  :ref:`the update steps <docker_updating>` describe. This edits a tracked
+  file, so expect ``git pull`` to report a conflict there at the next upgrade,
+  and resolve it in favour of the release.
+
+**On Docker, the site-requirements folder is not a route for this**, although it
+is the obvious place to look. A newer ``tzdata`` listed in
+``deploy/docker/site-requirements/requirements.txt`` does not work: A site's own packages are installed under
+constraints generated from QATrack+'s own environment, which pins ``tzdata``, so
+naming a newer one there fails the build rather than changing the rules. That
+constraint is deliberate - it is what stops a site's extra package quietly
+changing the versions QATrack+ runs on.
 
 Organization Logo
 ~~~~~~~~~~~~~~~~~

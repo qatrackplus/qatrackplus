@@ -128,6 +128,22 @@ Your command prompt should now be prefixed with ``(qatrackplus)`` or ``(.venv)``
    dependency, and ``uv`` remains the recommended and tested method for
    everyone else. If you can use ``uv``, use it.
 
+   One consequence worth knowing: on Windows, the rules for when your time
+   zone's clocks change come from the ``tzdata`` package in this virtual
+   environment (see :ref:`time_zone_rules`). Running ``pip install
+   ".[win,mssql]"`` again on an upgrade leaves the copy you already have in
+   place, so update it yourself when the rules change:
+
+   .. code-block:: console
+
+      >>  pip install --upgrade tzdata
+
+   Then restart QATrack+, or it carries on using the rules it already loaded:
+   Python caches time-zone data per process. Restart the `QATrack+ Web
+   Service` from the Windows Services dialog, and the `QATrack+ Django Q
+   Cluster` task from Task Scheduler - the second produces scheduled notices
+   and reports, so leaving it running means those keep the old offsets.
+
 .. dropdown:: Side note: ```C:\deploy```
 
    This folder is a convenient convention for storing the QATrack+ source code, virtual environment, and any other files related to your QATrack+ installation.  You can use a different folder if you prefer, but you will need to adjust the instructions accordingly.
