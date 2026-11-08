@@ -341,6 +341,23 @@ for your zone change and you cannot wait, each platform has a route:
   On Docker, rebuild and recreate as :ref:`the update steps <docker_updating>`
   describe.
 
+  **Docker needs uv on the host for this, and only for this.** A Docker
+  installation is not otherwise asked for it: the image builds with a copy of
+  its own, and nothing else in the deployment uses one. Install it as the other
+  guides do - :doc:`the Linux guide <linux>` has the same step in context:
+
+  .. code-block:: console
+
+      curl -LsSf https://astral.sh/uv/install.sh | sh
+
+  The copy you install is **not** the one the image builds with. The image pins
+  its own, and nothing compares the two. They need to agree about one thing: if
+  the uv on your host rewrites ``uv.lock`` in a form the image's cannot read,
+  the next ``docker compose build`` stops inside its own ``uv sync``, a long way
+  from the command that caused it. If that happens, undo the lockfile change -
+  ``git checkout -- uv.lock`` - and ask on the
+  :mailinglist:`QATrack+ Google Group <>` before trying again.
+
   ``uv lock`` edits a tracked file, so expect ``git pull`` to report a conflict
   there at the next upgrade, and resolve it in favour of the release.
 
