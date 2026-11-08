@@ -427,55 +427,62 @@ help = "Which browser to drive; omit it to use the one your settings choose. chr
 # The tasks exist so nobody has to remember which variables there are; once you
 # are filtering to one test you are past that point.
 
+# EVERY LINE OF A BODY IS PRINTED, so the explanation lives out here. poe echoes
+# a task's source before running it: this body was 49 lines, 23 of them comments
+# about `env` interpolation and SELENIUM_SLOW_MO precedence, and all 23 landed on
+# the terminal on every single run. `make_compat.toml` already knew this - "kept
+# to four lines because poe echoes a task's source before running it" - and it
+# was still worth measuring: 579 lines are echoed across the seventeen Python
+# bodies in poe_tasks, 139 of them comments.
+#
+# HOW THE TWO ARGUMENTS ARRIVE. `test-gui` declares `mode` and `browser`, and poe
+# hands a declared argument to a Python body as an environment variable, not as a
+# Python name and not on argv.
+#
+# WHY THE MODE MAPPING IS HERE rather than in an `env` table. It used to be: three
+# `test-gui-<mode>` tasks each carried a static `env`. One task with a `--mode`
+# option cannot, because an env table does not interpolate an argument - measured
+# on poe 0.49.0, `SELENIUM_HEADLESS = "${mode}"` arrives empty. So the mapping
+# from a mode name to the variables it sets has to be in the body.
+#
+# WHY OMITTING EITHER ONE OVERRIDES NOTHING. settings.py reads both variables from
+# the environment and local_test_settings.py is imported afterwards, so leaving
+# them unset is what lets a developer's own choice through. A default on either
+# option would silently take that away - there is a test asserting neither has
+# one.
+#
+# WATCHING. `watch` is `visible` plus a pause. SELENIUM_SLOW_MO is read straight
+# from the environment in live.py rather than exposed as a setting, so it cannot
+# be left switched on in a settings file - and a settings file cannot override it
+# either.
+#
+# THE ANNOUNCEMENT LINE is not decoration: without it there is nothing to tell a
+# headless run from a visible one until a window either appears or does not.
 [tasks._test-gui-run]
-help = "(internal) the GUI suite, with SELENIUM_BROWSER taken from the browser argument"
+help = "(internal) the GUI suite, with the mode and browser taken from the arguments"
 interpreter = "python"
 shell = """
 import os
 import subprocess
 import sys
 
-# The wrapper task declares `browser` and poe hands a declared argument to the
-# body as an environment variable, not as a Python name or on argv.
-#
-# With no argument, SELENIUM_BROWSER is left alone entirely rather than being
-# set to a default. settings.py reads it from the environment and
-# local_test_settings.py may override it, so leaving it unset is what lets a
-# developer's own choice through - the mode is the only thing these tasks are
-# being asked to decide.
+MODES = {
+    'headless': {'SELENIUM_HEADLESS': 'True'},
+    'visible': {'SELENIUM_HEADLESS': 'False'},
+    'watch': {'SELENIUM_HEADLESS': 'False', 'SELENIUM_SLOW_MO': '0.4'},
+}
+
 browser = os.environ.get('browser')
 if browser:
     os.environ['SELENIUM_BROWSER'] = browser
 
-# The mode arrives the same way, as a declared argument. It used to come from a
-# static `env` table on one of three wrapper tasks; an env table cannot
-# interpolate an argument - measured on poe 0.49.0, `SELENIUM_HEADLESS =
-# "${mode}"` arrives empty - so the mapping from a mode name to the two
-# variables lives here, which is the only place it can.
-#
-# Omitting it leaves both variables alone, exactly as omitting the browser
-# does, so `poe test-gui` with nothing given runs whatever your settings
-# configure and overrides neither half.
-MODES = {
-    'headless': {'SELENIUM_HEADLESS': 'True'},
-    'visible': {'SELENIUM_HEADLESS': 'False'},
-    # Watching is visible with a pause between actions. SELENIUM_SLOW_MO is
-    # read straight from the environment in live.py rather than exposed as a
-    # setting, so it cannot be left switched on in a settings file - and a
-    # settings file cannot override it either.
-    'watch': {'SELENIUM_HEADLESS': 'False', 'SELENIUM_SLOW_MO': '0.4'},
-}
 mode = os.environ.get('mode')
 if mode:
     os.environ.update(MODES[mode])
 
-# Say what is about to run: without this there is nothing to tell a headless
-# run from a visible one until a window either appears or does not.
-shown = 'mode from your settings'
-if mode:
-    shown = mode
-    if os.environ.get('SELENIUM_SLOW_MO'):
-        shown += ', slowed to %ss between actions' % os.environ['SELENIUM_SLOW_MO']
+shown = mode or 'mode from your settings'
+if mode and os.environ.get('SELENIUM_SLOW_MO'):
+    shown += ', slowed to %ss between actions' % os.environ['SELENIUM_SLOW_MO']
 print('GUI tests: %s, %s' % (browser or 'browser from your settings', shown))
 sys.stdout.flush()
 
