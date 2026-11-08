@@ -59,6 +59,16 @@ cmd = "ruff check . --fix"
 # `sys.argv` is `['']` and nothing warns - so `poe format-changed --check`
 # without this block would quietly reformat everything instead. A declared arg
 # arrives as an environment variable, not as a Python name.
+# The body carries no comments, because poe prints a task's source on every run.
+#
+# THE FILE SET is everything changed since the branch left `develop` plus
+# uncommitted work - unstaged, staged, and files git has not seen yet.
+# `--diff-filter` already drops deletions, but a path can still be gone by the
+# time this runs, and `.py`/`.pyi` are what `ruff format` acts on.
+#
+# THE FLUSH BEFORE THE SUBPROCESS is load-bearing: ruff writes straight to the
+# terminal while these prints are still buffered, so without it ruff's summary
+# lands above the list of files it applied to.
 [tasks.format-changed]
 help = "Format only the Python files this branch changed - never the whole repo (see AGENTS.md)"
 interpreter = "python"
@@ -94,13 +104,10 @@ if base:
     paths.update(git('diff', '--name-only', '--diff-filter=ACMR', base))
 else:
     print('No develop to compare against; only uncommitted changes were considered.')
-# Uncommitted work as well: unstaged, staged, and files git has not seen yet.
 paths.update(git('diff', '--name-only', '--diff-filter=ACMR'))
 paths.update(git('diff', '--name-only', '--diff-filter=ACMR', '--cached'))
 paths.update(git('ls-files', '--others', '--exclude-standard'))
 
-# --diff-filter already drops deletions, but a path can still be gone by now,
-# and these two suffixes are what ruff format acts on.
 files = sorted(p for p in paths if p.endswith(('.py', '.pyi')) and Path(p).is_file())
 
 if not files:
@@ -111,8 +118,6 @@ checking = bool(os.environ.get('check'))
 print('%s %d changed Python file(s), not the repo:' % ('Checking' if checking else 'Formatting', len(files)))
 for name in files:
     print('  %s' % name)
-# Flushed, or ruff's own summary lands above this list: the subprocess writes
-# straight to the terminal while these prints are still buffered.
 sys.stdout.flush()
 argv = ['ruff', 'format'] + (['--check'] if checking else []) + files
 sys.exit(subprocess.run(argv).returncode)
@@ -174,6 +179,9 @@ cmd = "python -Wd manage.py check"
 # Running one for the listing and the other for the status is what makes this
 # both readable and usable as a gate, and removes a trap that until now only a
 # comment protected anyone from.
+# The body carries no comments, because poe prints a task's source on every run.
+# A non-zero exit from `makemigrations` itself - a bad model, an import error -
+# is reported as that, rather than as a verdict about pending migrations.
 [tasks.check-migrations]
 help = "Report any model change that still needs a migration, and fail if there is one"
 interpreter = "python"
@@ -187,8 +195,6 @@ listing = subprocess.run(MANAGE, capture_output=True, text=True)
 sys.stdout.write(listing.stdout)
 sys.stderr.write(listing.stderr)
 if listing.returncode != 0:
-    # makemigrations itself failed - a bad model, an import error - and that is
-    # the answer, not a verdict about pending migrations.
     sys.exit(listing.returncode)
 
 status = subprocess.run(MANAGE + ['--check'], capture_output=True, text=True)

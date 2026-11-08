@@ -41,6 +41,17 @@ required = false
 help = "A seed printed by an earlier run, to replay that exact order"
 
 
+# The body carries no comments, because poe echoes a task's source before
+# running it and every line would be printed on every run.
+#
+# `seed` arrives through the environment: poe hands a declared argument to a
+# Python body that way, and `${seed}` is not substituted inside one - see
+# `test-engine` below for the same note.
+#
+# The pytest-randomly check is there because its dev-group entry arrived with
+# the order-independence work, so `uv sync --group dev` only answers the
+# missing-plugin case once that branch is in the tree. The one-off
+# `uv run --with` command the body prints works either way.
 [tasks.test-order]
 help = "Run the suite in a shuffled order, to catch tests that depend on each other"
 interpreter = "python"
@@ -50,14 +61,9 @@ import os
 import subprocess
 import sys
 
-# poe passes a declared arg to a `shell` task through the environment, and
-# `${seed}` is not substituted inside a python body - see `test-engine`.
 seed = os.environ.get('seed') or ''
 
 if importlib.util.find_spec('pytest_randomly') is None:
-    # The dev-group entry for pytest-randomly arrives with the
-    # order-independence work, so `uv sync --group dev` only answers this once
-    # that branch is in the tree. The one-off command works either way.
     print('pytest-randomly is not installed in this environment.')
     print()
     print('If the order-independence branch is in your tree:')
@@ -119,15 +125,31 @@ required = true
 help = "sqlite, memory, postgres, mysql or mssql"
 
 
+# The body carries no comments - poe prints a task's source on every run - so
+# the three things worth knowing about it are here.
+#
+# `engine` arrives through the environment. poe hands declared arguments to a
+# Python body that way, and `${engine}` is NOT substituted inside one: it would
+# arrive literally.
+#
+# THE .bak GUARD refuses before touching anything if a backup from an earlier
+# run is still present. The try/finally restores on any Python-level exit,
+# Ctrl-C included, but cannot run if the process is killed outright - SIGHUP
+# from a closed terminal or dropped SSH session, SIGKILL, a power cut - and
+# that leaves the real settings in the .bak. Copying over it would destroy
+# them, which is the one outcome worth refusing rather than reporting. The same
+# guard is in `test-integration` and in the Makefile.
+#
+# THE try/finally, rather than the shell version's fall-through restore: the
+# Makefile's own `_test-engine` target only restores if the pytest line
+# completes, so interrupting it leaves your real local_test_settings.py swapped
+# out. This restores on any exit, KeyboardInterrupt included.
 [tasks.test-engine]
 help = "Run the suite against one engine, restoring your settings afterwards: poe test-engine <sqlite|memory|postgres|mysql|mssql>"
 interpreter = "python"
 shell = """
 import os, pathlib, shutil, subprocess, sys
 
-# poe passes declared task args to a `shell` task as environment
-# variables. `${engine}` is NOT substituted inside a python-interpreter
-# body - it arrives literally - so read it from the environment.
 engine = os.environ['engine']
 src = pathlib.Path(f'qatrack/local_test_settings.{engine}.py')
 live = pathlib.Path('qatrack/local_test_settings.py')
@@ -139,23 +161,12 @@ if not src.exists():
           'for a starting template.')
     sys.exit(1)
 
-# Refuse, before touching anything, if a backup from an earlier run is still
-# here. try/finally below restores on any Python-level exit, Ctrl-C included,
-# but it cannot run at all if the process is killed outright - SIGHUP from a
-# closed terminal or a dropped SSH session, SIGKILL, a power cut - and that
-# leaves the real settings in the .bak. Copying over it then destroys them,
-# which is the one outcome worth refusing rather than reporting. Mirrors the
-# same guard in test-integration below, and in the Makefile.
 if backup.exists():
     print('error: %s already exists - an earlier run was killed before it could'
           ' put your settings back.' % backup)
     print('Move it to %s, or delete it, then try again.' % live)
     sys.exit(1)
 
-# try/finally rather than the shell version's fall-through restore. The
-# Makefile's own `_test-engine` target only restores if the pytest line
-# completes; interrupt it (Ctrl-C) and your real local_test_settings.py is
-# left swapped out. This restores on any exit, including KeyboardInterrupt.
 had_existing = live.exists()
 if had_existing:
     shutil.copyfile(live, backup)
@@ -171,6 +182,41 @@ sys.exit(status)
 """
 
 
+# The body carries no comments - poe prints a task's source on every run, and
+# this was the longest of them at 109 lines. Six things it does that are not
+# obvious from reading it:
+#
+# IT REFUSES IF THIS WOULD PROVISION THE DEVELOPER'S OWN DATABASE.
+# migrate/createcachetable/collectstatic/createsuperuser are manage.py commands,
+# so they read local_settings.py - the development settings - while only pytest
+# reads the local_test_settings.py this task writes its TEST name into. @nsmela
+# measured the consequence on 2026-10-08: with local_settings.py naming
+# db/my_real_dev.db, a superuser/superuser account was created in *that*
+# database while the tests ran against a separate db/default.db. Asking Django
+# for the effective name is the only reliable check, because the value can come
+# from any layer of the settings.
+#
+# THE EFFECTIVE NAME IS COMPARED AS A PATH, not a string: the settings hold a
+# posix-style name and `str(DB)` is backslashed on Windows.
+#
+# IT REFUSES IF A BACKUP FROM AN INTERRUPTED RUN IS STILL THERE, rather than
+# moving a throwaway copy on top of it - which is how the real loss happens.
+# Same guard as `test-engine`, and as the Makefile.
+#
+# IT MOVES THE REAL DATABASE AND SETTINGS ASIDE INSIDE A try/finally. The shell
+# version of this task does the same move but restores by falling through to its
+# last few lines, so a failed provision or an interrupted run leaves the
+# developer's database at db/default.db.bak with no db/default.db at all.
+#
+# IT POINTS THE TEST DATABASE AT THE ONE IT JUST PROVISIONED, which is the one
+# place that is wanted. The template deliberately names a different test
+# database, because Django deletes a file-based one before creating it and again
+# at teardown - when the two names matched, a plain pytest destroyed a
+# developer's populated db/default.db.
+#
+# IT KEEPS THE PROVISIONED DATABASE FOR INSPECTION, but only if it exists: the
+# shell version runs its `mv` unconditionally and errors when provisioning
+# failed before the database was created.
 [tasks.test-integration]
 help = "Provision a fresh sqlite db like a real deployment, then run the suite against it"
 interpreter = "python"
@@ -193,15 +239,6 @@ def manage(*args, env=None):
         raise SystemExit(code)
 
 
-# Refuse, before touching anything, if this would provision the developer's own
-# database. migrate/createcachetable/collectstatic/createsuperuser are manage.py
-# commands, so they read local_settings.py - the development settings - while
-# only pytest reads the local_test_settings.py this task writes its TEST name
-# into. nsmela measured the consequence on 2026-10-08: with local_settings.py
-# naming db/my_real_dev.db, a superuser/superuser account was created in that
-# database and the tests ran against a separate db/default.db. Asking Django for
-# the effective name is the only reliable check - the value can come from any
-# layer of the settings.
 effective = subprocess.run(
     [sys.executable, '-c',
      "import os, django; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'qatrack.settings');"
@@ -212,8 +249,6 @@ effective = subprocess.run(
 if effective.returncode != 0:
     print(effective.stderr.strip() or 'could not read DATABASES from the settings')
     raise SystemExit(1)
-# Compared as paths, not strings: the settings hold a posix-style name and
-# str(DB) is backslashed on Windows.
 if pathlib.Path(effective.stdout.strip()) != DB:
     print('error: this task provisions the database your settings point at, and that is')
     print('         %s' % effective.stdout.strip())
@@ -222,8 +257,6 @@ if pathlib.Path(effective.stdout.strip()) != DB:
     print('Point local_settings.py at %s before running this.' % DB)
     raise SystemExit(1)
 
-# Refuse too if a backup from an interrupted run is still here, rather than
-# moving a throwaway copy on top of it - which is how the real loss happens.
 stale = [p for p in (DB_BAK, LIVE_BAK) if p.exists()]
 if stale:
     print('error: a backup from an earlier run is still here:')
@@ -232,12 +265,6 @@ if stale:
     print('That run did not finish restoring. Put them back, or remove them, first.')
     raise SystemExit(1)
 
-# Move the developer's real database and settings aside. The shell version
-# of this task does the same, but restores by falling through to its last
-# few lines - so if provisioning fails, or the run is interrupted, the
-# developer is left with their dev database sitting at db/default.db.bak
-# and no db/default.db at all. Everything below is wrapped so the restore
-# happens on any exit.
 had_db = DB.exists()
 had_live = LIVE.exists()
 if had_db:
@@ -245,19 +272,11 @@ if had_db:
 if had_live:
     shutil.copyfile(LIVE, LIVE_BAK)
 shutil.copyfile('deploy/dev/local_test_settings.sqlite.py', LIVE)
-# test-integration only: test the database this task just provisioned, rather
-# than the template's separate test database. The template deliberately names a
-# different one, because Django deletes a file-based test database before
-# creating it and again at teardown - when the two names matched, a plain
-# pytest destroyed the developer's populated db/default.db. This task is the
-# one thing that really does want them to be the same. Mirrors the Makefile.
 with LIVE.open('a', encoding='utf-8') as fh:
     fh.write("\\nDATABASES['default']['TEST']['NAME'] = 'db/default.db'\\n")
 
 status = 1
 try:
-    # Provision exactly the way a fresh deployment would, so the whole
-    # sequence is exercised for real and not just a disposable test db.
     manage('migrate')
     manage('createcachetable')
     manage('collectstatic', '--noinput')
@@ -268,9 +287,6 @@ try:
     })
     status = subprocess.call([sys.executable, '-m', 'pytest', '--reuse-db'])
 finally:
-    # Keep the provisioned db for inspection, but only if it exists - the
-    # shell version runs its `mv` unconditionally and errors when
-    # provisioning failed before the database was created.
     if DB.exists():
         KEPT.unlink(missing_ok=True)
         shutil.move(str(DB), str(KEPT))

@@ -10,6 +10,22 @@
 # copying what it can and failing partway through on `That username is already
 # taken`. Half a setup and a confusing error is the worst of the options. If
 # you want the old one gone, say so explicitly with dev-reset.
+# The body carries no comments, because poe prints a task's source on every run.
+#
+# IT CHECKS EVERYTHING BEFORE WRITING ANYTHING, which is why the `existing`
+# list is built first.
+#
+# `undo()` PUTS THE TREE BACK so a failed run can simply be run again. Without
+# it a `migrate` that fails leaves the three settings files and the half-made
+# database behind, and the next `dev-init` refuses with *This already looks like
+# a set up dev environment* - precisely the state this task exists to get you
+# out of, leaving the developer deleting files by hand or reaching for
+# `dev-reset` to recover from a task that did nothing but fail.
+#
+# It removes only this run's files. Every path was checked as absent before
+# anything was written, so none of it can predate the invocation. `db/` itself
+# stays: `mkdir(exist_ok=True)` may have found it already there, and an empty
+# directory is not worth guessing about.
 [tasks.dev-init]
 help = "Create a fresh sqlite dev environment - refuses if one already exists"
 interpreter = "python"
@@ -23,7 +39,6 @@ TEMPLATES = [
 ]
 DB = pathlib.Path('db/default.db')
 
-# Check everything before doing anything.
 existing = [dst for _, dst in TEMPLATES if pathlib.Path(dst).exists()]
 if DB.exists():
     existing.append(str(DB))
@@ -47,23 +62,6 @@ for src, dst in TEMPLATES:
 pathlib.Path('db').mkdir(exist_ok=True)
 
 
-# Put the tree back, so a failed run can simply be run again. Without this, a
-# `migrate` that fails leaves the three settings files and the half-made
-# database behind, and the next `dev-init` refuses with 'This already looks
-# like a set up dev environment' - precisely the state this task exists to get
-# you out of. The developer is then deleting files by hand, or reaching for
-# `dev-reset`, to recover from a task that did nothing but fail.
-#
-# Only this run's files are removed. Every path here was checked as absent
-# above, before anything was written, so none of it can predate this
-# invocation. `db/` itself stays: mkdir(exist_ok=True) may have found it
-# already there, and an empty directory is not worth guessing about.
-#
-# Comments rather than a docstring, like every other body in poe_tasks/: a
-# triple-quoted string here would close the TOML string the body lives in.
-# That is the third instance of this class of trap in one sitting, after the
-# newline-escape one @nsmela found - an argument for his suggestion of
-# moving these bodies into a real module.
 def undo():
     for path in created:
         path.unlink(missing_ok=True)
