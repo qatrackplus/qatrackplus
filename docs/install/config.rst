@@ -249,18 +249,27 @@ and gives no warning, so it is worth knowing where your copy comes from:
   about the rules your site is applying - check the system package.
 * **Windows:** from the ``tzdata`` Python package in QATrack+'s virtual
   environment, not from Windows itself. Each QATrack+ release pins the copy it
-  was tested with, and ``uv sync`` during an upgrade installs it.
+  was tested with, and the ``uv sync`` in your upgrade guide installs it.
 
   Two cases where that is not the whole story. The first is the ``pip``
   fallback in :doc:`the Windows guide <win>`, where what happens depends on
   whether the release moved the minimum version QATrack+ asks for:
 
-  * **If it did**, your existing copy no longer satisfies it and ``pip install``
-    replaces it on its own. 4.0.3 is such a release - it is where
-    ``tzdata>=2026.6`` first appears - so this upgrade needs nothing from you.
-  * **If it did not**, ``pip`` leaves a copy that already satisfies the floor
-    exactly where it is, however old the rules in it are, and
-    ``pip install --upgrade tzdata`` is how you move it.
+  * **If it did**, your existing copy no longer satisfies it, and the upgrade's
+    own install replaces it for you - nothing extra to run. 4.0.3 is such a
+    release, because it is where ``tzdata>=2026.6`` first appears.
+
+    .. code-block:: console
+
+        >>  pip install ".[win,mssql]"
+
+  * **If it did not**, that same command leaves a copy that already satisfies
+    the floor exactly where it is, however old the rules in it are, and this is
+    how you move it:
+
+    .. code-block:: console
+
+        >>  pip install --upgrade tzdata
 
   That is ``pip`` doing what it is meant to do rather than a quirk: a
   requirement already met is left alone, and one that is not is resolved.
