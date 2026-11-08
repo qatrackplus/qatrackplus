@@ -962,6 +962,24 @@ Make habit keeps working on a host with no Make at all.
 Adding a new poe task
 ~~~~~~~~~~~~~~~~~~~~~
 
+**First, whether to.** A public task earns its name when it composes more than
+one command, hides a trap, or encodes something a newcomer could not guess - an
+environment variable, an ``--ignore``, an order that matters. A one-line alias
+of a ``manage.py`` command does not: that is a second spelling of something
+already documented, and it costs a line in every listing for everybody.
+
+Two consequences worth stating, because both have already happened here. **A
+variant is usually a parameter, not a task** - the browser for the GUI runs, the
+path for ``cover`` - and three copies of one command drift apart: ``cover``,
+``cover-qatrack`` and ``cover-module`` were three until 2026-11-08, and the
+third had quietly lost the ``--reuse-db`` the others carried. And **a step
+inside a composite does not need a public name**: prefix it with ``_`` and poe
+hides it from the list and refuses to run it directly, which is a real boundary
+rather than a convention.
+
+There is a test on the count - see ``test_poe_tasks.py`` - so raising it is a
+review decision rather than a side effect of adding a task.
+
 Task definitions live under ``poe_tasks/``, one file per theme, rather than
 directly in ``pyproject.toml``: ``dev.toml`` (dev environment setup),
 ``tests.toml`` (running the suite, GUI/Selenium variants), ``coverage.toml``,
