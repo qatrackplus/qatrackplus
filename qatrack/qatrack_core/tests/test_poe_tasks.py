@@ -23,6 +23,7 @@ implementation that no longer exists.
 """
 import os
 import pathlib
+import re
 import subprocess
 import sys
 import tomllib
@@ -432,6 +433,37 @@ def test_every_mirror_that_delegates_points_at_a_task_that_exists():
         if ref and ref.split()[0] not in TASKS:
             missing.append((name, ref))
     assert not missing, missing
+
+
+# --------------------------------------------------------------------------
+# The reminder `poe ci` ends with
+# --------------------------------------------------------------------------
+
+def test_every_task_the_ci_reminder_names_exists():
+    """The reminder is four `print()` calls, so nothing checks what it says.
+
+    It went on telling people to run `poe test-gui-*` for a day after those
+    three tasks became one `poe test-gui`. A reminder is only worth printing if
+    the commands in it can be pasted.
+    """
+    body = TASKS['_ci-reminder']['shell']
+    named = re.findall(r'\bpoe ([a-z][a-z0-9-]*)', body)
+    assert named, "the regex found no task names - the reminder changed shape"
+    missing = [name for name in named if name not in TASKS]
+    assert not missing, missing
+
+
+def test_the_ci_reminder_does_not_let_poe_narrate_it():
+    """`verbosity = -1` is the whole fix; without it poe prints the source.
+
+    Every other task in `ci` earns its echo - you want to see the pre-commit
+    line that failed. This one's source *is* its output, so the echo printed
+    the reminder twice: once as six `print()` calls and once as four lines of
+    English. Measured on poe 0.49.0, the setting suppresses the echo only: a
+    failing task still aborts the sequence by name and still carries its exit
+    code out.
+    """
+    assert TASKS['_ci-reminder'].get('verbosity') == -1
 
 
 # The number Cody is reacting to, and the only one a reader of `poe` sees:

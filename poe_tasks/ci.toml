@@ -144,15 +144,30 @@ sequence = [
 ]
 
 
+# `verbosity = -1` turns off poe's own `Poe => ...` echo for this task alone, so
+# a green `poe ci` ends with the four lines of the reminder instead of with the
+# six `print()` calls that produce them. It is a per-task setting, so it changes
+# nothing about the steps before it, and `poe -v ci` puts the echo back.
+#
+# It silences poe's narration, not failure: measured on poe 0.49.0, a task with
+# `verbosity = -1` that exits 3 still aborts the sequence with
+# `Error: Sequence aborted after failed subtask`, naming the task, and poe still
+# exits 3. So this is safe on a step that could fail, which this one cannot.
+#
+# Keep the task names in the reminder real. `poe test-gui-*` was three tasks
+# until they became one `poe test-gui`, and this text went on naming the dead
+# form - nothing printed here is checked at runtime, so
+# `test_every_task_the_ci_reminder_names_exists` is what catches that now.
 [tasks._ci-reminder]
 help = "(internal) printed after a green `poe ci`"
 interpreter = "python"
+verbosity = -1
 shell = """
 print()
 print('Locally green. Still only run by CI:')
-print('  - the suite on postgres / mysql / mssql   (poe test-engine <engine>)')
+print('  - the suite on postgres / mysql / mssql    (poe test-engine <engine>)')
 print('  - the suite on Windows                     (no local equivalent)')
-print('  - the Selenium suite, firefox and chromium (poe test-gui-*)')
+print('  - the Selenium suite, firefox and chromium (poe test-gui)')
 print('  - the Docker build-and-run check           (deploy/docker)')
 """
 
