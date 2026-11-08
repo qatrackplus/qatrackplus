@@ -48,6 +48,7 @@ is the one above - this file is a regression guard, not a currency check.
 
 import importlib.resources
 import pathlib
+import re
 import zoneinfo
 from datetime import datetime
 
@@ -193,73 +194,55 @@ class TestThePageTellsASiteSomethingItCanActOn:
             'below are reading the wrong text'
         )
 
-    def test_the_docker_restart_is_a_command_that_restarts(self):
-        section = self.section()
-        assert 'docker compose restart' in section, (
-            "config.rst does not give Docker a command that restarts the processes. "
-            "`docker compose up -d` is not one when the image has not changed - it reports "
-            "`Container Running` and does nothing, which is indistinguishable from success."
-        )
-        restart_block = section[section.index('restart QATrack+ after updating'):]
-        assert 'Not ``docker compose up -d``' in restart_block, (
-            "the page no longer says why `docker compose up -d` is the wrong command here. "
-            "Without that, the next person to tidy this will replace `restart` with it again, "
-            "because everywhere else in the Docker documentation `up -d` is right."
-        )
+    def test_what_makes_a_docker_restart_unnecessary_is_still_true(self):
+        """The page says Docker needs no restart. One setting is why.
 
-    def test_the_windows_route_does_not_tell_a_site_to_run_a_bare_uv_sync(self):
-        """`uv sync` is exact by default, so a bare one uninstalls the extras.
+        An earlier version of this note told a Docker site to run
+        `docker compose restart django django-q` after updating the rules, on
+        the reasoning that `up -d` does nothing to a stack whose image has not
+        changed - which is true, and irrelevant here. @nsmela pointed out on
+        q#926 that the case cannot arise for the `django` image: with
+        `PYTHONTZPATH=` emptying the search path, `zoneinfo` reads the pinned
+        package inside the image, so its rules change only when the image is
+        rebuilt - and the `up -d` after a build recreates the containers
+        anyway.
 
-        The between-releases route ends in a sync on Windows, and the first
-        version of it said plain `uv sync`. That removes CherryPy, pywin32,
-        mssql-django and the LDAP packages from a Windows site - a working site
-        broken by a command given to correct a clock. @nsmela caught it on
-        q#926 with a dry run; reproduced here as `Would uninstall 2 packages`.
+        That makes the claim conditional on one line of the Dockerfile. If
+        `PYTHONTZPATH=` goes, the image reads the operating system's copy
+        again, rules *can* then change under a running container, and the
+        paragraph becomes wrong. So this ties the two together rather than
+        asserting the wording: it is the Dockerfile that has to keep agreeing
+        with the page, not the page with itself.
         """
-        # Command lines only - the indented contents of a `code-block`. The
-        # prose around them has to be free to say `uv sync` while explaining
-        # why a bare one is wrong, and an earlier version of this test flagged
-        # exactly that explanation.
-        commands = [
-            line.strip() for line in self.section().splitlines()
-            if line.startswith('    ') and line.strip().startswith('uv sync')
+        dockerfile = (
+            pathlib.Path(__file__).resolve().parents[3]
+            / 'deploy' / 'docker' / 'django' / 'Dockerfile'
+        ).read_text(encoding='utf8')
+        # Comment lines in that Dockerfile also contain `PYTHONTZPATH=`, while
+        # explaining what it does. The first version of this test matched one
+        # of them and passed with the ENV line deleted - so the setting has to
+        # be looked for where it takes effect, not anywhere in the file.
+        setting = [
+            line for line in dockerfile.splitlines()
+            if 'PYTHONTZPATH' in line and not line.lstrip().startswith('#')
         ]
-        assert commands, (
-            'no `uv sync` command line in the time-zone section; if the Windows route has '
-            'moved or been dropped, re-read it rather than deleting this test'
+        assert setting, (
+            'PYTHONTZPATH appears in that Dockerfile only in comments, so nothing sets '
+            'it: zoneinfo reads the operating system copy again, its rules can change '
+            "under a running container, and the restart advice removed on @nsmela's "
+            'review would be needed back'
         )
-        bare = [c for c in commands if '--extra' not in c and '--dry-run' not in c]
-        assert not bare, (
-            'the time-zone section tells a site to run uv sync without the extras it '
-            'installed with, which uninstalls them: %r' % bare
+        assert any(re.search(r'PYTHONTZPATH=(""|\'\'|\s*\\?$)', line) for line in setting), (
+            'the django image sets PYTHONTZPATH to something other than empty: %r. An '
+            'empty value is what makes zoneinfo fall back to the pinned package, which '
+            'is what config.rst relies on when it says a Docker restart cannot be '
+            'needed.' % setting
         )
-
-    def test_no_bold_run_in_the_section_contains_a_literal(self):
-        """RST inline markup cannot nest, and `sphinx -W` does not say so.
-
-        `**Not a bare ``uv sync``.**` does not parse. It does not warn either -
-        the strict build reported zero warnings - it simply renders with the
-        double backticks showing as text on the page. That happened twice in
-        this file in one day, and both times the only thing that caught it was
-        reading the built HTML rather than the source.
-
-        Checked by pairing the `**` markers instead of pattern-matching them: a
-        regex for the whole construct also matches the gap *between* two bold
-        runs, which is how a first attempt at this found 27 instances in
-        `docs/` that were all false.
-        """
-        for paragraph in self.section().split('\n\n'):
-            runs = paragraph.split('**')
-            # Even count of markers means they pair; odd means one is a stray
-            # and this crude split would mis-assign the halves.
-            if len(runs) % 2 == 0:
-                continue
-            for inside in runs[1::2]:
-                assert '``' not in inside, (
-                    'a bold run contains a literal, which RST will not parse and the '
-                    'docs build will not warn about - it renders with the backticks '
-                    'visible: %r' % ('**%s**' % inside)
-                )
+        section = self.section()
+        assert 'PYTHONTZPATH' in section, (
+            'the note no longer says what makes a Docker restart unnecessary, so the '
+            'next person to read it has no way to check whether it still is'
+        )
 
     def test_docker_is_told_how_to_get_new_rules_before_a_release(self):
         section = self.section()

@@ -317,19 +317,16 @@ and gives no warning, so it is worth knowing where your copy comes from:
     the rules it loaded and goes on being wrong.
 
     On Linux and Windows that means restarting the web server and the Django Q
-    cluster. On Docker:
+    cluster. The cluster is the easier of the two to forget, and it is the
+    process that sends scheduled notices and reports, so leaving it running
+    means those keep the old offsets.
 
-    .. code-block:: console
-
-        docker compose restart django django-q
-
-    Not ``docker compose up -d``. That recreates containers when the image or
-    the configuration has changed, and does **nothing** when neither has - it
-    reports ``Container Running`` and leaves the processes exactly as they were,
-    which is a success-shaped message for a restart that did not happen. After a
-    rebuild, ``up -d`` does recreate them and no separate restart is needed; it
-    is updating the rules *underneath* an unchanged image, as a system package
-    upgrade does, that needs the command above.
+    **Docker needs nothing separate.** Its rules are in the image - the ``django``
+    image sets ``PYTHONTZPATH=`` so ``zoneinfo`` reads the pinned package rather
+    than the operating system's copy - so they change only when the image is
+    rebuilt, and the ``docker compose up -d`` that follows a build recreates both
+    services with the new rules already in them. The case a restart would be for,
+    rules changing underneath a container that keeps running, cannot arise there.
 
 
 Getting new rules before the next release
