@@ -43,50 +43,50 @@ cmd = "sphinx-autobuild docs docs/_build/html --port ${port}"
 # output path is gitignored so that running this to *look* at the schema does
 # not quietly stage a 6000-line SVG into an unrelated branch; adding one for a
 # new minor line is a deliberate `git add -f`.
+# The body carries no comments, because poe prints a task's source before
+# running it and this was the second longest at 60 lines. Four things about it
+# that reading the code does not tell you.
+#
+# NAMED FOR THE MINOR LINE, NOT THE PATCH. The schema is identical across every
+# 4.0.z - a patch that changed it would need a migration, which makes it a minor
+# release - so one diagram per x.y is what is being described, and a per-patch
+# name would add a near-identical 838 KB SVG on every release.
+#
+# THE VERSION COMES FROM THE INSTALLED PACKAGE METADATA rather than being
+# written down. It used to come from $VERSION, which existed in three places:
+# [tool.poe.env] said 4.0.0, the Makefile said 3.1.0, and [project] said 4.0.0.
+# So `poe schema` and `make schema` wrote *different files*, and the Makefile's
+# wrote over the committed 3.1.0 diagram - it carried a WARNING about exactly
+# that rather than fixing it. There is now one source, and it is correct by
+# construction because the package is built from it.
+#
+# IT RENDERS TO A STAGED FILE AND ONLY MOVES IT IF THAT WORKED. Not defensive
+# padding: the previous form wrote straight to the output and could empty it.
+# django-extensions falls back to pydotplus when pygraphviz is not importable,
+# and pydotplus fails by writing a zero-byte file and exiting 0 - so running
+# `make schema` on a machine without pygraphviz destroyed the committed 838 KB
+# diagram and reported success, while RELEASE_CHECKLIST.md tells the releaser to
+# regenerate it. `--pygraphviz` is passed explicitly for the same reason, so a
+# missing dependency fails loudly instead of silently selecting the broken path.
+# pygraphviz wheels bundle their own Graphviz, which also sidesteps the system
+# one: Ubuntu 24.04 ships 2.42, where `-g` (--group-models, each Django app as a
+# cluster) hits a "trouble in init_rank" bug.
+#
+# THE STAGED FILE IS CREATED BESIDE THE OUTPUT, not in the system temp
+# directory. Verified on Windows: tempfile lands on whatever drive holds %TEMP%,
+# and Path.replace() across drives raises `OSError: [WinError 17] The system
+# cannot move the file to a different disk drive` when the checkout is on
+# another drive. Staging next to the output keeps the rename on one filesystem
+# everywhere.
 [tasks.schema]
 help = "RELEASE: regenerate the distributed schema diagram (see docs/developer/schema.rst)"
 interpreter = "python"
 shell = '''
 import importlib.metadata, os, pathlib, subprocess, sys, tempfile
 
-# Named for the MINOR line, not the patch. The schema is identical across every
-# 4.0.z - a patch release that changed it would need a migration, which makes it
-# a minor release - so one diagram per x.y is what is actually being described,
-# and a per-patch name would add a near-identical 838 KB SVG to the repository
-# on every release.
-#
-# Read from the installed package metadata rather than written down here. It used
-# to come from $VERSION, which existed in three places: [tool.poe.env] said
-# 4.0.0, the Makefile said 3.1.0, and [project] said 4.0.0. So `poe schema` and
-# `make schema` wrote *different files*, and the Makefile's wrote over the
-# committed 3.1.0 diagram - the Makefile carried a WARNING about exactly that
-# rather than fixing it. There is now one source, and it is the one that is
-# already correct by construction because the package is built from it.
 MINOR_LINE = '.'.join(importlib.metadata.version('qatrackplus').split('.')[:2])
 OUT = pathlib.Path('docs/developer/images/qatrack_schema_%s.svg' % MINOR_LINE)
 
-# Render to a temporary file and only move it into place if it worked.
-#
-# This is not defensive padding - the previous form wrote straight to OUT and
-# could empty it. django-extensions falls back to pydotplus when pygraphviz is
-# not importable, and pydotplus fails by writing a zero-byte file and exiting
-# 0. Running `make schema` on a machine without pygraphviz therefore destroyed
-# the committed 838 KB diagram and reported success. RELEASE_CHECKLIST.md tells
-# the releaser to regenerate this, so that was a live trap.
-#
-# --pygraphviz is passed explicitly rather than letting django-extensions pick
-# whichever binding happens to be importable, so a missing dependency fails
-# loudly instead of silently selecting the broken path. pygraphviz wheels bundle
-# their own Graphviz (14.1.5 at the time of writing), which also sidesteps the
-# system Graphviz: Ubuntu 24.04 ships 2.42, and -g (--group-models, which draws
-# each Django app as a cluster) hits a "trouble in init_rank" bug there.
-#
-# The staged file is created *inside* OUT.parent rather than in the system
-# temp directory. Verified on Windows: tempfile.TemporaryDirectory() lands on
-# whatever drive holds %TEMP% (typically C:), and Path.replace() across
-# drives raises `OSError: [WinError 17] The system cannot move the file to a
-# different disk drive` when the repo checkout lives elsewhere (e.g. D:) -
-# staging next to OUT keeps the rename on one filesystem everywhere.
 OUT.parent.mkdir(parents=True, exist_ok=True)
 fd, tmp_name = tempfile.mkstemp(prefix='.qatrack_schema-', suffix='.svg', dir=OUT.parent)
 os.close(fd)
