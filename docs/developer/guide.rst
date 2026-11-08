@@ -1063,11 +1063,22 @@ When adding a task:
    task (defaults to bash/POSIX, which fails outright on a Windows host
    with no Git Bash or WSL) unless the task is genuinely Ubuntu/sudo-only
    by nature (see ``deploy.toml``) - in that case, say so in the task's
-   ``help`` text the way ``nginx-conf`` and ``supervisor-conf`` do. Inside an
+   ``help`` text the way ``nginx-conf`` and ``supervisor-conf`` do, and add
+   it to ``SHELL_TASKS_THAT_NEED_A_REAL_SHELL`` in ``test_poe_tasks.py``
+   with the reason, because the suite now fails on a bare ``shell`` task
+   that does not appear there. Inside an
    ``interpreter = "python"`` body poe does **not** substitute ``${arg}``;
    a declared argument arrives as an environment variable, so read
    ``os.environ['arg']`` (see ``test-engine`` in ``tests.toml``).
-4. A ``cmd`` task forwards extra arguments; a ``shell`` body discards them.
+4. A ``cmd`` is not a shell command line. poe parses it itself and runs the
+   result directly, so ``&&``, ``|``, ``>`` and ``;`` are passed on as
+   ordinary arguments rather than interpreted - and the task still **exits
+   0**. ``cmd = 'manage.py check && echo ok'`` runs ``manage.py`` with
+   ``&&``, ``echo`` and ``ok`` in ``sys.argv``, never runs ``echo``, and
+   reports success. Anything that genuinely needs to chain, pipe or redirect
+   belongs either in a ``sequence`` or in a ``shell`` body with
+   ``interpreter = "python"``; the suite guards this one too.
+5. A ``cmd`` task forwards extra arguments; a ``shell`` body discards them.
    ``poe test -- -k foo`` reaches pytest, because poe appends the extras to a
    ``cmd``'s command line. A ``shell`` body assembles its own argument list,
    so poe has nowhere to put them and they are silently gone - which is why
@@ -1076,14 +1087,14 @@ When adding a task:
    ``test-engine`` in ``poe_tasks/tests.toml`` for the measurements. If a task
    with a body needs to pass flags onward, declare an argument for them and
    split it in the body.
-5. A task's argument can declare ``choices = [...]`` to get real tab
+6. A task's argument can declare ``choices = [...]`` to get real tab
    completion of its allowed values (see `Shell Autocomplete for uv and poe`_
    above) - worth adding for anything with a small, fixed set of valid
    values (an engine name, a browser name, and so on).
-6. Run ``poe <task>`` for real, not just ``poe -d <task>`` (dry-run only
+7. Run ``poe <task>`` for real, not just ``poe -d <task>`` (dry-run only
    prints the resolved command/script - it does not catch a task that
    parses fine but fails or misbehaves once actually invoked).
-7. Give it a one-line ``help`` - that line is what ``poe`` prints in its task
+8. Give it a one-line ``help`` - that line is what ``poe`` prints in its task
    list and what the generated :ref:`appendix <poe_tasks_appendix>` shows; a
    task without one fails the docs build. If contributors will reach for it,
    add a row to the table in :ref:`the task runner <task-runner-poe>`; if it

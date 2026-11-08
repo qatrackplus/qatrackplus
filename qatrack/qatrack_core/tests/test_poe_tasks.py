@@ -24,6 +24,7 @@ implementation that no longer exists.
 import os
 import pathlib
 import re
+import shlex
 import subprocess
 import sys
 import tomllib
@@ -464,6 +465,121 @@ def test_the_ci_reminder_does_not_let_poe_narrate_it():
     code out.
     """
     assert TASKS['_ci-reminder'].get('verbosity') == -1
+
+
+# --------------------------------------------------------------------------
+# Nothing needs a POSIX shell unless it says which one and why
+# --------------------------------------------------------------------------
+
+# A `shell` task with no `interpreter` gets poe's default, which is a POSIX
+# shell. poe's own error message for the Windows case says so outright -
+# "Installing Git Bash or using WSL should fix this" (poethepoet/task/
+# shell.py). So every such task is a task a Windows developer cannot run, and
+# the whole reason these tasks exist is that `make` was one.
+#
+# `interpreter = "python"` is the portable form, because poe resolves it to the
+# interpreter the virtualenv already has. Seventeen of the twenty-three shell
+# tasks use it. These six do not, and each one has a reason that is about the
+# command rather than about convenience:
+SHELL_TASKS_THAT_NEED_A_REAL_SHELL = {
+    # Ubuntu-only by declaration, not by accident: the templates under deploy/
+    # hardcode a Linux path, the tasks run sudo and write into /etc, and the
+    # help text of all four starts "WIP- Ubuntu only". A python interpreter
+    # would not make any of that portable. See the header of deploy.toml.
+    'nginx-conf': 'installs a Linux nginx site config as root',
+    'nginx-conf-remove': 'removes a Linux nginx site config as root',
+    'supervisor-conf': 'installs Linux supervisor configs as root',
+    'supervisor-conf-remove': 'removes Linux supervisor configs as root',
+    # `make docs` shells out to docs/Makefile, so the thing being mirrored
+    # needs Make on the host. That is exactly why the `docs` task calls
+    # sphinx-build directly, and anyone reaching for the Makefile route has
+    # Make already.
+    'make-docs': 'mirrors `make docs`, which needs Make either way',
+    # Mirrors the Makefile's timestamp, which comes from `date`. The portable
+    # route is the `dump-data` task, which builds the same name in Python.
+    'make-dumpdata': 'mirrors `make dumpdata`, whose filename comes from `date`',
+}
+
+
+def shell_task_specs():
+    """Every `shell` task, including ones written inline inside a `sequence`."""
+    for name, spec in TASKS.items():
+        if not isinstance(spec, dict):
+            continue
+        if 'shell' in spec:
+            yield name, spec
+        for index, step in enumerate(spec.get('sequence') or []):
+            if isinstance(step, dict) and 'shell' in step:
+                yield '%s[%d]' % (name, index), step
+
+
+def test_every_shell_task_runs_python_or_says_why_not():
+    """A shell task without `interpreter = "python"` needs bash to exist.
+
+    Cody now runs an agent on Windows, so "it works on my machine" has two
+    answers. This is the guard that keeps the default honest: reach for a
+    POSIX shell only when the command itself is POSIX, and name the task here
+    with the reason when you do.
+    """
+    found = list(shell_task_specs())
+    assert found, "no shell tasks found - the walker stopped working"
+    unexplained = [name for name, spec in found
+                   if spec.get('interpreter') != 'python'
+                   and name not in SHELL_TASKS_THAT_NEED_A_REAL_SHELL]
+    assert not unexplained, (
+        "these shell tasks need a POSIX shell and do not say why; either set "
+        "interpreter = \"python\" or add them to "
+        "SHELL_TASKS_THAT_NEED_A_REAL_SHELL with a reason: %s" % unexplained)
+
+
+def test_no_shell_exception_has_outlived_its_reason():
+    """An exception list nobody prunes stops being a list of exceptions.
+
+    A name here that has since been ported to python, renamed or deleted
+    silences a guard for a task that no longer needs silencing.
+    """
+    specs = dict(shell_task_specs())
+    stale = [name for name in SHELL_TASKS_THAT_NEED_A_REAL_SHELL
+             if name not in specs
+             or specs[name].get('interpreter') == 'python']
+    assert not stale, (
+        "drop these from SHELL_TASKS_THAT_NEED_A_REAL_SHELL - they are no "
+        "longer shell tasks that need a shell: %s" % stale)
+
+
+def test_no_cmd_task_relies_on_shell_syntax():
+    """poe runs a `cmd` itself, with no shell, so an operator becomes an argument.
+
+    Measured on poe 0.49.0: `cmd = 'python -c "..." && echo second'` runs
+    python with `['-c', '&&', 'echo', 'second']` in argv and **exits 0**. The
+    chained command never runs and nothing says so. `>` does not redirect
+    either. The silence is what makes this worth a guard rather than a
+    comment: a task written this way looks like it worked.
+
+    Tokens are compared whole, so an operator inside a quoted argument - a
+    help string, a python one-liner - is not flagged. Anything that really
+    needs a pipe or a redirect belongs in a `shell` task with
+    `interpreter = "python"`.
+    """
+    operators = {'&&', '||', '|', '>', '>>', '<', '<<', ';', '&', '`'}
+    offenders = []
+    for name, spec in TASKS.items():
+        if not isinstance(spec, dict):
+            continue
+        commands = [spec['cmd']] if isinstance(spec.get('cmd'), str) else []
+        for index, step in enumerate(spec.get('sequence') or []):
+            if isinstance(step, dict) and isinstance(step.get('cmd'), str):
+                commands.append(step['cmd'])
+        for command in commands:
+            try:
+                tokens = shlex.split(command)
+            except ValueError:
+                continue  # unbalanced quotes are a different bug
+            hits = [t for t in tokens
+                    if t in operators or t.startswith('$(')]
+            if hits:
+                offenders.append((name, hits))
+    assert not offenders, offenders
 
 
 # The number Cody is reacting to, and the only one a reader of `poe` sees:
