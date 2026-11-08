@@ -260,9 +260,11 @@ generated from those same help lines at every docs build:
        ``qatrack/local_test_settings.<engine>.py`` first from the matching
        ``deploy/dev/`` template; the task swaps it in for the run and restores
        your usual settings afterwards, however the run ends.
-   * - ``poe test-gui-<mode> [browser]``
-     - Only the GUI tests, for ``firefox`` or ``chromium``, ``headless``,
-       ``visible`` or ``watch`` - see *Setting Up Selenium Browser Testing*.
+   * - ``poe test-gui [--mode M] [--browser B]``
+     - Only the GUI tests. ``--mode`` is ``headless``, ``visible`` or ``watch``;
+       ``--browser`` is ``firefox``, ``chromium`` or ``edge``. Both are
+       optional, in either order, and omitting one leaves that half to your own
+       settings - see *Setting Up Selenium Browser Testing*.
    * - ``poe dev-init`` / ``dev-reset`` / ``run``
      - Create a fresh sqlite development environment (``dev-reset`` deletes
        the existing one first), and run the development server.
@@ -1154,7 +1156,7 @@ them:
   Selenium Manager resolve one automatically.
 * `SELENIUM_SLOW_MO` - an environment variable, not a setting: a pause in
   seconds between browser actions, so a visible run can be followed by eye.
-  ``poe test-gui-watch`` sets it; leave it unset when measuring.
+  ``poe test-gui --mode watch`` sets it; leave it unset when measuring.
 
 ``SELENIUM_SLOW_MO`` is the one knob that is **not** a setting. It is seconds to
 pause after each browser interaction so a person can follow a run - ``0``, the
@@ -1278,10 +1280,12 @@ you, so nothing has to be edited into a settings file:
 .. code-block:: shell
 
     uv run poe test-gui                   # only the GUI tests, nothing overridden
-    uv run poe test-gui-headless          # no display needed; your settings' browser
-    uv run poe test-gui-headless edge     # or name one: firefox, chromium or edge
-    uv run poe test-gui-visible           # a real window, on a machine with a display
-    uv run poe test-gui-watch             # visible and slowed down, for watching only
+    uv run poe test-gui                                    # your settings, unchanged
+    uv run poe test-gui --mode headless                    # no display needed
+    uv run poe test-gui --mode headless --browser edge     # or name a browser
+    uv run poe test-gui --browser edge                     # browser only, your mode
+    uv run poe test-gui --mode visible                     # a real window, needs a display
+    uv run poe test-gui --mode watch                       # visible and slowed down
 
 Omitting the browser uses **yours**: the argument has no default, so the task
 imposes only the window mode and leaves ``SELENIUM_BROWSER`` alone, which lets
@@ -1307,8 +1311,8 @@ Running one GUI test
 
 The ``poe test-gui-*`` tasks take **no pytest flags**. They set environment
 variables and then run the whole GUI suite, and poe discards extra arguments
-for a task with a body - ``poe test-gui-watch -- -k test_x`` filters nothing,
-and ``poe test-gui-watch chromium -k test_x`` is refused outright. So to run
+for a task with a body - ``poe test-gui --mode watch -- -k test_x`` filters
+nothing, and ``poe test-gui --mode watch -k test_x`` is refused outright. So to run
 one test, go through pytest and set the same variables yourself. They are the
 only thing the tasks were doing:
 
@@ -1348,7 +1352,8 @@ accepted as an alias of ``chromium``.
 
 **Google Chrome already works, with no change.** Chrome and Chromium are driven
 by the same driver, so ``SELENIUM_BROWSER=chrome`` - or
-``poe test-gui-headless chromium`` - drives whichever of the two is installed.
+``poe test-gui --mode headless --browser chromium`` - drives whichever of the
+two is installed.
 Verified on a machine with Google Chrome 156 and no Chromium at all. If the
 binary is somewhere a driver will not find it, such as a Flatpak install, set
 ``SELENIUM_CHROMIUM_BINARY_PATH`` in your settings rather than changing code.
