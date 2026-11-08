@@ -74,7 +74,7 @@ def load_poe_tasks():
 
 
 def mirror_name(target):
-    """The ``make-*`` task that mirrors a Makefile target.
+    r"""The ``make-*`` task that mirrors a Makefile target.
 
     The dot goes: poe validates task names against ``^[^\W\d][\w:+-]*$``
     (``poethepoet/task/base.py``), so ``make-nginx.conf`` is refused outright.
