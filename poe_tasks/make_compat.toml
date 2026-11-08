@@ -235,14 +235,16 @@ ref = "supervisor-conf"
 # success. RELEASE_CHECKLIST.md sent the releaser there, which is what made it
 # a live trap. `poe schema` renders to a staged file and only moves it into
 # place if the render worked.
+# `sys.exit(str)` writes to stderr and exits 1, which is the whole body. It is
+# kept short because poe echoes a task's source before running it - the note
+# that used to be inside this body, and the reason every other body in
+# poe_tasks/ now keeps its explanation out here too.
 [tasks.make-schema]
 help = "RETIRED: this name no longer regenerates the diagram - use `uv run poe schema`"
 interpreter = "python"
 shell = '''
 import sys
 
-# sys.exit(str) writes to stderr and exits 1. Kept to four lines because poe
-# echoes a task's source before running it, so every line here is printed twice.
 sys.exit(
     "`make schema` is RETIRED, and so is this mirror of it: it wrote the diagram "
     "under a version hardcoded in the Makefile, and exited 0 even when the render "

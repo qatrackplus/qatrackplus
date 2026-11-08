@@ -24,6 +24,10 @@ positional = true
 choices = ["postgres", "mysql", "mssql"]
 help = "Which one to start; omit it for all three"
 
+# The body carries no comments, because poe prints a task's source on every run.
+# `docker compose down` would take the whole project with its network, so one
+# named service is stopped and removed with `rm --stop --force` instead, which
+# leaves the others running.
 [tasks.test-databases-down]
 help = "Stop throwaway database servers and remove their containers: poe test-databases-down [postgres|mysql|mssql], all three if omitted"
 interpreter = "python"
@@ -35,8 +39,6 @@ import sys
 COMPOSE = ['docker', 'compose', '-f', 'deploy/dev/compose.test-databases.yaml']
 engine = (os.environ.get('engine') or '').strip()
 
-# `down` takes the whole project with its network; one service is stopped and
-# removed with `rm --stop --force` instead, which leaves the others running.
 argv = COMPOSE + (['rm', '--stop', '--force', engine] if engine else ['down'])
 print('stopping %s' % (engine or 'postgres, mysql and mssql'))
 sys.stdout.flush()
@@ -67,6 +69,9 @@ cmd = "docker compose -f deploy/dev/compose.test-databases.yaml ps"
 # you need compose flags, run compose directly - the file is
 # deploy/dev/compose.test-databases.yaml.
 
+# The body carries no comments, because poe prints a task's source on every run.
+# `--wait` is the point of this task: SQL Server accepts connections before it
+# is ready, and the compose file's healthchecks are what `--wait` waits on.
 [tasks._compose-up]
 help = "(internal) start one throwaway database service, or all of them"
 interpreter = "python"
@@ -78,8 +83,6 @@ import sys
 COMPOSE = ['docker', 'compose', '-f', 'deploy/dev/compose.test-databases.yaml']
 engine = (os.environ.get('engine') or '').strip()
 
-# --wait is the point: SQL Server accepts connections before it is ready, and
-# the compose file's healthchecks are what --wait waits on.
 argv = COMPOSE + ['up', '-d', '--wait'] + ([engine] if engine else [])
 print('starting %s, and waiting until it answers' % (engine or 'postgres, mysql and mssql'))
 sys.stdout.flush()
@@ -134,6 +137,9 @@ print('gitignored, and this task will not touch it again now that it exists.')
 # django/db/backends/postgresql/base.py - which names neither the extra nor the
 # command that installs it. Measured: that is exactly what happened here on
 # 2026-11-06.
+# The body carries no comments, because poe prints a task's source on every run.
+# The mapping below is the module names to try per engine, against the extra in
+# pyproject.toml that provides them.
 [tasks._engine-driver-check]
 help = "(internal) refuse early, and say which extra to install, if the engine's driver is missing"
 interpreter = "python"
@@ -141,7 +147,6 @@ shell = """
 import os
 import sys
 
-# module names to try, and the extra in pyproject.toml that provides them
 DRIVERS = {
     'postgres': (('psycopg', 'psycopg2'), 'postgres'),
     'mysql': (('MySQLdb',), 'mysql'),
