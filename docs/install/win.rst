@@ -131,8 +131,11 @@ Your command prompt should now be prefixed with ``(qatrackplus)`` or ``(.venv)``
    One consequence worth knowing: on Windows, the rules for when your time
    zone's clocks change come from the ``tzdata`` package in this virtual
    environment (see :ref:`time_zone_rules`). Running ``pip install
-   ".[win,mssql]"`` again on an upgrade leaves the copy you already have in
-   place, so update it yourself when the rules change:
+   ".[win,mssql]"`` again on an upgrade brings in new rules **only when that
+   release raised the minimum version QATrack+ asks for** - 4.0.3 did, so this
+   one does it for you. When a release leaves the minimum where it is, your
+   existing copy still satisfies it and ``pip`` leaves it alone however old its
+   rules are, so update it yourself:
 
    .. code-block:: console
 

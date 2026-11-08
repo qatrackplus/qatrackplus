@@ -251,12 +251,26 @@ and gives no warning, so it is worth knowing where your copy comes from:
   environment, not from Windows itself. Each QATrack+ release pins the copy it
   was tested with, and ``uv sync`` during an upgrade installs it.
 
-  Two cases where that is not the whole story. If you installed with ``pip``
-  rather than ``uv`` - the fallback in :doc:`the Windows guide <win>` - then
-  running ``pip install`` again **leaves the copy you already have**, and you
-  update it yourself with ``pip install --upgrade tzdata``. And on either path,
-  if the rules for your zone change before the next QATrack+ release, see
-  *Getting new rules before the next release* below.
+  Two cases where that is not the whole story. The first is the ``pip``
+  fallback in :doc:`the Windows guide <win>`, where what happens depends on
+  whether the release moved the minimum version QATrack+ asks for:
+
+  * **If it did**, your existing copy no longer satisfies it and ``pip install``
+    replaces it on its own. 4.0.3 is such a release - it is where
+    ``tzdata>=2026.6`` first appears - so this upgrade needs nothing from you.
+  * **If it did not**, ``pip`` leaves a copy that already satisfies the floor
+    exactly where it is, however old the rules in it are, and
+    ``pip install --upgrade tzdata`` is how you move it.
+
+  That is ``pip`` doing what it is meant to do rather than a quirk: a
+  requirement already met is left alone, and one that is not is resolved.
+  Measured against this release's floor - an environment holding 2026.4 answers
+  ``Would install tzdata-2026.6``; one already holding 2026.6 answers
+  ``Requirement already satisfied``.
+
+  The second is that on either path, if the rules for your zone change before
+  the next QATrack+ release, see *Getting new rules before the next release*
+  below.
 * **Docker:** from the ``tzdata`` **package** pinned in ``uv.lock``, the same
   one Windows uses - not from the image's operating system copy. The image sets
   ``PYTHONTZPATH=``, which empties the search path Python would otherwise
