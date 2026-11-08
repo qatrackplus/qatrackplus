@@ -91,7 +91,11 @@ print('dev environment ready - log in as superuser / superuser')
 """
 
 
-[tasks.dev-clean]
+# Private: removing the dev environment and stopping there is not something
+# anybody sets out to do - `dev-reset` is the job, and it is named for being
+# destructive. poe 0.49.0 hides `_` tasks from the list and refuses to run one
+# directly, so this is a real boundary rather than a convention.
+[tasks._dev-clean]
 help = "Remove the dev settings files and sqlite database, leaving nothing behind"
 interpreter = "python"
 shell = """
@@ -112,7 +116,7 @@ for path in [
 
 [tasks.dev-reset]
 help = "DESTRUCTIVE: delete your dev settings and sqlite database, then set up a fresh one"
-sequence = ["dev-clean", "dev-init"]
+sequence = ["_dev-clean", "dev-init"]
 
 
 [tasks.run]
