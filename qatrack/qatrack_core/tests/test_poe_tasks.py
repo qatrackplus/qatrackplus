@@ -443,7 +443,7 @@ def test_every_mirror_that_delegates_points_at_a_task_that_exists():
 # and nobody has to argue for it. swift counted 41 on 2026-11-06 and said so -
 # `projects/qatrackplus/evidence/2026-11-06-swift-poe-task-architecture-review.md` -
 # and the guide's *Adding a new poe task* now says what earns a public name.
-MAX_PUBLIC_TASKS = 38
+MAX_PUBLIC_TASKS = 35
 
 
 def public_task_names():
@@ -482,3 +482,106 @@ def test_the_ceiling_is_not_far_above_the_count():
         'without this test noticing. Lower the ceiling to %d.'
         % (MAX_PUBLIC_TASKS, len(names), slack, len(names))
     )
+
+
+# --------------------------------------------------------------------------
+# test-gui: one task, two named options
+# --------------------------------------------------------------------------
+
+def gui_run(tmp_path, **argv):
+    """Run `_test-gui-run`'s body with a pytest that reports its environment.
+
+    poe hands a declared argument to a Python body as an environment variable,
+    so this sets `mode` and `browser` the way the wrapper would. The stub
+    stands in for `python -m pytest`, which is the only thing the body shells
+    out to.
+    """
+    stub = tmp_path / 'pytest' / '__main__.py'
+    stub.parent.mkdir(parents=True, exist_ok=True)
+    (tmp_path / 'pytest' / '__init__.py').write_text('', encoding='utf-8')
+    stub.write_text(
+        'import os\n'
+        "print('HEADLESS=%s' % os.environ.get('SELENIUM_HEADLESS', ''))\n"
+        "print('SLOWMO=%s' % os.environ.get('SELENIUM_SLOW_MO', ''))\n"
+        "print('BROWSER=%s' % os.environ.get('SELENIUM_BROWSER', ''))\n",
+        encoding='utf-8',
+    )
+    done = run_body('_test-gui-run', tmp_path, env={'PYTHONPATH': str(tmp_path), **argv})
+    assert done.returncode == 0, (done.returncode, done.stdout, done.stderr)
+    return dict(
+        line.split('=', 1) for line in done.stdout.splitlines() if '=' in line and line.isascii()
+    ), done.stdout
+
+
+def test_a_mode_sets_the_variables_it_names(tmp_path):
+    seen, out = gui_run(tmp_path, mode='headless')
+    assert seen.get('HEADLESS') == 'True', out
+    assert seen.get('SLOWMO') == '', out
+
+    seen, out = gui_run(tmp_path, mode='visible')
+    assert seen.get('HEADLESS') == 'False', out
+    assert seen.get('SLOWMO') == '', out
+
+    seen, out = gui_run(tmp_path, mode='watch')
+    assert seen.get('HEADLESS') == 'False', out
+    assert seen.get('SLOWMO') == '0.4', (
+        'watch no longer slows the run down, which is the only thing that '
+        'distinguishes it from visible: %s' % out
+    )
+
+
+def test_omitting_an_option_overrides_nothing(tmp_path):
+    """The reason `poe test-gui` with nothing given is still worth having.
+
+    settings.py reads both variables from the environment and
+    local_test_settings.py is imported afterwards, so leaving them unset is
+    what lets a developer's own choice through. Setting a default here would
+    silently take that away.
+    """
+    seen, out = gui_run(tmp_path)
+    assert seen.get('HEADLESS') == '', out
+    assert seen.get('SLOWMO') == '', out
+    assert seen.get('BROWSER') == '', out
+    assert 'mode from your settings' in out, out
+    assert 'browser from your settings' in out, out
+
+    # The body cannot see this half. poe applies a declared `default` before
+    # the body runs, so a default added to either option would hand it a value
+    # and the assertions above would still pass while the behaviour they exist
+    # for had gone. Checked here because this is the test that would otherwise
+    # be believed - found by mutating the TOML and watching it stay green.
+    for arg in TASKS['test-gui'].get('args') or []:
+        assert 'default' not in arg, (
+            "%s has a default, so `poe test-gui` no longer leaves that half to the "
+            "developer's own settings - which is the only reason the bare task is "
+            'worth having' % arg['name']
+        )
+
+
+def test_the_browser_option_reaches_selenium(tmp_path):
+    seen, out = gui_run(tmp_path, browser='chromium')
+    assert seen.get('BROWSER') == 'chromium', out
+    assert seen.get('HEADLESS') == '', 'naming a browser should not impose a mode: %s' % out
+
+
+def test_both_options_are_named_so_their_order_cannot_matter(tmp_path):
+    """Measured: two optional *positionals* reject the reversed order.
+
+    `poe a chromium headless` fails with "argument mode: invalid choice:
+    'chromium'" - true, and misleading, since the fault is the order. Named
+    options cannot have that problem, and this asserts they are named rather
+    than trusting the help line.
+    """
+    args = TASKS['test-gui'].get('args') or []
+    by_name = {a['name']: a for a in args}
+    assert set(by_name) == {'mode', 'browser'}, by_name
+    for name, arg in by_name.items():
+        assert arg.get('options'), (
+            '%s is not a named option, so `poe test-gui <a> <b>` would depend on the '
+            'order the two are typed in' % name
+        )
+        assert not arg.get('positional'), '%s is positional again' % name
+        assert arg.get('choices'), (
+            '%s lost its choices, which is what rejects a value the harness does not '
+            'know and what drives tab completion' % name
+        )

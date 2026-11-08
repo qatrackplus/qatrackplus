@@ -50,8 +50,9 @@ _Confirm which branch this targets (e.g. master)._
   skipped by default.
 - [ ] `uv run poe test-gui` passes — only the GUI/Selenium tests. **Headless is
   the default**, so no display server is needed. The browser is an optional
-  argument (`poe test-gui-headless chromium`); omit it and your own settings
-  choose. `poe test-gui-visible` and `poe test-gui-watch` show the run instead.
+  option (`poe test-gui --mode headless --browser chromium`); omit either and
+  your own settings choose that half. `--mode visible` and `--mode watch` show
+  the run instead.
   For a single GUI test, go through pytest — `uv run pytest -m selenium -k
   test_name` — since the tasks take no pytest flags. These are
   `continue-on-error` in CI, so a red GUI run does not block the build; check
