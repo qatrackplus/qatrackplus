@@ -207,6 +207,60 @@ class TestThePageTellsASiteSomethingItCanActOn:
             "because everywhere else in the Docker documentation `up -d` is right."
         )
 
+    def test_the_windows_route_does_not_tell_a_site_to_run_a_bare_uv_sync(self):
+        """`uv sync` is exact by default, so a bare one uninstalls the extras.
+
+        The between-releases route ends in a sync on Windows, and the first
+        version of it said plain `uv sync`. That removes CherryPy, pywin32,
+        mssql-django and the LDAP packages from a Windows site - a working site
+        broken by a command given to correct a clock. @nsmela caught it on
+        q#926 with a dry run; reproduced here as `Would uninstall 2 packages`.
+        """
+        # Command lines only - the indented contents of a `code-block`. The
+        # prose around them has to be free to say `uv sync` while explaining
+        # why a bare one is wrong, and an earlier version of this test flagged
+        # exactly that explanation.
+        commands = [
+            line.strip() for line in self.section().splitlines()
+            if line.startswith('    ') and line.strip().startswith('uv sync')
+        ]
+        assert commands, (
+            'no `uv sync` command line in the time-zone section; if the Windows route has '
+            'moved or been dropped, re-read it rather than deleting this test'
+        )
+        bare = [c for c in commands if '--extra' not in c and '--dry-run' not in c]
+        assert not bare, (
+            'the time-zone section tells a site to run uv sync without the extras it '
+            'installed with, which uninstalls them: %r' % bare
+        )
+
+    def test_no_bold_run_in_the_section_contains_a_literal(self):
+        """RST inline markup cannot nest, and `sphinx -W` does not say so.
+
+        `**Not a bare ``uv sync``.**` does not parse. It does not warn either -
+        the strict build reported zero warnings - it simply renders with the
+        double backticks showing as text on the page. That happened twice in
+        this file in one day, and both times the only thing that caught it was
+        reading the built HTML rather than the source.
+
+        Checked by pairing the `**` markers instead of pattern-matching them: a
+        regex for the whole construct also matches the gap *between* two bold
+        runs, which is how a first attempt at this found 27 instances in
+        `docs/` that were all false.
+        """
+        for paragraph in self.section().split('\n\n'):
+            runs = paragraph.split('**')
+            # Even count of markers means they pair; odd means one is a stray
+            # and this crude split would mis-assign the halves.
+            if len(runs) % 2 == 0:
+                continue
+            for inside in runs[1::2]:
+                assert '``' not in inside, (
+                    'a bold run contains a literal, which RST will not parse and the '
+                    'docs build will not warn about - it renders with the backticks '
+                    'visible: %r' % ('**%s**' % inside)
+                )
+
     def test_docker_is_told_how_to_get_new_rules_before_a_release(self):
         section = self.section()
         assert 'uv lock --upgrade-package tzdata' in section, (

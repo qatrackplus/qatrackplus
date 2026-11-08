@@ -324,10 +324,25 @@ for your zone change and you cannot wait, each platform has a route:
 
       uv lock --upgrade-package tzdata
 
-  On Windows follow it with ``uv sync``; on Docker, rebuild and recreate as
-  :ref:`the update steps <docker_updating>` describe. This edits a tracked
-  file, so expect ``git pull`` to report a conflict there at the next upgrade,
-  and resolve it in favour of the release.
+  On Windows, follow it with **the same sync command you installed with**. The
+  Windows guide's is ``uv sync --exact --extra win --extra mssql``:
+
+  .. code-block:: console
+
+      uv sync --exact --extra win --extra mssql
+
+  **Not the bare command.** ``uv sync`` is exact by default - only ``--inexact`` turns
+  that off - so running it without the extras you installed with *uninstalls*
+  them: on a Windows site that is CherryPy, pywin32, mssql-django and the LDAP
+  packages, which is a working site turned into a broken one by a command given
+  for a clock correction. Dry-run on a Linux checkout with one extra added:
+  plain ``uv sync --frozen --dry-run`` answers ``Would uninstall 2 packages``.
+
+  On Docker, rebuild and recreate as :ref:`the update steps <docker_updating>`
+  describe.
+
+  ``uv lock`` edits a tracked file, so expect ``git pull`` to report a conflict
+  there at the next upgrade, and resolve it in favour of the release.
 
 **On Docker, the site-requirements folder is not a route for this**, although it
 is the obvious place to look. A newer ``tzdata`` listed in
