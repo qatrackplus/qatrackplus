@@ -40,11 +40,23 @@ and then you can generate your schema with:
 
 .. code-block:: sh
 
-    make schema
+    uv run poe schema
 
 which will output the schema to
-docs/developer/images/qatrack_schema_$(SCHEMA_VERSION).svg - the minor version,
-so every 4.0.z writes qatrack_schema_4.0.svg.
+``docs/developer/images/qatrack_schema_<major>.<minor>.svg`` - for example
+``qatrack_schema_4.0.svg``. The version comes from the installed package, and the
+diagram is named for the minor line rather than the patch release because the
+schema is the same across every patch of a line: a change to it needs a
+migration, which makes it a minor release.
+
+``make schema`` is **retired** and no longer does this. It named the diagram from
+a version hardcoded in the ``Makefile``, which went stale, and it exited 0 even
+when the render failed - so it could report success while leaving the committed
+838 KB diagram corrupted. The target now prints that and exits 1.
+
+The output is gitignored. Running the task to *look* at the schema will not
+stage an 838 KB SVG into an unrelated branch; adding the diagram for a new minor
+line is a deliberate ``git add -f``.
 
 
 Windows

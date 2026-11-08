@@ -1488,3 +1488,20 @@ If using SSL use these:
 
 More information on Active Directory is available here: :ref:`Active Directory
 <active_directory>`.
+
+
+.. _settings_defaults:
+
+Every setting and its default
+-----------------------------
+
+The table below is generated when the documentation is built, from
+``qatrack/settings.py`` itself, so it cannot drift from the code: every
+upper-case setting the file defines, with the literal value it has before
+``local_settings.py`` is applied. A value marked *computed* is derived at
+start-up (from another setting, the environment or the file system); read the
+line in ``settings.py``. Secret-looking settings are listed but their defaults
+are not shown. The sections above explain what the settings you are likely to
+change actually do.
+
+.. include:: _settings_defaults.rst

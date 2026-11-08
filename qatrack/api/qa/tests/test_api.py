@@ -869,7 +869,13 @@ class TestTestListInstanceAPI(APITestCase):
         expected_due_date = self.utc.due_date
 
         self.data['include_for_scheduling'] = False
-        self.data['work_completed'] = (timezone.now() - timezone.timedelta(days=1)).strftime("%Y-%m-%d %H:%M")
+        # Local wall-clock time at midday, for the reason given in
+        # qa/tests/test_views.py::TestPerformQA::test_perform_unscheduled. This path does
+        # not currently fail - DRF resolves an ambiguous hour to the DST side instead of
+        # refusing it, which Django's own form does not - so the string is the same shape
+        # for the same reason rather than because this test was seen to break.
+        yesterday = timezone.localtime(timezone.now()) - timezone.timedelta(days=1)
+        self.data['work_completed'] = yesterday.replace(hour=12, minute=0).strftime("%Y-%m-%d %H:%M")
         self.data['work_started'] = self.data['work_completed']
         self.client.post(self.create_url, self.data)
 

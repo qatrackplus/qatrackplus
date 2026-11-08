@@ -1,0 +1,37 @@
+# Included from pyproject.toml's [tool.poe] include list - see the header
+# comment there for the overall poe/Makefile migration context.
+
+# ==========================================================================
+# Coverage
+# ==========================================================================
+
+
+[[tasks.cover.args]]
+name = "path"
+positional = true
+# Optional, and that is what collapses three tasks into one: poe drops an
+# omitted positional out of a `cmd` entirely, so `poe cover` runs
+# `--cov ./` and `poe cover qatrack` runs `--cov ./qatrack qatrack`.
+# Measured on poe 0.49.0, the version uv.lock pins.
+#
+# A path, not a dotted module. The command interpolates it into both
+# `--cov ./${path}` and pytest's target, and pytest takes paths - given
+# qatrack.qa it collects nothing, reports no coverage and exits 4, which
+# looks far too much like a module with no tests.
+help = "optional: qatrack, qatrack/qa, or any path - omit it for the whole suite"
+
+
+# `cover`, `cover-qatrack` and `cover-module` were three copies of one command
+# differing only in what they measured, which is a parameter rather than a job
+# - the rule tests.toml already states for the browser argument. swift counted
+# the cost on 2026-11-06: `cover-module` had lost the `--reuse-db` the other
+# two carried, which is what three copies of a command do to each other.
+# Merging them restores it for the module case.
+[tasks.cover]
+help = "Run the suite with coverage (--reuse-db); add a path to scope it"
+cmd = "pytest --reuse-db --cov-report term-missing --cov ./${path} ${path}"
+
+
+[tasks.cover-mo]
+help = "Like cover, but omits files that are already fully covered"
+cmd = "pytest --reuse-db --cov-report term-missing:skip-covered --cov ./"

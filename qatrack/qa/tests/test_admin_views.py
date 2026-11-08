@@ -27,6 +27,24 @@ class TestListAdminViewsTest(TestCase):
         self.assertContains(response, _("Export Test Pack"))
         self.assertContains(response, _("Import Test Pack"))
 
+    def test_test_changelist_view_contains_export_import_buttons(self):
+        """The Test changelist offers the test pack links too"""
+        response = self.client.get(reverse('admin:qa_test_changelist'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, reverse('admin:qa_export_testpack'))
+        self.assertContains(response, reverse('admin:qa_import_testpack'))
+        self.assertContains(response, _("Export Test Pack"))
+        self.assertContains(response, _("Import Test Pack"))
+
+    def test_testlistcycle_changelist_view_contains_export_import_buttons(self):
+        """The Test List Cycle changelist offers the test pack links too"""
+        response = self.client.get(reverse('admin:qa_testlistcycle_changelist'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, reverse('admin:qa_export_testpack'))
+        self.assertContains(response, reverse('admin:qa_import_testpack'))
+        self.assertContains(response, _("Export Test Pack"))
+        self.assertContains(response, _("Import Test Pack"))
+
     def test_export_testpack_view_requires_permission(self):
         """Test that export testpack view requires proper permission"""
         # Remove superuser status and permissions
@@ -280,3 +298,82 @@ class TestRawIdWrapperIconTest(TestCase):
                     "{# #} is not a comment, use {%% comment %%}" % url
                 ),
             )
+
+
+class TestPackLinksFollowTheirViewsPermission(TestCase):
+    """The links must not be offered to users the views will refuse.
+
+    `ExportTestPack` and `ImportTestPack` require `qa.change_testlist`
+    (`qa/views/admin.py`), but reaching the Test, Test List or Test List Cycle
+    changelist needs only that model's own view or change permission. So a user with
+    `qa.view_test` saw both links and got a **403** on clicking either.
+
+    This is a usability defect rather than a security one, and the distinction matters:
+    the views were and are the enforcement boundary. These tests assert both halves -
+    the link is hidden, *and* the view still refuses - so a later change that swaps the
+    template gate for real access control, or drops the view's permission because "the
+    link is hidden anyway", fails here.
+
+    Found by @coderabbitai and @copilot-pull-request-reviewer on c#12, which flagged the
+    Test and Test List Cycle changelists. **The Test List one has the same defect and
+    was not flagged**; it is covered below.
+    """
+
+    CHANGELISTS = [
+        ('admin:qa_test_changelist', 'view_test'),
+        ('admin:qa_testlist_changelist', 'view_testlist'),
+        ('admin:qa_testlistcycle_changelist', 'view_testlistcycle'),
+    ]
+
+    def setUp(self):
+        self.test_list = utils.create_test_list()
+        self.test = utils.create_test()
+        utils.create_test_list_membership(self.test_list, self.test)
+        self.export = reverse('admin:qa_export_testpack')
+        self.import_ = reverse('admin:qa_import_testpack')
+
+    def staff_user(self, username, *codenames):
+        """A staff user with exactly the named qa permissions and nothing else."""
+        user = utils.create_user(uname=username, is_superuser=False, is_staff=True)
+        user.user_permissions.clear()
+        for codename in codenames:
+            user.user_permissions.add(
+                Permission.objects.get(content_type__app_label='qa', codename=codename))
+        return type(user).objects.get(pk=user.pk)   # clear the permission cache
+
+    def test_the_links_are_hidden_from_a_user_the_views_would_refuse(self):
+        for url_name, view_perm in self.CHANGELISTS:
+            with self.subTest(changelist=url_name):
+                user = self.staff_user('viewer-%s' % view_perm, view_perm)
+                self.client.force_login(user)
+                response = self.client.get(reverse(url_name))
+                assert response.status_code == 200, (url_name, response.status_code)
+                self.assertNotContains(response, self.export)
+                self.assertNotContains(response, self.import_)
+
+    def test_the_views_still_refuse_that_user(self):
+        """The gate is cosmetic; this is the boundary that actually holds."""
+        user = self.staff_user('viewer-only', 'view_test', 'view_testlist')
+        self.client.force_login(user)
+        for url in (self.export, self.import_):
+            with self.subTest(url=url):
+                assert self.client.get(url).status_code == 403
+
+    def test_the_links_are_shown_to_a_user_who_may_use_them(self):
+        """Without this the test above would pass just as well if the links were gone."""
+        for url_name, view_perm in self.CHANGELISTS:
+            with self.subTest(changelist=url_name):
+                user = self.staff_user('editor-%s' % view_perm, view_perm, 'change_testlist')
+                self.client.force_login(user)
+                response = self.client.get(reverse(url_name))
+                assert response.status_code == 200, (url_name, response.status_code)
+                self.assertContains(response, self.export)
+                self.assertContains(response, self.import_)
+
+    def test_that_user_reaches_the_views(self):
+        user = self.staff_user('editor-only', 'view_test', 'change_testlist')
+        self.client.force_login(user)
+        for url in (self.export, self.import_):
+            with self.subTest(url=url):
+                assert self.client.get(url).status_code == 200
+

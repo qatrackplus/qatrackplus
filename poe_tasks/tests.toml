@@ -1,0 +1,508 @@
+# Included from pyproject.toml's [tool.poe] include list - see the header
+# comment there for the overall poe/Makefile migration context.
+
+# ==========================================================================
+# Tests
+# ==========================================================================
+
+
+[tasks.test]
+help = "Run the suite (GUI/Selenium tests skipped by default - pass --run-selenium to include them)"
+cmd = "pytest"
+
+# `test-order` is the local half of
+# `.github/workflows/order-independence.yml`, and `poe help` is the only place
+# it is written down. That is deliberate: a check that exists only as a
+# workflow file is a check nobody runs before pushing, and this one is meant to
+# be run by a person who has decided a change deserves it. The workflow's
+# header holds the policy - as preparation for any release, when a new app or a
+# significant database change arrives, and when a database driver or a maths
+# library moves version significantly.
+#
+# `-p randomly` is passed here rather than enabled for every run. `poe test`
+# has to stay deterministic: a failure you cannot reproduce from the command
+# that produced it is worse than no failure at all. pytest-randomly prints the
+# seed it chose at the top of its output, and replaying that seed replays the
+# order exactly, which is what makes a failure here actionable.
+#
+# What it catches is tests that depend on each other - state left in a module,
+# a class attribute mutated, an id that is 1 only because nothing ran first. It
+# does not catch a test that depends on the order a *database* returns rows in;
+# that is a property of the query, and the fix is an explicit `order_by`.
+#
+# Known: the suite does not pass shuffled yet. Measured 2026-10-19, seeds 1 and
+# 2 each give 15 failures. So expect red, and read the failures rather than the
+# count.
+
+[[tasks.test-order.args]]
+name = "seed"
+positional = true
+required = false
+help = "A seed printed by an earlier run, to replay that exact order"
+
+
+# The body carries no comments, because poe echoes a task's source before
+# running it and every line would be printed on every run.
+#
+# `seed` arrives through the environment: poe hands a declared argument to a
+# Python body that way, and `${seed}` is not substituted inside one - see
+# `test-engine` below for the same note.
+#
+# The pytest-randomly check is there because its dev-group entry arrived with
+# the order-independence work, so `uv sync --group dev` only answers the
+# missing-plugin case once that branch is in the tree. The one-off
+# `uv run --with` command the body prints works either way.
+[tasks.test-order]
+help = "Run the suite in a shuffled order, to catch tests that depend on each other"
+interpreter = "python"
+shell = """
+import importlib.util
+import os
+import subprocess
+import sys
+
+seed = os.environ.get('seed') or ''
+
+if importlib.util.find_spec('pytest_randomly') is None:
+    print('pytest-randomly is not installed in this environment.')
+    print()
+    print('If the order-independence branch is in your tree:')
+    print()
+    print('    uv sync --group dev')
+    print()
+    print('Otherwise, for a one-off run without installing it:')
+    print()
+    print('    uv run --with pytest-randomly pytest -m \"not selenium\" -p randomly')
+    sys.exit(1)
+
+argv = [sys.executable, '-m', 'pytest', '-m', 'not selenium', '-p', 'randomly']
+if seed:
+    argv.append('--randomly-seed=%s' % seed)
+    print('Replaying seed %s.' % seed)
+else:
+    print('New shuffle. pytest-randomly prints the seed it chose below; pass it')
+    print('back as `poe test-order <seed>` to run the same order again.')
+print()
+
+sys.exit(subprocess.call(argv))
+"""
+
+
+# NOTE: EXTRA ARGUMENTS, and where they do and do not arrive.
+#
+# `poe <task> -- --flag` appends the extra tokens to a `cmd` task's command
+# line, and silently discards them for a task with a `shell` body. A body
+# builds its own argv in Python, and poe has nowhere to put the extras, so
+# they are simply gone. So `poe test -- -k foo` filters the run and
+# `poe test-engine sqlite -- -k foo` runs the whole suite against sqlite.
+#
+# Measured with poe 0.49.0: `poe -d test -- -k foo` prints
+# `pytest -- -k foo`; `poe -d lint -- --fix` prints
+# `pre-commit run --all-files -- --fix`; `poe -d docs-serve --port 9000
+# -- -k foo` prints `sphinx-autobuild ... --port 9000 -k foo`; while
+# `poe test-order 1 -- -k nosuchtest` ran all 1745 tests.
+#
+# **An earlier version of this note, and of the matching text in
+# pyproject.toml and the developer guide, blamed declaring a named argument.
+# That is wrong.** `docs-serve` declares `--port` and forwards extras
+# anyway; `dump-data` declares nothing and drops them. The dividing line is
+# `cmd` against `shell`, and nothing else. The mistake came from
+# `_test-engine`, which was a shell task that happened to declare
+# `--engine`; the argument was never what stopped the forwarding.
+#
+# For a filtered run against one engine, copy that engine's file to
+# qatrack/local_test_settings.py by hand and run `poe test -- -k foo`. The
+# alternative - a declared argument on `test-engine` that the body splits
+# into pytest flags - would work, and is not written here because nobody has
+# asked for it.
+#
+# This note used to live beside `_test-engine` in poe_tasks/make_compat.toml,
+# which is gone: the make-* analogs are now `ref`s to the tasks here.
+[[tasks.test-engine.args]]
+name = "engine"
+positional = true
+required = true
+help = "sqlite, memory, postgres, mysql or mssql"
+
+
+# The body carries no comments - poe prints a task's source on every run - so
+# the three things worth knowing about it are here.
+#
+# `engine` arrives through the environment. poe hands declared arguments to a
+# Python body that way, and `${engine}` is NOT substituted inside one: it would
+# arrive literally.
+#
+# THE .bak GUARD refuses before touching anything if a backup from an earlier
+# run is still present. The try/finally restores on any Python-level exit,
+# Ctrl-C included, but cannot run if the process is killed outright - SIGHUP
+# from a closed terminal or dropped SSH session, SIGKILL, a power cut - and
+# that leaves the real settings in the .bak. Copying over it would destroy
+# them, which is the one outcome worth refusing rather than reporting. The same
+# guard is in `test-integration` and in the Makefile.
+#
+# THE try/finally, rather than the shell version's fall-through restore: the
+# Makefile's own `_test-engine` target only restores if the pytest line
+# completes, so interrupting it leaves your real local_test_settings.py swapped
+# out. This restores on any exit, KeyboardInterrupt included.
+[tasks.test-engine]
+help = "Run the suite against one engine, restoring your settings afterwards: poe test-engine <sqlite|memory|postgres|mysql|mssql>"
+interpreter = "python"
+shell = """
+import os, pathlib, shutil, subprocess, sys
+
+engine = os.environ['engine']
+src = pathlib.Path(f'qatrack/local_test_settings.{engine}.py')
+live = pathlib.Path('qatrack/local_test_settings.py')
+backup = pathlib.Path('qatrack/local_test_settings.py.bak')
+
+if not src.exists():
+    print(f'error: {src} not found.')
+    print(f'Create it first - see deploy/dev/local_test_settings.{engine}.py '
+          'for a starting template.')
+    sys.exit(1)
+
+if backup.exists():
+    print('error: %s already exists - an earlier run was killed before it could'
+          ' put your settings back.' % backup)
+    print('Move it to %s, or delete it, then try again.' % live)
+    sys.exit(1)
+
+had_existing = live.exists()
+if had_existing:
+    shutil.copyfile(live, backup)
+shutil.copyfile(src, live)
+try:
+    status = subprocess.call([sys.executable, '-m', 'pytest'])
+finally:
+    if had_existing:
+        shutil.move(str(backup), str(live))
+    else:
+        live.unlink(missing_ok=True)
+sys.exit(status)
+"""
+
+
+# The body carries no comments - poe prints a task's source on every run, and
+# this was the longest of them at 109 lines. Six things it does that are not
+# obvious from reading it:
+#
+# IT REFUSES IF THIS WOULD PROVISION THE DEVELOPER'S OWN DATABASE.
+# migrate/createcachetable/collectstatic/createsuperuser are manage.py commands,
+# so they read local_settings.py - the development settings - while only pytest
+# reads the local_test_settings.py this task writes its TEST name into. @nsmela
+# measured the consequence on 2026-10-08: with local_settings.py naming
+# db/my_real_dev.db, a superuser/superuser account was created in *that*
+# database while the tests ran against a separate db/default.db. Asking Django
+# for the effective name is the only reliable check, because the value can come
+# from any layer of the settings.
+#
+# THE EFFECTIVE NAME IS COMPARED AS A PATH, not a string: the settings hold a
+# posix-style name and `str(DB)` is backslashed on Windows.
+#
+# IT REFUSES IF A BACKUP FROM AN INTERRUPTED RUN IS STILL THERE, rather than
+# moving a throwaway copy on top of it - which is how the real loss happens.
+# Same guard as `test-engine`, and as the Makefile.
+#
+# IT MOVES THE REAL DATABASE AND SETTINGS ASIDE INSIDE A try/finally. The shell
+# version of this task does the same move but restores by falling through to its
+# last few lines, so a failed provision or an interrupted run leaves the
+# developer's database at db/default.db.bak with no db/default.db at all.
+#
+# IT POINTS THE TEST DATABASE AT THE ONE IT JUST PROVISIONED, which is the one
+# place that is wanted. The template deliberately names a different test
+# database, because Django deletes a file-based one before creating it and again
+# at teardown - when the two names matched, a plain pytest destroyed a
+# developer's populated db/default.db.
+#
+# IT KEEPS THE PROVISIONED DATABASE FOR INSPECTION, but only if it exists: the
+# shell version runs its `mv` unconditionally and errors when provisioning
+# failed before the database was created.
+[tasks.test-integration]
+help = "Provision a fresh sqlite db like a real deployment, then run the suite against it"
+interpreter = "python"
+shell = """
+import os, pathlib, shutil, subprocess, sys
+
+DB = pathlib.Path('db/default.db')
+DB_BAK = pathlib.Path('db/default.db.bak')
+KEPT = pathlib.Path('db/pytest_default.db')
+LIVE = pathlib.Path('qatrack/local_test_settings.py')
+LIVE_BAK = pathlib.Path('qatrack/local_test_settings.py.bak')
+
+pathlib.Path('db').mkdir(exist_ok=True)
+
+
+def manage(*args, env=None):
+    code = subprocess.call([sys.executable, 'manage.py', *args],
+                           env={**os.environ, **(env or {})})
+    if code != 0:
+        raise SystemExit(code)
+
+
+effective = subprocess.run(
+    [sys.executable, '-c',
+     "import os, django; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'qatrack.settings');"
+     "django.setup();"
+     "from django.conf import settings; print(settings.DATABASES['default']['NAME'])"],
+    capture_output=True, text=True,
+)
+if effective.returncode != 0:
+    print(effective.stderr.strip() or 'could not read DATABASES from the settings')
+    raise SystemExit(1)
+if pathlib.Path(effective.stdout.strip()) != DB:
+    print('error: this task provisions the database your settings point at, and that is')
+    print('         %s' % effective.stdout.strip())
+    print('not %s. Continuing would migrate that database and leave a' % DB)
+    print('superuser/superuser account in it, while the tests ran somewhere else.')
+    print('Point local_settings.py at %s before running this.' % DB)
+    raise SystemExit(1)
+
+stale = [p for p in (DB_BAK, LIVE_BAK) if p.exists()]
+if stale:
+    print('error: a backup from an earlier run is still here:')
+    for p in stale:
+        print('  %s' % p)
+    print('That run did not finish restoring. Put them back, or remove them, first.')
+    raise SystemExit(1)
+
+had_db = DB.exists()
+had_live = LIVE.exists()
+if had_db:
+    shutil.move(str(DB), str(DB_BAK))
+if had_live:
+    shutil.copyfile(LIVE, LIVE_BAK)
+shutil.copyfile('deploy/dev/local_test_settings.sqlite.py', LIVE)
+with LIVE.open('a', encoding='utf-8') as fh:
+    fh.write("\\nDATABASES['default']['TEST']['NAME'] = 'db/default.db'\\n")
+
+status = 1
+try:
+    manage('migrate')
+    manage('createcachetable')
+    manage('collectstatic', '--noinput')
+    manage('createsuperuser', '--noinput', env={
+        'DJANGO_SUPERUSER_USERNAME': 'superuser',
+        'DJANGO_SUPERUSER_PASSWORD': 'superuser',
+        'DJANGO_SUPERUSER_EMAIL': 'superuser@example.com',
+    })
+    status = subprocess.call([sys.executable, '-m', 'pytest', '--reuse-db'])
+finally:
+    if DB.exists():
+        KEPT.unlink(missing_ok=True)
+        shutil.move(str(DB), str(KEPT))
+        print(f'provisioned database kept at {KEPT}')
+    if had_live:
+        shutil.move(str(LIVE_BAK), str(LIVE))
+    else:
+        LIVE.unlink(missing_ok=True)
+    if had_db:
+        shutil.move(str(DB_BAK), str(DB))
+        print(f'restored your {DB}')
+
+sys.exit(status)
+"""
+
+# ==========================================================================
+# Tests - browser / GUI
+# ==========================================================================
+
+
+# GUI/Selenium only. There are two axes, browser and window, and neither has a
+# "real" option and a deviation: Chromium finds timing races Firefox does not,
+# and a visible window is how you debug them. So no mode or browser is treated
+# as the special case - but the browser is a *parameter*, and the window mode
+# is what you are choosing to do, which is why one is an argument and the other
+# is the task name.
+#
+# ONE TASK, TWO NAMED OPTIONS. Cody's decision, 2026-11-08: *"is there a way to
+# have something like test-gui <mode> <browser> be interpreted consistently?
+# Where missing one argument, or having the arguments out of order wouldn't be
+# issues"* - then *"do option 1"*. Named options are order-insensitive and
+# optional by construction, which positionals are not: measured on poe 0.49.0,
+# two optional positionals with `choices` accept `headless chromium` and reject
+# `chromium headless` with *"argument mode: invalid choice: 'chromium'"* - true,
+# and misleading, because the fault is the order rather than the word.
+#
+# This supersedes the 2026-11-05 shape of three `test-gui-<mode>` tasks with a
+# browser argument, and the reasoning for that shape is kept below rather than
+# deleted, because the trade it describes is still the trade.
+#
+# What it costs, and this is the part to weigh if it is ever revisited: the
+# plain `test-gui` was a `cmd`, so `poe test-gui -- -k foo` forwarded to pytest.
+# A task that takes arguments refs a body, and a body drops extras. Filtering to
+# one test was already documented as a job for plain pytest - the block below
+# and the developer guide both give those commands - but it used to be possible
+# here and now is not.
+#
+# `test-gui` with nothing given still sets nothing, so it runs whatever your own
+# settings configure - the mode is now omitted rather than absent.
+#
+# THIS REVERSES AN EARLIER DECISION HERE, and the cost is real. It used to be
+# six plain `cmd` tasks, one per browser-and-mode pair, because a `cmd`
+# forwards `poe test-gui-firefox-headless -- -k foo` straight to pytest, and
+# `-k`, `-x` and `--pdb` are exactly what you reach for on a failing browser
+# test. These are `ref`s to a body, so they drop extras - see the note above
+# `test-engine`. Cody chose the argument form on 2026-11-05 and accepted that
+# cost: six names for two axes was the worse trade, and once you are filtering
+# to a single test you are better off calling pytest directly. The block below
+# the tasks gives those commands for bash and PowerShell, and so does the
+# developer guide under *Running one GUI test*.
+#
+# The env tables are the reason these exist at all - `SELENIUM_BROWSER=chromium
+# pytest ...` is not something you can type in cmd or PowerShell, and Windows
+# is a large share of real deployments.
+#
+# Note these set environment variables, and qatrack/local_test_settings.py is
+# imported after settings.py has read them. If you uncomment SELENIUM_BROWSER
+# or SELENIUM_HEADLESS there, your file wins and these tasks stop having any
+# effect - which looks exactly like the task being broken.
+
+# WHY THIS EXISTS, given that it is exactly `uv run pytest -m selenium` and
+# adds no behaviour whatsoever. Cody was asked and decided to keep it,
+# 2026-11-05, for two reasons:
+#
+# 1. **It is the only task here that overrides nothing.** The three
+#    `test-gui-<mode>` tasks below always impose the window mode; omitting
+#    their browser argument leaves SELENIUM_BROWSER alone but still forces
+#    headless or visible. This one honours *both* halves of your own settings,
+#    so it is not `test-gui-headless` with the argument left off.
+# 2. **`poe` with no arguments is how someone finds out this project has a GUI
+#    suite at all.** A task list where every GUI entry forces a window mode
+#    hides the plain case - and the plain case is what CI runs, so naming it
+#    makes the CI command reproducible by name instead of by reading
+#    .github/workflows/ci.yml.
+#
+# If it is ever removed, the developer guide needs one line pointing at
+# `uv run pytest -m selenium`, and the three mode tasks need help text saying
+# that plain pytest is the unmodified form - otherwise that knowledge leaves
+# with the task. The full decision is in aviary,
+# projects/qatrackplus/decisions/2026-11-05-poe-task-naming-and-test-gui.md.
+[tasks.test-gui]
+help = "Run ONLY the GUI/Selenium tests: poe test-gui [--mode headless|visible|watch] [--browser firefox|chromium|edge]"
+ref = "_test-gui-run"
+
+[[tasks.test-gui.args]]
+name = "mode"
+options = ["--mode"]
+choices = ["headless", "visible", "watch"]
+help = "Window mode; omit it to use the one your settings choose"
+
+[[tasks.test-gui.args]]
+name = "browser"
+options = ["--browser"]
+choices = ["firefox", "chromium", "edge"]
+help = "Which browser to drive; omit it to use the one your settings choose. chromium also drives Google Chrome"
+
+
+# Three modes, with the browser as an argument, rather than one task per
+# browser-and-mode pair. Six tasks became three because the browser is a
+# parameter and not a purpose - the same reason a task is named for its job and
+# not for its tool (see *Adding a new poe task* in the developer guide).
+#
+#     poe test-gui-headless            # whichever browser your settings choose
+#     poe test-gui-headless chromium   # or name one
+#     poe test-gui-visible edge
+#     poe test-gui-watch               # your browser, slowed down
+#
+# OMITTING THE BROWSER USES YOURS. The argument has no default, so with none
+# given the tasks leave SELENIUM_BROWSER alone and whatever
+# local_test_settings.py (or your environment) says is what runs. Only the
+# window mode is imposed, which is the thing the task name is choosing.
+#
+# One asymmetry to know about, and it is the same precedence as ever:
+# settings.py reads SELENIUM_BROWSER from the environment, and
+# local_test_settings.py is imported afterwards, so a value pinned there beats
+# the environment. That is exactly what makes the no-argument case work - and
+# it means a developer who pins SELENIUM_BROWSER in that file will find the
+# ARGUMENT ignored too, with nothing said. If that bites, the fix is in
+# live.py, which would have to prefer the environment over the setting.
+#
+# `choices` on the argument does two things: it rejects a browser the harness
+# does not know (`poe test-gui-headless safari` fails with "invalid choice"
+# rather than running firefox and reporting a pass), and it gives real tab
+# completion of the allowed values.
+#
+# WHAT THIS COSTS, and what to do instead. These are `shell` bodies, so they
+# discard extra arguments - `poe test-gui-watch -- -k test_x` does not filter
+# anything, and poe rejects `poe test-gui-watch chromium -k test_x` outright
+# (measured on poe 0.49.0: "unrecognized arguments"). The six `cmd` tasks these
+# replace did forward `-- -k`. That mattered most for watch mode, so run a
+# single test through pytest directly, which is all the task does anyway:
+#
+#     # bash/zsh - one test, headless firefox
+#     uv run pytest -m selenium -k test_schedule_report
+#
+#     # bash/zsh - one test, chromium, visible, paused between actions
+#     SELENIUM_BROWSER=chromium SELENIUM_HEADLESS=False SELENIUM_SLOW_MO=0.4 \
+#         uv run pytest -m selenium -k test_schedule_report
+#
+#     # PowerShell - the same
+#     $env:SELENIUM_BROWSER='chromium'; $env:SELENIUM_HEADLESS='False'
+#     $env:SELENIUM_SLOW_MO='0.4'; uv run pytest -m selenium -k test_schedule_report
+#
+# The tasks exist so nobody has to remember which variables there are; once you
+# are filtering to one test you are past that point.
+
+# EVERY LINE OF A BODY IS PRINTED, so the explanation lives out here. poe echoes
+# a task's source before running it: this body was 49 lines, 23 of them comments
+# about `env` interpolation and SELENIUM_SLOW_MO precedence, and all 23 landed on
+# the terminal on every single run. `make_compat.toml` already knew this - "kept
+# to four lines because poe echoes a task's source before running it" - and it
+# was still worth measuring: 579 lines are echoed across the seventeen Python
+# bodies in poe_tasks, 139 of them comments.
+#
+# HOW THE TWO ARGUMENTS ARRIVE. `test-gui` declares `mode` and `browser`, and poe
+# hands a declared argument to a Python body as an environment variable, not as a
+# Python name and not on argv.
+#
+# WHY THE MODE MAPPING IS HERE rather than in an `env` table. It used to be: three
+# `test-gui-<mode>` tasks each carried a static `env`. One task with a `--mode`
+# option cannot, because an env table does not interpolate an argument - measured
+# on poe 0.49.0, `SELENIUM_HEADLESS = "${mode}"` arrives empty. So the mapping
+# from a mode name to the variables it sets has to be in the body.
+#
+# WHY OMITTING EITHER ONE OVERRIDES NOTHING. settings.py reads both variables from
+# the environment and local_test_settings.py is imported afterwards, so leaving
+# them unset is what lets a developer's own choice through. A default on either
+# option would silently take that away - there is a test asserting neither has
+# one.
+#
+# WATCHING. `watch` is `visible` plus a pause. SELENIUM_SLOW_MO is read straight
+# from the environment in live.py rather than exposed as a setting, so it cannot
+# be left switched on in a settings file - and a settings file cannot override it
+# either.
+#
+# THE ANNOUNCEMENT LINE is not decoration: without it there is nothing to tell a
+# headless run from a visible one until a window either appears or does not.
+[tasks._test-gui-run]
+help = "(internal) the GUI suite, with the mode and browser taken from the arguments"
+interpreter = "python"
+shell = """
+import os
+import subprocess
+import sys
+
+MODES = {
+    'headless': {'SELENIUM_HEADLESS': 'True'},
+    'visible': {'SELENIUM_HEADLESS': 'False'},
+    'watch': {'SELENIUM_HEADLESS': 'False', 'SELENIUM_SLOW_MO': '0.4'},
+}
+
+browser = os.environ.get('browser')
+if browser:
+    os.environ['SELENIUM_BROWSER'] = browser
+
+mode = os.environ.get('mode')
+if mode:
+    os.environ.update(MODES[mode])
+
+shown = mode or 'mode from your settings'
+if mode and os.environ.get('SELENIUM_SLOW_MO'):
+    shown += ', slowed to %ss between actions' % os.environ['SELENIUM_SLOW_MO']
+print('GUI tests: %s, %s' % (browser or 'browser from your settings', shown))
+sys.stdout.flush()
+
+sys.exit(subprocess.run([sys.executable, '-m', 'pytest', '-m', 'selenium']).returncode)
+"""
+
+

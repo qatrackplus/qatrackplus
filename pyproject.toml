@@ -153,7 +153,18 @@ norecursedirs = [
 # test_collection.py below enforces that nothing else slips through the same
 # way.
 python_files = ["test_*.py", "*_test.py", "tests.py"]
-addopts = "-ra -q"
+# `-p no:randomly` makes the default order deterministic. pytest-randomly is a
+# dev dependency for the order-independence run, and it shuffles on *every*
+# invocation as soon as it is installed - so adding it silently turned a bare
+# `pytest`, and all eight CI test jobs, into a different order each time, with a
+# fresh seed and no record of it. Measured 2026-11-02: three bare runs of one
+# file gave three different orders, and CI failed on a unique-constraint
+# collision in parts/test_partsnotice.py that no local run reproduced.
+#
+# The shuffle is meant to be opt-in until the suite can pass it - the
+# order-independence workflow already asks for it explicitly with `-p randomly`,
+# which is the shape the plugin was added for. This restores that.
+addopts = "-ra -q -p no:randomly"
 django_find_project = true
 DJANGO_SETTINGS_MODULE = "qatrack.settings"
 markers = [
@@ -165,11 +176,48 @@ python-ldap = { url = "https://github.com/cgohlke/python-ldap-build/releases/dow
 
 [dependency-groups]
 dev = [
+    # The task runner. `uv sync` installs the dev group by default, so
+    # `uv run poe <task>` works straight after a sync and nobody needs a global
+    # `uv tool install poethepoet` - which was the thing worth fixing, because a
+    # global install leaves everyone on a different version.
+    #
+    # In the dev group rather than the base set. It was in the base set on the
+    # grounds that the deployment and translation tasks are meant for sites too,
+    # and that Windows has no Make. Measured 2026-11-03, and neither holds:
+    # `docs/install/` contains **no** reference to poe, nor does `deploy/` or
+    # the Docker entrypoint, so nothing tells a site to run a poe task; the four
+    # deployment tasks that were the reason are all marked `WIP-`, are Ubuntu
+    # and sudo only, and have never been exercised; and `compile-messages` needs
+    # msgfmt, which the Docker runtime image does not carry. The Windows
+    # argument is about developers, who get the dev group by default.
+    #
+    # The consequence of getting it wrong was real: the production image runs
+    # `uv sync --no-dev` (deploy/docker/django/Dockerfile:30) and was shipping
+    # poethepoet to every site. @nsmela asked for this on 1 Oct and again on
+    # 3 Nov.
+    #
+    # Note it is pre-1.0, so the `<1.0` ceiling is doing real work.
+    #
+    # STILL AN OPEN QUESTION, and this placement is a deferral. Cody,
+    # 2026-11-04: *"leave poe in dev until those four are verified ... this will
+    # need to be validated and fixed in a later pr as 4.1 approaches release."*
+    # The four are nginx-conf, supervisor-conf and their -remove counterparts in
+    # poe_tasks/deploy.toml - the only tasks written for a site rather than a
+    # developer, and all four unverified. If they are made to work, poe belongs
+    # in the base dependencies and they belong in the install guide; if they are
+    # dropped, poe stays here for good. The full decision, and what has to be
+    # run first, is in the block above those tasks. Do not resolve it from this
+    # file alone.
+    "poethepoet>=0.49,<1.0",
+
     # Testing framework and utilities
     "pytest>=7.0,<8.0",
     "pytest-django>=4.5.0,<5.0",
     "pytest-cov>=4.0,<5.0",
     "pytest-sugar>=0.9.6,<1.0",
+    # Shuffles test order, for the nightly order-independence run. Prints the
+    # seed it used, so a failure is reproducible with --randomly-seed=<n>.
+    "pytest-randomly>=3.12,<4.0",
     "coverage>=6.0,<8.0",
     "django-coverage>=1.2.4,<2.0",
     "freezegun>=1.0.0,<3.0",
@@ -207,6 +255,7 @@ dev = [
     "sphinx-copybutton>=0.5.2",
     "sphinx-design>=0.6.0",
     "pytest-xdist>=3.0,<4.0",
+    "pygraphviz>=2.0.2",
 ]
 
 [tool.ruff]
@@ -239,3 +288,230 @@ ignore = [
 
 [tool.ruff.format]
 quote-style = "single"
+
+# poethepoet task definitions - see https://poethepoet.natn.io/
+#
+# This mirrors the Makefile's dev/test commands and is meant to run
+# *alongside* it, not replace it, while the project figures out whether to
+# move off Make (every Makefile target here is .PHONY - there's no real
+# file-dependency graph, so Make's core feature isn't actually in use, and
+# it has no native Windows story despite this project supporting Windows
+# deployments). `poe` is a project dependency (see [project] dependencies),
+# so `uv sync` installs it and `poe <task>` works from inside the repo with the
+# environment active, or as `uv run poe <task>` without. Tasks call
+# `pytest`/`python` directly rather than re-prefixing with `uv run`.
+#
+# The task definitions themselves live under poe_tasks/, one file per
+# theme (dev.toml, tests.toml, coverage.toml, docs.toml, data.toml,
+# deploy.toml, make_compat.toml), pulled in below via `[tool.poe] include`.
+# This file used to hold every task directly under `[tool.poe.tasks.*]`;
+# splitting it up was purely to keep pyproject.toml itself from growing
+# without bound as tasks were added - it changes nothing about how tasks
+# run. Included files use bare `[tasks.<name>]` headers rather than
+# `[tool.poe.tasks.<name>]` - poe treats a non-pyproject.toml file with no
+# `tool.poe` table of its own as if its whole contents were placed under
+# `tool.poe`. `poe <task>` and `poe --help` work exactly as before,
+# regardless of which included file a task's definition lives in - poe
+# merges all included tasks into one flat namespace before running
+# anything, so a `ref`/`sequence` in one file can still target a task
+# defined in another - which is what poe_tasks/make_compat.toml's
+# `make-test-sqlite` does: it is a `ref` to `test-engine` over in
+# poe_tasks/tests.toml.
+#
+# ---------------------------------------------------------------------------
+# If Make is retired and poe becomes the only task runner, these need doing
+# first. None of them matter while the Makefile is still the primary runner
+# and poe only mirrors it.
+#
+# 1. Windows. This is the sharp one, because Windows support is the main
+#    argument for replacing Make - and some of these tasks do not yet deliver
+#    it. Six do not: make-dumpdata and make-docs in
+#    poe_tasks/make_compat.toml, and nginx-conf, supervisor-conf and their
+#    two -remove counterparts in poe_tasks/deploy.toml. They use POSIX-only
+#    shell: `mkdir -p`,
+#    `[ -f ... ]`, `rm -f`, `$(date ...)`, `cd &&`, `sudo`. The tasks a
+#    developer actually reaches for - test-engine, test-integration, dev-init,
+#    schema, the i18n tasks - are Python bodies, and the make-* analogs of the
+#    first two are now `ref`s to them rather than shell copies.
+#    poe defaults `shell` tasks to bash/posix and, on Windows with no
+#    other interpreter configured, fails with "Installing Git Bash or using
+#    WSL should fix this" - which is the same "no native Windows story" the
+#    Makefile is criticised for above. Fix before relying on it: set
+#    `interpreter = "python"` on those tasks and port the logic to stdlib
+#    (shutil.copy/os.makedirs/pathlib), which is genuinely cross-platform;
+#    `interpreter = ["pwsh", "bash"]` is also supported if a PowerShell
+#    rewrite is preferred. nginx-conf/supervisor-conf are Ubuntu-and-sudo
+#    only by nature and should just be marked as such rather than ported.
+#
+# 2. Extra pytest args, for the tasks with a `shell` body. `poe test -- -k foo`
+#    works, because `test` is a `cmd` and poe appends to its command line. A
+#    `shell` body builds its own argv, so the extras are discarded - which is
+#    why `make test-<engine> args="-k foo"` has no equivalent. Not about
+#    declaring arguments; measured either way, with the figures in the note
+#    above `test-engine` in poe_tasks/tests.toml. Retiring Make would make it
+#    a real regression rather than a documented gap. The way out is a declared
+#    argument on those tasks that the body splits into flags itself.
+#
+# 3. DONE, and it turned out to be a live bug rather than a tidiness item.
+#    VERSION was written in three places - `VERSION` in the Makefile (3.1.0),
+#    `version` under [project] (4.0.0), and VERSION in [tool.poe.env] (4.0.0) -
+#    so `make schema` and `poe schema` named their output differently and the
+#    Makefile's overwrote the committed 3.1.0 diagram. Both now read
+#    importlib.metadata.version('qatrackplus') at task time and truncate it to
+#    the minor line, [tool.poe.env] is gone, and the Makefile no longer defines
+#    VERSION at all. Nothing else in either file used it.
+#
+# 4. Done 2026-11-03, and **reopened 2026-11-04 as a deferral**: poe is in the
+#    `dev` dependency group, so every `uv sync` provides it and uv.lock pins
+#    it, while `uv sync --no-dev` - which is what the production image runs -
+#    does not ship it to sites. The measurements that moved it out of the base
+#    set are on the declaration in [dependency-groups].
+#
+#    **What reopened it:** the measurement was that no *documentation* sends a
+#    site to a poe task, which sidesteps the question of whether any task was
+#    *written* for one. Four were - nginx-conf, supervisor-conf and their
+#    -remove counterparts - and all four are unverified. So this is settled
+#    only until somebody runs them. The required next step is written above
+#    those tasks in poe_tasks/deploy.toml, and belongs in its own pull request
+#    as 4.1 approaches release.
+#
+# 5. Consider `[tool.poe.executor] locked = true`. poe runs tasks through
+#    `uv run` already, and its uv executor accepts locked/frozen/no-sync/
+#    exact. It is deliberately left unset here so poe behaves exactly like
+#    the Makefile; that reason disappears with the Makefile. If CI ever
+#    invokes poe directly, `locked = true` gives it the same lockfile
+#    guarantee the workflow's `uv sync --locked` steps have.
+#
+# 6. `test_simple` exists only for Make muscle memory and is identical to
+#    `test`. Drop it.
+# ---------------------------------------------------------------------------
+[tool.poe]
+include = [
+    "poe_tasks/ci.toml",
+    "poe_tasks/dev.toml",
+    "poe_tasks/tests.toml",
+    "poe_tasks/coverage.toml",
+    "poe_tasks/docs.toml",
+    "poe_tasks/data.toml",
+    "poe_tasks/deploy.toml",
+    "poe_tasks/test_databases.toml",
+    "poe_tasks/translations.toml",
+    "poe_tasks/make_compat.toml",
+]
+
+
+# ==========================================================================
+# A note on task style: cross-platform tasks and the make-* mirrors
+# ==========================================================================
+#
+# The tasks named `make-*` (poe_tasks/make_compat.toml) mirror a Makefile
+# target one-for-one, and there is one for every target the Makefile has.
+# Do not change those to gain portability; changing them breaks the mirror,
+# which is the only thing making the two runners comparable. The
+# documentation build is what keeps the set complete - a target with no
+# mirror fails it (docs/_ext/command_tables.py).
+#
+# **The Makefile is frozen, and it is removed in the 4.1 cycle.** It is
+# byte-identical to the one on `develop`; this branch does not touch it.
+# An earlier commit here reduced it to a file of aliases forwarding to poe,
+# and Cody reversed that on 2026-11-05. The reason that matters beyond
+# tidiness: `POE = uv run poe` inside a recipe means a site synced
+# `--no-dev` pulls the whole dev group the moment it runs one - crane
+# measured 112 packages to 200 on Ubuntu 24.04 - and a Makefile with no
+# mention of poe in it cannot do that. So until the Makefile goes, both
+# ways work: `poe <task>` is the cross-platform successor, and
+# `poe make-<target>` is what the Makefile does.
+#
+# Every other task (poe_tasks/dev.toml, poe_tasks/tests.toml,
+# poe_tasks/coverage.toml, poe_tasks/docs.toml, poe_tasks/data.toml) is a
+# cross-platform successor, written the way it would have to be written if
+# Make were retired. These used to carry a `next-` prefix marking them as
+# the intended future rather than an alternative flavour; that prefix has
+# since been dropped now that they are the primary names, leaving `make-*`
+# as the deliberately-named old mirrors instead.
+#
+# They have no Makefile counterpart on purpose. The point of them is to work
+# where Make does not - a Windows host with no `make` at all - so mirroring
+# them back into the Makefile would defeat the exercise.
+#
+# Why Python rather than PowerShell, having tried both: poe runs `pwsh`
+# tasks as `pwsh -NoLogo -Command -`, piping the body in on stdin (see
+# poethepoet/task/shell.py). Verified against pwsh 7.6.6: that invocation
+# runs flat multi-line scripts and single-line brace blocks, but a
+# *multi-line* brace block - any real `if`, `foreach` or `try` - silently
+# executes nothing at all and exits 0. The same script via `pwsh -File`
+# runs fine, but poe does not use -File. Every task needing a conditional
+# or a loop therefore has to be written in Python, since a PowerShell body
+# would have to be single-line-with-semicolons to work, which is not
+# reviewable. Python is also one body instead of two, with no platform
+# switch to keep in sync.
+#
+# Shell support: bash on Linux/macOS, pwsh on Windows. cmd.exe is
+# deliberately NOT supported - a project decision, not an oversight. Tasks
+# that genuinely need a shell therefore declare an explicit `interpreter`
+# and may assume ordinary shell syntax.
+#
+# Current shell situation, so it stays honest as tasks are added:
+#
+#   * `cmd` tasks (no shell at all), which is most of them: test, the
+#     test-gui* family, cover*, lint, docs, docs-serve, run, the
+#     message tasks, the test-databases-* tasks.
+#   * `interpreter = "python"`: dev-init, dev-clean, dump-data,
+#     schema, test-engine, test-integration, test-order. Note schema is one
+#     of these - a Python body, not a `cmd`.
+#   * `ref` only, so they inherit whatever they point at: every make-test-*
+#     analog in poe_tasks/make_compat.toml.
+#   * POSIX-shell-only, with a cross-platform successor: make-dumpdata and
+#     make-docs (poe_tasks/make_compat.toml).
+#   * POSIX-shell-only and deliberately so: nginx-conf, supervisor-conf and
+#     their -remove counterparts (poe_tasks/deploy.toml). They shell out to
+#     sudo to install nginx/supervisor configs, so there is no meaningful
+#     Windows equivalent to write.
+#
+# In other words, every task that cannot run on Windows today either has a
+# cross-platform successor or is Ubuntu-only by nature. If you add a task
+# that needs a shell, give it an explicit interpreter or a cross-platform
+# counterpart. See the "Adding a new poe task" section of
+# docs/developer/guide.rst for the full checklist.
+#
+# Exercised on Windows (pwsh, PowerShell 5.1) and on Linux. What was actually
+# run, because an earlier version of this comment claimed more than had been
+# done - it listed the destructive tasks as having "ran for real ... and
+# produced the expected result", and they had not been run at all:
+#
+#   * Windows, 2026-09-24: 21 tasks, all green bar two designed refusals
+#     (translation status with no msgfmt, dev-init on an existing environment). The
+#     five destructive tasks were deliberately skipped as too destructive for
+#     a working machine.
+#   * Linux, 2026-09-25: the five destructive ones, against a backed-up dev
+#     database restored and checksum-verified afterwards. dev-clean (and its
+#     idempotence), dev-init from empty and its refusal, dev-reset and
+#     delete-all-data all behaved as documented. delete-users-and-types did
+#     not, and delete-qc-records worked but deleted the QC history and every
+#     ContentType as a side effect; both are removed.
+#
+# Still not run anywhere: the sudo deploy tasks, the two blocking servers, and
+# docs-serve. Two bugs surfaced on Windows and were fixed:
+#
+#   * schema (poe_tasks/docs.toml) staged its render in the system temp
+#     directory (tempfile.TemporaryDirectory()), then moved it into docs/.
+#     On Windows that directory is often on a different drive than the
+#     repo checkout, and Path.replace()/os.replace() cannot rename across
+#     drives - `OSError: [WinError 17] The system cannot move the file to
+#     a different disk drive`. Fixed by staging the temp file inside
+#     docs/developer/images/ itself, so the final rename is always
+#     same-filesystem.
+#   * the translation-status task (then in poe_tasks/docs.toml) shelled out to `msgfmt -o
+#     /dev/null`. Neither piece is portable: msgfmt (from gettext) is not
+#     on PATH by default on Windows, and /dev/null does not exist there -
+#     it failed with a raw FileNotFoundError traceback rather than the
+#     friendly self-checks other tasks give. Fixed with a
+#     shutil.which('msgfmt') guard that gives an actionable install
+#     pointer, and os.devnull in place of the hardcoded POSIX path (msgfmt
+#     itself must still be installed separately - e.g. via MSYS2 - on
+#     Windows).
+#
+# nginx-conf/supervisor-conf (and their -remove counterparts, all in
+# poe_tasks/deploy.toml) are Ubuntu-only by design and were not exercised
+# here; the make-* mirrors (poe_tasks/make_compat.toml) are POSIX-shell-only
+# by design and likewise were not exercised here.

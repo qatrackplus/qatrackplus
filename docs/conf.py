@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 
 # -*- coding: utf-8 -*-
 #
@@ -18,6 +19,7 @@ import re
 # import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('_ext'))
 
 
 # -- Project information -----------------------------------------------------
@@ -45,6 +47,7 @@ release = version
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    'command_tables',  # docs/_ext/command_tables.py: generates developer/_poe_tasks.rst, _manage_commands.rst, _make_targets.rst
     'sphinx.ext.autodoc',
     'sphinx.ext.extlinks',
     'sphinx.ext.todo',
