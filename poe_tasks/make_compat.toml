@@ -126,7 +126,8 @@ ref = "cover"
 
 [tasks.make-cover-qatrack]
 help = "Coverage for the qatrack package only, as `make cover-qatrack` runs it"
-ref = "cover-qatrack"
+# A ref may carry an argument - measured on poe 0.49.0.
+ref = "cover qatrack"
 
 
 [tasks.make-cover-mo]
@@ -136,10 +137,12 @@ ref = "cover-mo"
 
 # `make cover-module module=qatrack/units` passes the module as a make
 # variable; here it is poe's positional argument, so
-# `poe make-cover-module qatrack/units`. The ref carries it through.
+# `poe make-cover-module qatrack/units`. The ref carries it through - measured
+# on poe 0.49.0, a ref forwards a positional the caller supplies, which is what
+# lets this mirror survive `cover-module` folding into `cover`.
 [tasks.make-cover-module]
 help = "Coverage for one module, e.g. `poe make-cover-module qatrack/units`"
-ref = "cover-module"
+ref = "cover"
 
 
 # --------------------------------------------------------------------------

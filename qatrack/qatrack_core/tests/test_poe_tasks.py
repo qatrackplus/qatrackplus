@@ -432,3 +432,53 @@ def test_every_mirror_that_delegates_points_at_a_task_that_exists():
         if ref and ref.split()[0] not in TASKS:
             missing.append((name, ref))
     assert not missing, missing
+
+
+# The number Cody is reacting to, and the only one a reader of `poe` sees:
+# public tasks that are not Makefile mirrors. 38 at 2026-11-08, after `cover`
+# absorbed `cover-qatrack` and `cover-module` and `dev-clean` went private.
+#
+# Raising it is a review decision. That is the whole point of the number being
+# here: adding a task is easy, and without this the surface grows by default
+# and nobody has to argue for it. swift counted 41 on 2026-11-06 and said so -
+# `projects/qatrackplus/evidence/2026-11-06-swift-poe-task-architecture-review.md` -
+# and the guide's *Adding a new poe task* now says what earns a public name.
+MAX_PUBLIC_TASKS = 38
+
+
+def public_task_names():
+    """Every task a `poe` listing shows that is not a Makefile mirror."""
+    return sorted(
+        name for name in load_tasks()
+        if not name.startswith('_') and not name.startswith('make-')
+    )
+
+
+def test_the_public_task_surface_has_not_grown_quietly():
+    names = public_task_names()
+    assert len(names) <= MAX_PUBLIC_TASKS, (
+        'there are now %d public non-mirror tasks, over the %d this test allows.\n\n'
+        'If the new one earns its name by the rule in the developer guide - it composes '
+        'more than one command, hides a trap, or encodes something a newcomer could not '
+        'guess - raise MAX_PUBLIC_TASKS here and say so in the pull request. If it is a '
+        'variant of an existing task, it probably wants to be an argument instead, and '
+        'if it is a step inside a composite it wants a leading underscore.\n\n%s'
+        % (len(names), MAX_PUBLIC_TASKS, ', '.join(names))
+    )
+
+
+def test_the_ceiling_is_not_far_above_the_count():
+    """A ratchet that has drifted loose stops ratcheting.
+
+    If several tasks are retired and the ceiling is left where it was, the next
+    few additions are free and this test goes quiet for exactly as long as it
+    takes for the surface to grow back. Tightening it is part of retiring a
+    task.
+    """
+    names = public_task_names()
+    slack = MAX_PUBLIC_TASKS - len(names)
+    assert slack <= 2, (
+        'MAX_PUBLIC_TASKS is %d and there are %d public tasks, so %d could be added '
+        'without this test noticing. Lower the ceiling to %d.'
+        % (MAX_PUBLIC_TASKS, len(names), slack, len(names))
+    )
