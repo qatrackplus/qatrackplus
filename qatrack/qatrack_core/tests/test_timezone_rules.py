@@ -57,7 +57,12 @@ import tzdata
 
 CONFIG_PAGE = pathlib.Path(__file__).resolve().parents[3] / 'docs' / 'install' / 'config.rst'
 
-# The release carrying IANA 2026f, the first with all four changes above.
+# IANA 2026f, and the floor is set there because it is the first release the
+# assertions below have actually been run against with all four changes present.
+# It is not the first release to carry them: the table above shows Manitoba's
+# change arriving in 2026e, so 2026e already has all four. The distinction
+# matters if anyone ever wants to lower the floor - 2026e is the earliest that
+# could be correct, and it would need testing first.
 MINIMUM_TZDATA = (2026, 6)
 
 # Checked at a date after every one of the 2026 transitions, so each expectation
