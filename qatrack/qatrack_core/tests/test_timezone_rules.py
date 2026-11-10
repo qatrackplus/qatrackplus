@@ -55,9 +55,9 @@ from datetime import datetime
 import pytest
 import tzdata
 
-# The release carrying IANA 2026f, the first with all four changes above.
 CONFIG_PAGE = pathlib.Path(__file__).resolve().parents[3] / 'docs' / 'install' / 'config.rst'
 
+# The release carrying IANA 2026f, the first with all four changes above.
 MINIMUM_TZDATA = (2026, 6)
 
 # Checked at a date after every one of the 2026 transitions, so each expectation
