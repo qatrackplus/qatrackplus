@@ -6,6 +6,7 @@ import sqlite3
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
+from django.utils import timezone
 
 
 class Command(BaseCommand):
@@ -23,7 +24,14 @@ class Command(BaseCommand):
         for path in glob.glob(pattern):
             if os.path.isdir(path):
                 # get creation time or modification time
-                mtime = datetime.datetime.fromtimestamp(os.path.getmtime(path)).date()
+                # The mtime is an epoch instant; read it in the site's zone so
+                # that it is comparable with `limit_date`, which comes from
+                # `timezone.localdate()`.
+                mtime = timezone.localtime(
+                    datetime.datetime.fromtimestamp(
+                        os.path.getmtime(path), datetime.UTC
+                    )
+                ).date()
                 if mtime < limit_date:
                     self.stdout.write(f"Removing old {backup_type} backup: {path}")
                     shutil.rmtree(path)
@@ -58,7 +66,10 @@ class Command(BaseCommand):
           media step, so a site on either engine got an empty dated folder and
           no uploaded files at all. Media is now archived whatever the engine.
         """
-        today_str = datetime.date.today().strftime("%Y-%m-%d")
+        # The site's date, not the machine's. These differ on Windows, where
+        # Django leaves the process TZ alone, and a backup that names itself
+        # with the wrong day is hard to reason about afterwards.
+        today_str = timezone.localdate().strftime("%Y-%m-%d")
         backup_loc = os.path.join(backup_dir, f"{today_str}-{backup_type}")
 
         if not os.path.exists(backup_loc):
@@ -185,7 +196,7 @@ class Command(BaseCommand):
         if not os.path.exists(backup_dir):
             os.makedirs(backup_dir)
 
-        today = datetime.date.today()
+        today = timezone.localdate()
 
         # Monthly Backup
         if today.day == monthly_day:

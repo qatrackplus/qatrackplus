@@ -2,7 +2,25 @@
 
 Release notes are located at http://docs.qatrackplus.com/en/latest/release_notes.html
 
-## v4.0.2
+## 4.1.0
+
+* **Time zones**: QATrack+ now ships the IANA **2026f** time zone rules, so sites in jurisdictions that changed their clock behaviour during 2026 show the right times. Four Canadian jurisdictions stopped observing daylight saving: **British Columbia** (permanent UTC−07), **Alberta** (permanent UTC−06), the **Northwest Territories** (permanent UTC−06) and **Manitoba** (permanent UTC−05 from 31 October 2026). The rules QATrack+ previously bundled (IANA 2026b) knew only about British Columbia, so a site in the other three could show times an hour out — on dates after each jurisdiction's change, which for Manitoba means from 1 November 2026 ([#926](https://github.com/qatrackplus/qatrackplus/pull/926)).
+
+  **Whether your site was affected depended on the platform, which is why this went unnoticed.** On **Linux**, Python reads the operating system's time zone database before the bundled copy, so a maintained server has been correct all along. On **Windows** there is no such database for Python to read, so the bundled copy is the only one — those sites were affected. On **Docker** it used to depend on how old the base image was when it was built; as of this release it does not, because the image now reads the pinned `tzdata` package rather than the operating system's copy, so Docker gets the same tested rules as every other platform.
+
+  **The zone names did not change** — `America/Edmonton` and `America/Winnipeg` are still the right choices; only their rules changed, so there is nothing to reconfigure.
+
+  **One kind of stored value is wrong, and this release makes it visible rather than fixing it.** QATrack+ stores an instant in UTC and applies the rules when it displays one, so anything the system worked out for itself — a schedule, a due date, the moment a test list was submitted — is right, and displays right from now on. **A date and time somebody typed in by hand is different.** The wall-clock time they entered was correct; the offset applied to it was the stale one, so the instant stored underneath is an hour out. While the rules stayed stale that was invisible, because the same wrong offset was used to show it again — typed 10:00, displayed 10:00. With the correct rules that entry now displays an hour away from what was typed.
+
+  Worked through for `America/Edmonton` on 15 November 2026: somebody types **10:00**; the stale rules read it as UTC−07 and store **17:00 UTC**; the stale rules then display that as **10:00**, so nothing looks amiss; under 2026f the same stored instant displays as **11:00**.
+
+  **So hand-entered dates are worth a look on an affected site**, in the window between the jurisdiction's change and this upgrade — from 1 November 2026 for Alberta, the Northwest Territories and Manitoba — and only on Windows or Docker rather than a maintained Linux server. The fields to check are the ones a person fills in rather than the ones QATrack+ fills in for them: a service event's date, a fault's *Occurred* time, a work-completed time set by hand. There is no automatic correction, because QATrack+ cannot tell which stored instants came from a keyboard and which it calculated itself.
+
+  **A `pip install` picks the new rules up by itself for this release**, because `tzdata` now carries a minimum version and an older copy no longer satisfies it. That is specific to this release: a later IANA change that does not move the floor would leave an existing `tzdata` in place, and `pip install --upgrade tzdata` is then the way to force it. Installations that follow the documented `uv` steps get the rules from the lockfile either way.
+
+  **Restart QATrack+ after any of this.** Python caches time zone data for the life of a process, so a web server or Django Q cluster that started before the update keeps the rules it loaded. On Windows restart the `QATrack+ Web Service` and the `QATrack+ Django Q Cluster` task; on Linux restart the supervisor programs; on Docker, `docker compose up -d` after the build recreates both services. Leaving the Django Q cluster running is the easiest one to miss, and it is the process that sends scheduled notices and reports.
+
+## 4.0.2
 
 * **QA**: The Test List admin shows each member test's name again, and the view and change icons beside it work ([#897](https://github.com/qatrackplus/qatrackplus/issues/897)).
 * **Docker**: Docker hosting is supported on Linux only, with Docker Engine 23.0+ and Docker Compose 2.17+. Windows and Docker Desktop are not supported; on a Windows server, use the Windows Server installation, which doesn't use Docker. The Docker installation guide has been reorganised into setup, configuration, data and backups, day-to-day operation and development, and its out-of-date parts fixed (the Django shell command, removing a site safely, and the backup time, which is now 4 AM in QATrack+'s own time zone). It draws on Vincent Leduc's reorganisation of the Docker docs in [#866](https://github.com/qatrackplus/qatrackplus/pull/866).
@@ -35,7 +53,7 @@ Release notes are located at http://docs.qatrackplus.com/en/latest/release_notes
 * **Docker**: Files under `deploy/docker` always check out with LF line endings, whatever git's `core.autocrlf` setting.
 * **QA**: Superusers and users with "Can view tli and utc not visible to user's groups" now see QC from all groups in the Perform QC lists, trees and unit chooser ([#883](https://github.com/qatrackplus/qatrackplus/pull/883)).
 
-## v4.0.0 Recent Fixes
+## 4.0.0 Recent Fixes
 
 * **Service Log**: Service Event Templates can now be shared across different machines and modalities. When selecting a template, only the Return to Service tests that apply to the chosen unit will be added to the form ([#829](https://github.com/qatrackplus/qatrackplus/issues/829)).
 * **QA**: Fixed an issue where resuming an autosaved QC session could display the wrong start date and time.
