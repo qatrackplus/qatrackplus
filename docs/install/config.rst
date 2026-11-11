@@ -256,7 +256,7 @@ and gives no warning, so it is worth knowing where your copy comes from:
   whether the release moved the minimum version QATrack+ asks for:
 
   * **If it did**, your existing copy no longer satisfies it, and the upgrade's
-    own install replaces it for you - nothing extra to run. 4.0.3 is such a
+    own install replaces it for you - nothing extra to run. 4.1 is such a
     release, because it is where ``tzdata>=2026.6`` first appears.
 
     .. code-block:: console

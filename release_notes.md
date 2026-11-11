@@ -2,7 +2,7 @@
 
 Release notes are located at http://docs.qatrackplus.com/en/latest/release_notes.html
 
-## v4.1.0
+## 4.1.0
 
 * **Time zones**: QATrack+ now ships the IANA **2026f** time zone rules, so sites in jurisdictions that changed their clock behaviour during 2026 show the right times. Four Canadian jurisdictions stopped observing daylight saving: **British Columbia** (permanent UTC−07), **Alberta** (permanent UTC−06), the **Northwest Territories** (permanent UTC−06) and **Manitoba** (permanent UTC−05 from 31 October 2026). The rules QATrack+ previously bundled (IANA 2026b) knew only about British Columbia, so a site in the other three could show times an hour out — on dates after each jurisdiction's change, which for Manitoba means from 1 November 2026 ([#926](https://github.com/qatrackplus/qatrackplus/pull/926)).
 
@@ -20,7 +20,7 @@ Release notes are located at http://docs.qatrackplus.com/en/latest/release_notes
 
   **Restart QATrack+ after any of this.** Python caches time zone data for the life of a process, so a web server or Django Q cluster that started before the update keeps the rules it loaded. On Windows restart the `QATrack+ Web Service` and the `QATrack+ Django Q Cluster` task; on Linux restart the supervisor programs; on Docker, `docker compose up -d` after the build recreates both services. Leaving the Django Q cluster running is the easiest one to miss, and it is the process that sends scheduled notices and reports.
 
-## v4.0.2
+## 4.0.2
 
 * **QA**: The Test List admin shows each member test's name again, and the view and change icons beside it work ([#897](https://github.com/qatrackplus/qatrackplus/issues/897)).
 * **Docker**: Docker hosting is supported on Linux only, with Docker Engine 23.0+ and Docker Compose 2.17+. Windows and Docker Desktop are not supported; on a Windows server, use the Windows Server installation, which doesn't use Docker. The Docker installation guide has been reorganised into setup, configuration, data and backups, day-to-day operation and development, and its out-of-date parts fixed (the Django shell command, removing a site safely, and the backup time, which is now 4 AM in QATrack+'s own time zone). It draws on Vincent Leduc's reorganisation of the Docker docs in [#866](https://github.com/qatrackplus/qatrackplus/pull/866).
@@ -53,7 +53,7 @@ Release notes are located at http://docs.qatrackplus.com/en/latest/release_notes
 * **Docker**: Files under `deploy/docker` always check out with LF line endings, whatever git's `core.autocrlf` setting.
 * **QA**: Superusers and users with "Can view tli and utc not visible to user's groups" now see QC from all groups in the Perform QC lists, trees and unit chooser ([#883](https://github.com/qatrackplus/qatrackplus/pull/883)).
 
-## v4.0.0 Recent Fixes
+## 4.0.0 Recent Fixes
 
 * **Service Log**: Service Event Templates can now be shared across different machines and modalities. When selecting a template, only the Return to Service tests that apply to the chosen unit will be added to the form ([#829](https://github.com/qatrackplus/qatrackplus/issues/829)).
 * **QA**: Fixed an issue where resuming an autosaved QC session could display the wrong start date and time.
