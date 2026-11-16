@@ -1455,7 +1455,11 @@ def handle_unit_down_time(request):
         date_from = date_from.date()
     else:
         date_from = None
-        date_to = timezone.datetime.now().date()
+        # localdate(), not datetime.now().date(): see the note in
+        # qa/views/review.py - on Windows the latter is the machine's date, not
+        # the site's, so the report's open end moved by a day either side of
+        # midnight.
+        date_to = timezone.localdate()
         date_to = timezone.datetime(
             year=date_to.year,
             month=date_to.month,
@@ -1509,7 +1513,7 @@ def handle_unit_down_time(request):
     rows = [
         [
             'Up Time Report: ' + (format_as_date(date_from) + ' to ' + format_as_date(date_to))
-            if daterange else 'Up Time Report: All time until ' + format_datetime(timezone.datetime.now())
+            if daterange else 'Up Time Report: All time until ' + format_datetime(timezone.now())
         ],
         [''],
         [''],
