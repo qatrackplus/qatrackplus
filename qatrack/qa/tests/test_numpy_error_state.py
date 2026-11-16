@@ -249,6 +249,33 @@ class TestControlChartFit(TestCase):
         self.assertIn(control_chart.LBL_GAUSS, legends)
         self.assertEqual(numpy.geterr(), NUMPY_DEFAULTS)
 
+    def test_gamma_curve_that_cannot_be_drawn_leaves_the_gaussian_fit(self):
+        """Tightly clustered data gets the Gaussian fit, without an empty Gamma line.
+
+        For data like 100 +/- 0.5 the Gamma shape parameter is huge, so its curve
+        works out to NaN at every point. It used to appear in the legend with
+        nothing drawn; now only the Gamma part of the fit is left out.
+        """
+        rng = random.Random(929)
+        fig = Figure()
+        control_chart.display(fig, numpy.array([rng.gauss(100, 0.5) for _ in range(40)]), 2, 2, fit=True)
+        ax_hist_data = fig.axes[1]
+
+        legend = [t.get_text() for t in ax_hist_data.get_legend().get_texts()]
+        self.assertIn(control_chart.LBL_GAUSS, legend)
+        self.assertNotIn(control_chart.LBL_GAMMA, legend)
+
+        texts = [t.get_text() for t in ax_hist_data.texts]
+        self.assertTrue(any('fit mean' in t for t in texts))
+        self.assertFalse(any('fit k' in t for t in texts))
+
+        # no histogram anywhere on the chart shows a Gamma line with nothing to draw
+        for ax in fig.axes:
+            for line in ax.get_lines():
+                if line.get_label() == control_chart.LBL_GAMMA:
+                    self.assertTrue(numpy.any(numpy.isfinite(line.get_xdata())))
+        self.assertEqual(numpy.geterr(), NUMPY_DEFAULTS)
+
     def test_data_that_cannot_be_fitted_gets_no_fit(self):
         """Constant data gives a zero-width fit, which used to be dropped and still is."""
         texts, legends = self.render([1.1] * 10)

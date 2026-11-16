@@ -97,6 +97,11 @@ def generate_fit(x, axes, freq, bins, binwidth):
     here - the Gamma curve is undefined below zero, for example - and the fit
     should not stop over them. What matters is the result, so every fitted
     parameter is checked before anything is drawn.
+
+    A Gamma fit that can't be drawn is left out on its own, keeping the Gaussian
+    fit. For tightly clustered data, such as 100 +/- 0.5, the Gamma shape
+    parameter is so large that ``gamma_pdf`` works out to NaN at every point,
+    and drawing it would add a legend entry with no line.
     """
     with np.errstate(all='ignore'):
         optParam, cov = lsqfit.gauss_fit(x, freq, bins, binwidth)
@@ -118,8 +123,10 @@ def generate_fit(x, axes, freq, bins, binwidth):
         if np.min(x) >= 0:
             optParam = mlefit.gamma_fit(x, binwidth)
             norm, k, theta = optParam
-            gamma_ydata = mlefit.gamma_pdf(xdata, norm, k, theta)
-            fits += (k, theta)
+            ydata = mlefit.gamma_pdf(xdata, norm, k, theta)
+            if np.all(np.isfinite((k, theta))) and np.any(np.isfinite(ydata)):
+                gamma_ydata = ydata
+                fits += (k, theta)
 
     if not np.all(np.isfinite(fits)) or fitsigma <= 0:
         raise ValueError('Unable to fit a distribution to this data')
