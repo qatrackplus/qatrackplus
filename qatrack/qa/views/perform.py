@@ -2,6 +2,7 @@ import collections
 import datetime
 import json
 import math
+import numbers
 import os
 import traceback
 from functools import reduce
@@ -632,6 +633,24 @@ class Upload(JSONResponseMixin, View):
             return
 
 
+def is_non_finite_number(value):
+    """Return True if ``value`` is a NaN or an infinity, of any float type.
+
+    Calculation procedures run with numpy's default error handling, so a
+    division by zero gives ``inf`` or ``nan`` rather than an error. Those must
+    never become a test result: they are not valid JSON for the browser, and
+    the API would save them.
+
+    ``numbers.Real`` covers Python floats and every numpy float type
+    (``float16`` to ``longdouble``). Integers are always finite and are skipped,
+    because ``math.isfinite`` raises ``OverflowError`` for an int too large to
+    convert to a float.
+    """
+    if isinstance(value, numbers.Integral) or not isinstance(value, numbers.Real):
+        return False
+    return not math.isfinite(value)
+
+
 class CompositePerformer:
 
     def __init__(self, user, data):
@@ -745,7 +764,7 @@ class CompositePerformer:
                 key = "result" if "result" in self.calculation_context else slug
                 result = self.calculation_context[key]
 
-                if isinstance(result, float) and result in (numpy.nan, numpy.inf):
+                if is_non_finite_number(result):
                     raise ValueError(
                         _("%(test)s has a result of '%(test_result)s'") % {
                             'test': slug,
