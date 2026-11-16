@@ -17,12 +17,22 @@ this; it measured a review stamped 14 hours out on `develop`.
 
 Two things about the shape, since both are easy to get wrong.
 
-**It skips where `time.tzset` is missing, which is the platform the defect
-affects.** That looks backwards and is not: the test's method is to move the
-process clock away from `TIME_ZONE`, and on Windows there is no way to do that
-from Python. A Windows run would raise `AttributeError` on `time.tzset`
-instead of testing anything, so it says why it skipped rather than erroring in
-every Windows and SQL Server row of CI.
+**It puts the machine and the site in different zones in one of two ways,
+because the platforms differ in which of the two Python can move.**
+
+- **Where `time.tzset` exists**, Django points the process clock at
+  `TIME_ZONE` whenever that setting changes, tests included, so changing the
+  setting would move both. Instead the process clock is moved away from it
+  (`MachineClock`).
+- **On Windows there is no `time.tzset`**, so the process clock cannot be
+  moved from Python - and for the same reason Django leaves it alone when
+  `TIME_ZONE` changes. Moving `TIME_ZONE` with `override_settings` is then
+  enough, and it is exactly the situation the defect needs: a site whose zone
+  is not the machine's. Without this the test would skip on the one platform
+  the defect affects.
+
+On a machine that is already in `ELSEWHERE` neither way produces a
+difference, so the test says so and skips rather than passing on nothing.
 
 **The process clock is global**, so the zone is restored in a `finally` even if
 the assertion fails. A leaked `TZ` would change what every test after this one
@@ -37,11 +47,12 @@ as B229, which a shuffled run reaches through all seven
 that worse.
 """
 
+import datetime
 import os
 import time
 
 import pytest
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.utils import timezone
 
 from qatrack.qa.tests import utils
@@ -56,12 +67,14 @@ ELSEWHERE = 'Asia/Tokyo'
 # tight bound would turn a slow machine into a failure and say nothing more.
 TOLERANCE_SECONDS = 60
 
+HAS_TZSET = hasattr(time, 'tzset')
+
 needs_tzset = pytest.mark.skipif(
-    not hasattr(time, 'tzset'),
+    not HAS_TZSET,
     reason=(
-        "no time.tzset on this platform, so the process clock cannot be moved away "
-        "from TIME_ZONE here. That absence is the reason the defect only ever showed "
-        "on Windows - see this module's docstring."
+        "no time.tzset on this platform, so there is no process clock to put back. "
+        "The review tests still run here, by moving TIME_ZONE instead - see this "
+        "module's docstring."
     ),
 )
 
@@ -88,7 +101,19 @@ class MachineClock:
         return False
 
 
-@needs_tzset
+def machine_and_site_apart():
+    """Put the machine's wall clock and TIME_ZONE in different zones, on any platform."""
+    if HAS_TZSET:
+        return MachineClock(ELSEWHERE)
+    return override_settings(TIME_ZONE=ELSEWHERE)
+
+
+def hours_between_machine_and_site():
+    machine = datetime.datetime.now()
+    site = timezone.localtime(timezone.now()).replace(tzinfo=None)
+    return abs((site - machine).total_seconds()) / 3600.0
+
+
 class TestAReviewIsStampedFromTheSiteClock(TestCase):
 
     def setUp(self):
@@ -107,17 +132,20 @@ class TestAReviewIsStampedFromTheSiteClock(TestCase):
         return self.test_list_instance.reviewed
 
     def test_the_review_time_is_now_even_when_the_machine_is_elsewhere(self):
-        with MachineClock(ELSEWHERE):
+        with machine_and_site_apart():
+            if hours_between_machine_and_site() < 1:
+                pytest.skip('this machine is already in %s, so the zones cannot be put apart' % ELSEWHERE)
             reviewed = self.review()
             drift = abs((reviewed - timezone.now()).total_seconds())
 
         assert drift < TOLERANCE_SECONDS, (
-            "the review was stamped %.1f hours from now with the machine clock in %s. "
+            "the review was stamped %.1f hours from now with the %s in %s. "
             "The timestamp is being taken from the machine's wall clock and labelled "
             "with the site's zone, so it is wrong by the difference between them."
-            % (drift / 3600.0, ELSEWHERE)
+            % (drift / 3600.0, 'machine clock' if HAS_TZSET else 'site (TIME_ZONE)', ELSEWHERE)
         )
 
+    @needs_tzset
     def test_the_process_clock_is_put_back(self):
         """Otherwise this module quietly breaks whatever runs after it."""
         before = os.environ.get('TZ')
@@ -128,9 +156,20 @@ class TestAReviewIsStampedFromTheSiteClock(TestCase):
         )
 
     def test_the_review_time_is_also_right_with_no_zone_shift(self):
-        """The control: the assertion must not pass merely because it is loose."""
+        """The control: the assertion must not pass merely because it is loose.
+
+        On Windows this can fail on the defect itself, with nothing moved: the
+        machine keeps its own zone, so a machine that is not in TIME_ZONE is
+        already a site elsewhere. The message says which case it is.
+        """
+        apart = hours_between_machine_and_site()
         drift = abs((self.review() - timezone.now()).total_seconds())
         assert drift < TOLERANCE_SECONDS, (
-            'the review is stamped %.1f s from now with no clock shift at all, so this '
-            'module is measuring something other than the zone' % drift
+            'the review is stamped %.1f s from now with no zone moved by this test. %s'
+            % (
+                drift,
+                'This machine is %.1f h from TIME_ZONE already, so that is the defect itself.' % apart
+                if apart >= 1
+                else 'The machine is in TIME_ZONE, so this module is measuring something other than the zone.',
+            )
         )
