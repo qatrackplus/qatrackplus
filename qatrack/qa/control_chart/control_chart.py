@@ -88,32 +88,54 @@ font = FontProperties(size=LEGFS)
 
 
 def generate_fit(x, axes, freq, bins, binwidth):
+    """Fit Gaussian (and, for non-negative data, Gamma) distributions to a histogram and plot them.
+
+    Raises ``ValueError`` when the fit is not usable, so the caller can show the
+    chart without a fit rather than with a meaningless one.
+
+    The fitting runs with numpy errors ignored. Intermediate NaNs are normal
+    here - the Gamma curve is undefined below zero, for example - and the fit
+    should not stop over them. What matters is the result, so every fitted
+    parameter is checked before anything is drawn.
+
+    A Gamma fit that can't be drawn is left out on its own, keeping the Gaussian
+    fit. For tightly clustered data, such as 100 +/- 0.5, the Gamma shape
+    parameter is so large that ``gamma_pdf`` works out to NaN at every point,
+    and drawing it would add a legend entry with no line.
     """
-    """
-    optParam, cov = lsqfit.gauss_fit(x, freq, bins, binwidth)
-    norm, fitmean, fitsigma = optParam
-    paramUnc = np.zeros(len(optParam))
-    for i in np.arange(0, len(optParam)):
-        paramUnc[i] = np.sqrt(abs(cov[i, 1]))
-    xdata = np.linspace(fitmean - fitsigma * 10, fitmean + fitsigma * 10, 500)
-    ydata = lsqfit.gauss_pdf(xdata, norm, fitmean, fitsigma)
-    axes.plot(ydata, xdata, GAUSSFORMAT, label=LBL_GAUSS, lw=LINEWIDTH)
+    with np.errstate(all='ignore'):
+        optParam, cov = lsqfit.gauss_fit(x, freq, bins, binwidth)
+        norm, fitmean, fitsigma = optParam
+        paramUnc = np.zeros(len(optParam))
+        for i in np.arange(0, len(optParam)):
+            paramUnc[i] = np.sqrt(abs(cov[i, 1]))
+        xdata = np.linspace(fitmean - fitsigma * 10, fitmean + fitsigma * 10, 500)
+        gauss_ydata = lsqfit.gauss_pdf(xdata, norm, fitmean, fitsigma)
 
-    # maximum likelihood estimator fit of Gaussian and Gamma distributions:
-    # Gaussian distribution (not for plotting):
-    optParam = mlefit.gauss_fit(x, binwidth)
-    norm, mean, sigma = optParam
+        # maximum likelihood estimator fit of Gaussian and Gamma distributions:
+        # Gaussian distribution (not for plotting):
+        optParam = mlefit.gauss_fit(x, binwidth)
+        norm, mean, sigma = optParam
 
-    # Gamma distribution:
-    if np.min(x) >= 0:
-        optParam = mlefit.gamma_fit(x, binwidth)
-        norm, k, theta = optParam
-        ydata = mlefit.gamma_pdf(xdata, norm, k, theta)
-        axes.plot(ydata, xdata, GAMMAFORMAT, ls=GAMMALINE, label=LBL_GAMMA, lw=LINEWIDTH)
+        # Gamma distribution:
+        fits = (mean, sigma, fitmean, fitsigma)
+        gamma_ydata = None
+        if np.min(x) >= 0:
+            optParam = mlefit.gamma_fit(x, binwidth)
+            norm, k, theta = optParam
+            ydata = mlefit.gamma_pdf(xdata, norm, k, theta)
+            if np.all(np.isfinite((k, theta))) and np.any(np.isfinite(ydata)):
+                gamma_ydata = ydata
+                fits += (k, theta)
 
-        return mean, sigma, fitmean, fitsigma, k, theta
-    else:
-        return mean, sigma, fitmean, fitsigma
+    if not np.all(np.isfinite(fits)) or fitsigma <= 0:
+        raise ValueError('Unable to fit a distribution to this data')
+
+    axes.plot(gauss_ydata, xdata, GAUSSFORMAT, label=LBL_GAUSS, lw=LINEWIDTH)
+    if gamma_ydata is not None:
+        axes.plot(gamma_ydata, xdata, GAMMAFORMAT, ls=GAMMALINE, label=LBL_GAMMA, lw=LINEWIDTH)
+
+    return fits
 
 
 #################################################################################

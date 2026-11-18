@@ -30,8 +30,6 @@ from qatrack.units.models import Site, Unit
 
 from .. import models
 
-numpy.seterr(all='raise')
-
 JSON_CONTENT_TYPE = "application/json"
 
 local_tz = timezone.get_current_timezone()

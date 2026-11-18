@@ -327,6 +327,26 @@ class TestTestListInstanceAPI(APITestCase):
         response = self.client.post(self.create_url, self.data)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
+    def test_create_composite_non_finite_is_not_saved(self):
+        """
+        A composite that works out to NaN or infinity must be refused, not saved.
+
+        The API saves composite values without the browser form's number
+        check, so the composite calculation is the only thing standing between
+        a NaN and the database (issue 929).
+        """
+        utils.create_test_list_membership(self.test_list, self.tc)
+        for procedure in [
+            'import numpy\nresult = numpy.float64(numpy.nan) * test1',
+            'import numpy\nresult = numpy.log(test1 - 1)',
+        ]:
+            self.tc.calculation_procedure = procedure
+            self.tc.save()
+            response = self.client.post(self.create_url, self.data)
+            assert response.status_code == status.HTTP_400_BAD_REQUEST, procedure
+            assert 'has a result of' in response.content.decode()
+            assert models.TestListInstance.objects.count() == 0
+
     def test_create_composite_with_user_attached(self):
         """
         Add a composite test to our test list.  Submitting without data
