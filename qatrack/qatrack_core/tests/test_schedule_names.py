@@ -22,6 +22,7 @@ from django.db import IntegrityError
 from django.test import TestCase
 from django.utils import timezone
 from django_q.models import Schedule
+from freezegun import freeze_time
 
 from qatrack.notifications.faults_review import tasks as faults_review_tasks
 from qatrack.notifications.models import (
@@ -52,6 +53,12 @@ NOTICE_SCHEDULERS = [
     (ServiceEventReviewNotice, service_log_review_tasks.schedule_serviceeventreview_notice),
     (ServiceEventSchedulingNotice, service_log_scheduling_tasks.schedule_service_event_scheduling_notice),
 ]
+
+# The periodic scheduler only picks up notices due in the 15 minutes after the
+# moment it runs, and these tests set a notice due a minute after it was made.
+# Freezing the clock, at noon in the test time zone (America/Toronto) and well
+# away from midnight, keeps that true however slowly the tests run.
+FROZEN_NOON = '2026-06-15 16:00:00'
 
 
 class TestNoticeScheduleNames(TestCase):
@@ -170,6 +177,7 @@ class TestSendWithScheduleQueuedUnderOldName(TestCase):
         assert not Schedule.objects.filter(name=old_name).exists()
 
 
+@freeze_time(FROZEN_NOON)
 class TestRunPeriodicSchedulerIsolatesFailures(TestCase):
     def setUp(self):
         recipients = RecipientGroup.objects.create(name='recipients')
@@ -222,6 +230,7 @@ class TestRunPeriodicSchedulerIsolatesFailures(TestCase):
         assert Schedule.objects.filter(name__startswith='ok ').count() == len(self.notices) - 1
 
 
+@freeze_time(FROZEN_NOON)
 class TestPeriodicRunsOfDifferentNoticeTypes(TestCase):
     """The way the collision shows up on a real site: two notice types, the same pk, the same time."""
 

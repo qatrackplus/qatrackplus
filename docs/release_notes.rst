@@ -104,10 +104,14 @@ Ordered by consequence, most serious first.
   backs up.** When background tasks pile up - several large PDF reports due at
   once, say - a scheduled email could wait in the queue long enough for it to be
   handed out a second time, and both copies sent it. Each scheduled report and
-  notice now records that it is being sent for that due time, and a second copy
-  finds the record and does nothing. A send that fails is not recorded as sent, so
-  it can still be retried. This applies to every installation, not only Docker
-  (:issues:`#919 <919>`).
+  notice now records that it is being sent for that due time. A second copy that
+  finds it already sent does nothing. One that finds it still being sent stays in
+  the queue and tries again a few minutes later, so the email isn't lost if the
+  first copy is stopped before it finishes. A send that fails is not recorded as
+  sent, so it can still be retried. You may occasionally see a failed task in the
+  task log saying a report or notice *is being sent by another worker*; that is
+  this check at work, not a problem. This applies to every installation, not only
+  Docker (:issues:`#919 <919>`).
 
 * **Scheduled notices of different kinds no longer stop each other being sent.**
   Every scheduled notice is queued under a name made from its id and its due time,

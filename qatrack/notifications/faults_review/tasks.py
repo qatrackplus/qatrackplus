@@ -62,7 +62,7 @@ def send_faultsreview_notice(notice_id, task_name=""):
 
     claim = ScheduledDelivery.claim(notice, task_name)
     if claim is None:
-        logger.info("FaultsReviewNotice %s (%s) was already sent, or is being sent by another worker" % (
+        logger.info("FaultsReviewNotice %s (%s) was already sent" % (
             notice_id, task_name,
         ))
         return

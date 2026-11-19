@@ -62,7 +62,7 @@ def send_qcreview_notice(notice_id, task_name=""):
 
     claim = ScheduledDelivery.claim(notice, task_name)
     if claim is None:
-        logger.info("QCReviewNotice %s (%s) was already sent, or is being sent by another worker" % (
+        logger.info("QCReviewNotice %s (%s) was already sent" % (
             notice_id, task_name,
         ))
         return

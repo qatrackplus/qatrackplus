@@ -66,7 +66,7 @@ def send_serviceeventreview_notice(notice_id, task_name=""):
 
     claim = ScheduledDelivery.claim(notice, task_name)
     if claim is None:
-        logger.info("ServiceEventReviewNotice %s (%s) was already sent, or is being sent by another worker" % (
+        logger.info("ServiceEventReviewNotice %s (%s) was already sent" % (
             notice_id, task_name,
         ))
         return

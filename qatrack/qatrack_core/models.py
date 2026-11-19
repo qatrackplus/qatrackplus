@@ -20,11 +20,49 @@ def claim_lifetime():
     never gets the chance to release its claim. Once `timeout` has passed the
     claiming copy is certainly no longer running, so its claim can be treated
     as abandoned. Without a timeout there is no such guarantee, so fall back to
-    the broker's `retry` lease, and then to an hour.
+    the broker's `retry` lease, and then to an hour. django-q2 treats a timeout
+    of None, 0 or a negative number as no timeout at all.
     """
     q_cluster = getattr(settings, 'Q_CLUSTER', {})
-    seconds = q_cluster.get('timeout') or q_cluster.get('retry') or 60 * 60
+    timeout = q_cluster.get('timeout')
+    retry = q_cluster.get('retry')
+    if timeout and timeout > 0:
+        seconds = timeout
+    elif retry and retry > 0:
+        seconds = retry
+    else:
+        seconds = 60 * 60
     return timezone.timedelta(seconds=seconds)
+
+
+def occurrence_from_task_name(task_name):
+    """The due time a scheduled task's name ends with, e.g. 2026-11-19T08:00:00-05:00.
+
+    Task names changed in 4.0.2 (notices now include their type, and reports
+    their schedule rather than the report), so a send queued before an upgrade
+    and one queued after it can carry different names for the same due time.
+    Keying the claim on the due time alone means both claim the same
+    occurrence. A name that doesn't end in a date and time is used whole.
+    """
+    candidate = task_name.rsplit(' ', 1)[-1]
+    try:
+        return timezone.datetime.fromisoformat(candidate).isoformat()
+    except ValueError:
+        return task_name
+
+
+class DeliveryInProgress(Exception):
+    """Another copy of this task is sending the email right now.
+
+    Raised rather than returning normally because django-q2 acknowledges a task
+    that returns, which deletes it from the queue. Both copies of a redelivered
+    task share one queue entry, so if this copy acknowledged it and the copy
+    holding the claim were then stopped before it sent, nothing would be left to
+    retry and the email would never go. A task that raises is left in the queue
+    (QATrack+ doesn't set `ack_failures`), and is handed out again once the
+    broker's `retry` lease runs out. By then the claim has been either finished
+    or abandoned.
+    """
 
 
 class ScheduledDelivery(models.Model):
@@ -40,9 +78,9 @@ class ScheduledDelivery(models.Model):
     # The model the email belongs to (e.g. reports.reportschedule) and its pk.
     kind = models.CharField(max_length=100)
     object_id = models.PositiveIntegerField()
-    # The scheduled task's name, which includes the due time. Paired with kind
-    # and object_id it identifies one occurrence: notice task names on their
-    # own are not unique across notice types.
+    # The due time, taken from the end of the scheduled task's name (see
+    # occurrence_from_task_name). Paired with kind and object_id it identifies
+    # one occurrence.
     occurrence = models.CharField(max_length=255)
     created = models.DateTimeField(auto_now_add=True)
     claimed_at = models.DateTimeField(null=True, blank=True)
@@ -60,14 +98,15 @@ class ScheduledDelivery(models.Model):
         return '%s %s %s' % (self.kind, self.object_id, self.occurrence)
 
     @classmethod
-    def claim(cls, instance, occurrence):
-        """Claim the right to send `instance`'s email for `occurrence`.
+    def claim(cls, instance, task_name):
+        """Claim the right to send `instance`'s email for the task `task_name`.
 
         Returns a `DeliveryClaim` if this copy should send, or None if the
-        email has already been sent, or another copy is sending it right now.
+        email has already been sent. Raises `DeliveryInProgress` if another
+        copy is sending it right now.
         """
 
-        if not occurrence:
+        if not task_name:
             # Called by hand rather than from a schedule, so there is no
             # occurrence to guard. Send as before.
             return DeliveryClaim(None, None)
@@ -75,7 +114,7 @@ class ScheduledDelivery(models.Model):
         delivery, created = cls.objects.get_or_create(
             kind=instance._meta.label_lower,
             object_id=instance.pk,
-            occurrence=occurrence,
+            occurrence=occurrence_from_task_name(task_name),
         )
         if created:
             cls.prune()
@@ -91,10 +130,17 @@ class ScheduledDelivery(models.Model):
             sent_at__isnull=True,
         ).update(claimed_at=now)
 
-        if not won:
+        if won:
+            return DeliveryClaim(delivery.pk, now)
+
+        if cls.objects.filter(pk=delivery.pk, sent_at__isnull=False).exists():
             return None
 
-        return DeliveryClaim(delivery.pk, now)
+        raise DeliveryInProgress(
+            "%s %s (%s) is being sent by another worker; leaving this copy in the queue to retry later" % (
+                instance._meta.object_name, instance.pk, task_name,
+            )
+        )
 
     @classmethod
     def prune(cls):

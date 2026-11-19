@@ -71,11 +71,12 @@ def send_email_to_users(
         message.attach(name, attachment, mimetype)
 
     try:
-        message.send(fail_silently=False)
+        sent_count = message.send(fail_silently=False)
     except Exception:  # noqa: E722  # pragma: nocover
         logger.exception("Error sending email.")
         if not fail_silently:
             raise
         return False
 
-    return True
+    # send() returns 0, having sent nothing, when every recipient was blank
+    return bool(sent_count)

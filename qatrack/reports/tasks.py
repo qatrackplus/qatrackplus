@@ -62,17 +62,24 @@ def send_report(schedule_id, task_name=""):
 
     claim = ScheduledDelivery.claim(s, task_name)
     if claim is None:
-        logger.info("ReportSchedule %s (%s) was already sent, or is being sent by another worker" % (
+        logger.info("ReportSchedule %s (%s) was already sent" % (
             schedule_id, task_name,
         ))
         return
 
     sent = False
+    rendered = False
     try:
         fname, attach = s.report.render(user=s.created_by)
+        rendered = True
         sent = _send_report_email(s, recipients, fname, attach, schedule_id, task_name)
     finally:
+        # Finish the claim first, so a failure saving last_sent can't lose the
+        # record that the email went out.
         claim.finish(sent)
+        if rendered:
+            s.last_sent = timezone.now()
+            s.save()
 
 
 def _send_report_email(s, recipients, fname, attach, schedule_id, task_name):
@@ -102,8 +109,5 @@ def _send_report_email(s, recipients, fname, attach, schedule_id, task_name):
         fail_silently = getattr(settings, "EMAIL_FAIL_SILENTLY", True)
         if not fail_silently:
             raise
-    finally:
-        s.last_sent = timezone.now()
-        s.save()
 
     return sent
