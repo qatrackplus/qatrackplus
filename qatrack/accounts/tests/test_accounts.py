@@ -47,19 +47,58 @@ class TestAdminFilter(TestCase):
     def test_lookups(self):
         assert AdminFilter.lookups(None, None, None) == (('yes', 'Yes'), ('no', 'No'))
 
+    # These two filter `User.objects` down to the pair they create rather than
+    # counting the whole table. Counting everything made them depend on which
+    # accounts the database already held, which is not a property of the filter:
+    # `test_queryset_no` already carried a `1 + 1  # count Internal User` to
+    # absorb the account a migration creates, and `test_queryset_yes` failed
+    # outright under `poe test-integration` / `make test-integration`, which
+    # provisions the database the way a deployment does and so leaves the
+    # `superuser` account `createsuperuser` makes in it. @nsmela reported that
+    # on #868: a correct tree gave 1 failed, 1742 passed, with
+    # `assert 2 == 1` here.
+    #
+    # Scoping the queryset is the fix rather than dropping `createsuperuser`
+    # from that task, which exists precisely to exercise the real provisioning
+    # sequence.
+    OWN_USERS = ["admin-filter-admin", "admin-filter-regular"]
+
+    def create_the_pair(self):
+        utils.create_user(uname=self.OWN_USERS[0], is_staff=True, is_superuser=True)
+        utils.create_user(uname=self.OWN_USERS[1], is_staff=False, is_superuser=False)
+        return User.objects.filter(username__in=self.OWN_USERS)
+
     def test_queryset_yes(self):
-        utils.create_user(uname="admin", is_staff=True, is_superuser=True)
-        utils.create_user(uname="reg", is_staff=False, is_superuser=False)
+        own = self.create_the_pair()
         af = AdminFilter(None, [], None, None)
         af.value = lambda: 'yes'
-        assert af.queryset(None, User.objects.all()).count() == 1
+
+        assert list(af.queryset(None, own).values_list('username', flat=True)) == [self.OWN_USERS[0]]
 
     def test_queryset_no(self):
-        utils.create_user(uname="admin", is_staff=True, is_superuser=True)
-        utils.create_user(uname="reg", is_staff=False, is_superuser=False)
+        own = self.create_the_pair()
         af = AdminFilter(None, [], None, None)
         af.value = lambda: 'no'
-        assert af.queryset(None, User.objects.all()).count() == 1 + 1  # count Internal User
+
+        assert list(af.queryset(None, own).values_list('username', flat=True)) == [self.OWN_USERS[1]]
+
+    def test_the_answer_does_not_depend_on_other_accounts_in_the_table(self):
+        """The regression, stated as a property rather than left to the count.
+
+        An account this test did not create must not change what the filter
+        returns. `poe test-integration` provisions the database the way a
+        deployment does, so a `superuser` account is sitting in the
+        `--reuse-db` database before the suite starts - and that is exactly
+        what the old whole-table count could not survive.
+        """
+        utils.create_user(uname="provisioned-superuser", is_staff=True, is_superuser=True)
+        own = self.create_the_pair()
+        af = AdminFilter(None, [], None, None)
+
+        af.value = lambda: 'yes'
+        assert list(af.queryset(None, own).values_list('username', flat=True)) == [self.OWN_USERS[0]]
+        af.value = lambda: 'no'
+        assert list(af.queryset(None, own).values_list('username', flat=True)) == [self.OWN_USERS[1]]
 
 
 class TestADFSBackend(TestCase):
