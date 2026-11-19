@@ -167,13 +167,17 @@ class TestLiveServerBehaviour(live.StaticLiveServerSingleThreadedTestCase):
         assert _in_view['most'] == 1, '%d requests were inside a view at once' % _in_view['most']
 
     def test_an_idle_connection_does_not_hold_up_other_requests(self):
-        """Browsers open connections before they use them; one sending nothing must not block the server."""
+        """Browsers open connections before they use them; one sending nothing must not block the server.
+
+        A server that read connections in turn would wait on the idle one until it closed, which is
+        after this fetch, so the fetch would time out. No tighter limit: loaded Windows runners took
+        up to 6 s to answer at all.
+        """
         idle = socket.create_connection(('127.0.0.1', self.server_thread.port))
         try:
-            started = time.monotonic()
-            body = self.fetch(timeout=10)
-            took = time.monotonic() - started
+            body = self.fetch(timeout=20)
+        except OSError as e:
+            self.fail('no answer while a connection that sent nothing was open: %r' % e)
         finally:
             idle.close()
         assert body == b'ok'
-        assert took < 2, 'a request waited %.1f s behind a connection that sent nothing' % took
