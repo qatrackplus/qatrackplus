@@ -14,6 +14,7 @@ Developers Guide
 
    self
    schema
+   commands
 
 Installing QATrack+ For Development
 -----------------------------------
@@ -81,6 +82,107 @@ Install uv using the official installer (recommended):
 
 For other installation methods or troubleshooting, see the full installation guide at https://docs.astral.sh/uv/getting-started/installation/
 
+.. note::
+
+    **Draft**: this section hasn't been reviewed yet - if something below
+    doesn't work for you, please report it on the :mailinglist:`mailing list <>`.
+
+Shell Autocomplete for uv and poe
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Tab completion for both tools is optional, but worth setting up if you use
+them often.
+
+**Requirements:**
+
+- ``uv`` itself (already required above).
+- ``poe`` (`poethepoet <https://poethepoet.natn.io/>`__), the project's task
+  runner. It is in the ``dev`` dependency group, so ``uv sync`` installs it; see
+  *The task runner: poe* below for what it does.
+- A shell ``uv``/``poe`` recognize: bash, zsh, fish, PowerShell, elvish
+  (``uv``) or nushell (``poe``, in addition to the previous four).
+
+**Enabling completion:**
+
+Both tools generate their own completion script - there is nothing to
+install from PyPI or npm. Add the appropriate line to your shell's profile
+(``~/.bashrc``, ``~/.zshrc``, ``~/.config/fish/config.fish``, or
+PowerShell's ``$PROFILE``), then restart your shell or ``source`` the
+profile:
+
+.. code-block:: powershell
+
+    # PowerShell ($PROFILE)
+    uv generate-shell-completion powershell | Out-String | Invoke-Expression
+    poe _powershell_completion | Out-String | Invoke-Expression
+
+.. code-block:: shell
+
+    # bash (~/.bashrc)
+    eval "$(uv generate-shell-completion bash)"
+    eval "$(poe _bash_completion)"
+
+    # zsh (~/.zshrc)
+    eval "$(uv generate-shell-completion zsh)"
+    eval "$(poe _zsh_completion)"
+
+    # fish (~/.config/fish/config.fish)
+    uv generate-shell-completion fish | source
+    poe _fish_completion | source
+
+.. note::
+
+    ``uv``'s completion is static - it completes ``uv``'s own subcommands
+    and flag names (e.g. ``uv sync --e<TAB>`` -> ``--extra``), but it does
+    not read this project's ``pyproject.toml``, so it will not suggest the
+    actual extra names (``mysql``, ``mssql``, ``postgres``, ``win``,
+    ``docker``, ``translations``) after ``--extra``. There's currently no
+    way to get that from ``uv`` itself.
+
+    ``poe``'s completion, in contrast, reads the task definitions each time it
+    runs, so ``poe <TAB>`` lists this project's actual task names. It also
+    completes a task argument's allowed values, for arguments that declare a
+    ``choices`` list - so ``poe test-engine-docker <TAB>`` offers ``postgres``,
+    ``mysql`` and ``mssql``, and the GUI tasks complete their browser argument
+    the same way. An argument without ``choices`` completes nothing, which is
+    the main reason to add one (see :ref:`adding-a-poe-task`).
+
+.. note::
+
+    **Completion attaches to the word you type, and that word is ``poe``, not
+    ``uv run poe``.** This guide writes every command as ``uv run poe <task>``,
+    because that is always the project's pinned copy - but at a prompt,
+    ``uv run poe <TAB>`` asks the shell to complete **uv's** arguments, and uv
+    knows nothing about this project's tasks. The completion set up above does
+    not apply.
+
+    Two ways to have both, neither of which needs anything new installed:
+
+    **Activate the virtual environment.** Bare ``poe`` is then the project's
+    copy, and completion works exactly as above.
+
+    **Or wrap it**, which keeps the ``uv run`` guarantee at every prompt without
+    activating anything:
+
+    .. code-block:: shell
+
+        # bash (~/.bashrc) or zsh (~/.zshrc)
+        poe() { uv run poe "$@"; }
+
+        # fish (~/.config/fish/config.fish)
+        function poe; uv run poe $argv; end
+
+    .. code-block:: powershell
+
+        # PowerShell ($PROFILE)
+        function poe { uv run poe @args }
+
+    The word being completed is then ``poe``, so poe's own completer runs, while
+    the command that actually executes is still ``uv run poe``. It settles a
+    second question at the same time: with the wrapper, ``poe`` is *always* this
+    project's pinned version, never a global install - which is the trap
+    described in the note under :ref:`the task runner <task-runner-poe>`.
+
 Setting up your development environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -119,6 +221,116 @@ If you would rather activate the environment instead, the two are equivalent: ru
 ``source .venv/bin/activate`` (``.venv\Scripts\activate`` on Windows) once per
 shell and drop the ``uv run`` prefix from everything below.
 
+.. _task-runner-poe:
+
+The task runner: poe
+~~~~~~~~~~~~~~~~~~~~
+
+QATrack+ uses `poe <https://poethepoet.natn.io/>`__ (poethepoet) as its task
+runner. It is in the ``dev`` dependency group, so the ``uv sync`` above installed
+it; there is nothing else to set up. It works the same way on Linux, macOS and
+Windows, which is why it is preferred over the ``Makefile``. The ``Makefile``
+is frozen and is **removed during the 4.1 cycle**; until then every target it
+has is also reachable through poe as ``poe make-<target>``, so either habit
+works and nothing has to be relearned twice.
+
+These are the tasks you need; ``poe`` with no arguments lists the rest, each
+with a one-line description, and :ref:`the appendix <poe_tasks_appendix>` is
+generated from those same help lines at every docs build:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 70
+
+   * - Task
+     - What it does
+   * - ``poe ci``
+     - **Run before you push.** The CI checks that work on a dev machine, in
+       order: the pre-commit suite over every file, the lockfile check, the
+       documentation build, then the test suite.
+   * - ``poe docs`` / ``poe docs-serve``
+     - Build the documentation, failing on any warning; or serve it with
+       live reload on port 8008 (``--port`` to change).
+   * - ``poe test``
+     - The suite, with the GUI tests skipped (``poe test --run-selenium`` to
+       include them).
+   * - ``poe test-engine <engine>``
+     - The suite against one database engine (``sqlite``, ``memory``,
+       ``postgres``, ``mysql``, ``mssql``). Create
+       ``qatrack/local_test_settings.<engine>.py`` first from the matching
+       ``deploy/dev/`` template; the task swaps it in for the run and restores
+       your usual settings afterwards, however the run ends.
+   * - ``poe test-gui [--mode M] [--browser B]``
+     - Only the GUI tests. ``--mode`` is ``headless``, ``visible`` or ``watch``;
+       ``--browser`` is ``firefox``, ``chromium`` or ``edge``. Both are
+       optional, in either order, and omitting one leaves that half to your own
+       settings - see *Setting Up Selenium Browser Testing*.
+   * - ``poe dev-init`` / ``dev-reset`` / ``run``
+     - Create a fresh sqlite development environment (``dev-reset`` deletes
+       the existing one first), and run the development server.
+   * - ``poe lint-fix`` / ``poe format-changed``
+     - Apply ruff's automatic lint fixes across the repo; or format only the
+       files this branch changed, which it works out from git and prints.
+       Never format repo-wide - see the note in ``AGENTS.md``.
+   * - ``poe check-deprecations`` / ``poe check-migrations``
+     - Django's system checks with deprecation warnings visible; and whether
+       any model change still needs a migration. The second prints what is
+       pending *and* fails, which neither form of ``makemigrations`` does on
+       its own.
+
+Tasks whose help text begins **WIP** (the Ubuntu deployment helpers in
+``poe_tasks/deploy.toml``, which run ``sudo``, and three ``make-*`` shims) are
+unverified and not part of the ordinary workflow.
+
+This guide writes them as ``uv run poe <task>``, like every other command here.
+In an activated virtual environment the ``uv run`` prefix is optional - the one
+place it is left off below is the shell-completion snippets above, which the
+shell evaluates itself. To add a task of your own, see :ref:`adding-a-poe-task`.
+
+.. note::
+
+   **If you already have a global poe, you have two of them, and they are not
+   the same version.** ``uv tool install poethepoet`` or a system package puts a
+   ``poe`` on your ``PATH``; the ``uv sync`` above puts another in
+   ``.venv``. Which one answers depends only on how you type the command:
+
+   - ``poe <task>`` runs the **global** one, whatever version that happens to be;
+   - ``uv run poe <task>`` runs the project's, which the lockfile pins.
+
+   On one development machine in November 2026 those were **0.48.0 and 0.49.0**
+   respectively - and ``pyproject.toml`` declares ``poethepoet>=0.49,<1.0``, so
+   the bare ``poe`` was below the project's own floor. Nothing said so.
+
+   **Your tasks still run in the project environment either way.** poe executes
+   each task through ``uv run``, so ``ruff``, ``pytest`` and ``pre-commit`` come
+   from ``.venv`` even when poe itself does not. Measured on that same machine:
+   neither ``ruff`` nor ``pre-commit`` existed anywhere on ``PATH``, and the
+   global poe ran both correctly. So a global install does not give you the
+   wrong Django, the wrong database or the wrong test suite.
+
+   **What it does give you is an unchecked task runner.** The version floor and
+   the ``<1.0`` ceiling in ``pyproject.toml`` apply to the copy in ``.venv``;
+   nothing compares them against a global install. poe is pre-1.0, so a minor
+   release may change task syntax - which is what the ceiling is for. A global
+   poe that is too old silently fails to understand something a task file
+   relies on; one that is too new may read it differently. Neither produces a
+   version error, because no version check happens.
+
+   So: **prefer** ``uv run poe``, which is how this guide writes every command
+   and is always the pinned one. If you want the shorter spelling, either
+   activate the virtual environment - then bare ``poe`` is the project's - or
+   keep your global install inside the declared range and upgrade it when the
+   range moves:
+
+   .. code-block:: bash
+
+       uv tool install 'poethepoet>=0.49,<1.0'   # or: uv tool upgrade poethepoet
+       poe --version                             # check it against pyproject.toml
+
+   There is no need for a global install at all. It used to be the documented
+   way to get poe, which is exactly why poe is now a ``dev`` dependency: a
+   global install left every developer on a different version.
+
 Understanding the Settings Files
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -145,8 +357,28 @@ Creating your development database
 Rather than using a full blown database server for development work, You can
 use Sqlite3 which is included with Python.
 
-Once you have the requirements installed, copy the debug `local_settings.py` and `local_test_settings.py`
-files from the deploy subdirectory and then create your database:
+Once you have the requirements installed, one task does the whole thing:
+
+.. code-block:: shell
+
+    uv run poe dev-init
+
+That copies three files out of ``deploy/dev/`` - ``local_settings.dev.py`` to
+``qatrack/local_settings.py``, ``local_test_settings.sqlite.py`` to
+``qatrack/local_test_settings.py``, and ``local_test_settings.memory.py``
+alongside it for the fastest way to run the suite - creates the ``db``
+directory, runs the migrations, and leaves you a superuser called ``superuser``
+whose password is ``superuser``. The database is ``db/default.db``.
+
+It **refuses** if any of those files or that database is already there, rather
+than copying what it can and then failing partway through on *That username is
+already taken*: half a setup and a confusing error is the worst of the
+available outcomes. If a later step fails it removes what that run created, so
+you can fix the problem and simply run it again. To discard an environment on
+purpose, ``uv run poe dev-reset`` deletes those files and the sqlite database
+and then sets up a fresh one.
+
+By hand, without the memory template or the superuser, the same thing is:
 
 .. code-block:: shell
 
@@ -155,8 +387,164 @@ files from the deploy subdirectory and then create your database:
     mkdir db
     uv run python manage.py migrate
 
+``migrate`` is also what creates the cache table QATrack+ reads - the
+``qatrack_core.0002_cache_table`` migration - so a development database needs
+nothing beyond it.
 
-this will put a database called `default.db` in the `db` subdirectory.
+``deploy/dev/`` has a template per engine if you would rather test against
+something other than sqlite - see :ref:`local_test_settings_templates` below,
+and ``poe test-engine <engine>`` under `Running The Test Suite`_ for running
+against one without touching your usual ``local_test_settings.py``.
+
+.. _local_settings_templates:
+
+``local_settings.py`` templates
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``deploy/dev/local_settings.dev.py`` above is the right starting point for
+development work. The remaining ``local_settings.py`` templates under
+``deploy/`` target real deployments rather than development, and are the
+ones referred to by the error QATrack+ raises when ``qatrack/local_settings.py``
+is missing:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 40 60
+
+   * - Template
+     - Use it for
+   * - ``deploy/dev/local_settings.dev.py``
+     - Local development (sqlite, ``DEBUG`` on). Start here.
+   * - ``deploy/sqlite/local_settings.py``
+     - A file-backed sqlite deployment.
+   * - ``deploy/postgres/local_settings.py``
+     - A PostgreSQL deployment (see also the ``.sql`` role/database setup
+       scripts alongside it).
+   * - ``deploy/mysql/local_settings.py``
+     - A MySQL/MariaDB deployment (likewise with ``.sql`` setup scripts).
+   * - ``deploy/win/local_settings.py``
+     - A Windows/MS SQL Server deployment.
+
+Copy whichever one matches your target to ``qatrack/local_settings.py`` and
+edit it from there. For full deployment instructions see the
+:doc:`installation guides </install/install>`, not this page.
+
+Getting a database to test against
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The sqlite variants need nothing installed. The other three need a running
+server *and* a database driver, neither of which arrives with
+``uv sync --dev``.
+
+Throwaway servers for all three::
+
+    cp deploy/dev/.env.test-databases.example deploy/dev/.env
+    uv run poe test-databases-up
+
+They keep nothing - every service runs on tmpfs with no volume - so
+``poe test-databases-down`` leaves no trace and the next ``up`` is a clean
+slate. ``up`` waits until each server actually answers rather than returning
+while SQL Server is still starting, which otherwise fails the first run for
+reasons unrelated to the code.
+
+Then install the driver for the engine you want and run it::
+
+    uv sync --dev --extra postgres
+    cp deploy/dev/local_test_settings.postgres.py qatrack/local_test_settings.postgres.py
+    uv run poe test-engine postgres
+
+The templates read their connection details from the same variables the
+compose file publishes, so the two cannot disagree - a hardcoded port in one
+and a different one in the other is a failure whose only symptom is a port
+that never comes up.
+
+Each engine needs a different amount installed on the host:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 14 20 66
+
+   * - Engine
+     - uv extra
+     - Also needs
+   * - ``postgres``
+     - ``--extra postgres``
+     - Nothing. ``psycopg[binary]`` is a self-contained wheel.
+   * - ``mysql``
+     - ``--extra mysql``
+     - ``default-libmysqlclient-dev`` and ``pkg-config``: ``mysqlclient`` is
+       pinned to a version that builds from source.
+   * - ``mssql``
+     - ``--extra mssql``
+     - ``unixodbc-dev`` and Microsoft's ``msodbcsql18``, plus
+       ``libldap2-dev`` and ``libsasl2-dev`` - the ``mssql`` extra also pulls
+       ``python-ldap``, which is why ``poe deps`` does not use
+       ``--all-extras``.
+
+Running a different version
+"""""""""""""""""""""""""""
+
+The defaults track the versions :doc:`the installation guides </install/install>`
+commit to, so a plain ``poe test-engine postgres`` exercises what the project
+promises rather than whatever is newest.
+
+To test something else, change one value in ``deploy/dev/.env`` and bring the
+servers back up::
+
+    QATRACK_TEST_POSTGRES_VERSION=14
+    QATRACK_TEST_POSTGRES_PORT=5433
+
+Ports are variables for the same reason versions are: two versions of the
+same engine can then run side by side, and a port already taken by a locally
+installed server can be moved without editing the compose file.
+
+Understanding the Settings Files
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+QATrack+ uses a layered approach to Django settings, with each file serving a specific purpose. Understanding this hierarchy will help you configure your development and testing environment.
+
+Every file below is imported with ``from ... import *``, so the *last* one
+loaded wins for any given setting. Under a test run the chain is
+``settings.py`` -> ``local_settings.py`` -> ``test_settings.py`` ->
+``local_test_settings.py``, giving this order:
+
+**Settings File Hierarchy (Highest to Lowest Precedence):**
+
+1. ``local_test_settings.py`` - Your custom test environment overrides
+
+   - Contains all essential development and test settings in one place
+   - This is the main file you'll customize for your testing needs
+
+2. ``test_settings.py`` - Default test environment settings
+
+   - Contains test-specific defaults like password hashers and notification
+     settings
+   - Note that ``test_settings.py`` re-imports ``local_settings.py`` and
+     *then* applies its own values, so under a test run it overrides
+     anything you set in ``local_settings.py``. If you set, say,
+     ``LANGUAGE_CODE`` or ``NOTIFICATIONS_ON`` in ``local_settings.py`` and
+     wonder why the tests don't see it, this is why - put test-only values
+     in ``local_test_settings.py`` instead.
+
+3. ``local_settings.py`` - Your custom development environment overrides
+
+   - Contains development-specific settings like database configuration
+   - This is the file the development server and management commands use;
+     outside of a test run it is the highest-precedence file.
+
+4. ``settings.py`` - Base Django application settings
+
+   - Contains core Django configuration, installed apps, middleware, etc.
+
+Collect Static Files
+~~~~~~~~~~~~~~~~~~~~
+
+Before running the development server, you need to collect all static files to the STATIC_ROOT directory:
+
+.. code-block:: shell
+
+    uv run python manage.py collectstatic --noinput
+
 
 .. _local_test_settings_templates:
 
@@ -196,9 +584,10 @@ this will put a database called `default.db` in the `db` subdirectory.
       - SQL Server
       - the same, plus ``uv sync --extra mssql`` and ODBC Driver 17 or 18.
 
-``make test-<engine>`` runs the suite against one of these without disturbing
-the ``local_test_settings.py`` you work with day to day; the Makefile's own
-comment says what it swaps and restores.
+``uv run poe test-engine <engine>`` runs the suite against one of these without
+disturbing the ``local_test_settings.py`` you work with day to day: it swaps the
+template in, runs the suite, and puts your own file back however the run ends -
+Ctrl-C included, which the ``Makefile`` target it replaces did not.
 
 For a *deployment* rather than a test run the templates are elsewhere -
 ``deploy/sqlite/``, ``deploy/postgres/``, ``deploy/mysql/`` and ``deploy/win/``
@@ -238,12 +627,25 @@ Generating Sample Data
 
 The default fixtures give you an empty, correctly configured QATrack+. To get a
 database that actually *looks* like a working clinic — useful when developing a
-feature or reviewing someone else's pull request — use the
-``generate_sample_data`` command:
+feature or reviewing someone else's pull request:
 
 .. code-block:: shell
 
-    uv run python manage.py generate_sample_data
+    uv run poe generate-sample-data                 # 90 days of history
+    uv run poe generate-sample-data --days 30       # or as much as you want
+    uv run poe generate-sample-data --clear         # replace what is there
+
+``--clear`` **deletes** the existing QA, unit, service log, fault, parts and
+report data before generating, and asks you to confirm first. The task does not
+offer the underlying command's ``--no-input``, deliberately: the confirmation is
+the only thing standing between a mistyped task name and a developer's
+database, and a task should not be a shorter way to skip it than doing it by
+hand. For an unattended run — a container build, a demo site, a script you have
+thought about — call the command directly:
+
+.. code-block:: shell
+
+    uv run python manage.py generate_sample_data --clear --no-input
 
 This creates a small radiation oncology centre: two linacs and a CT simulator,
 TG-142 style daily and monthly test lists with per unit references and
@@ -311,7 +713,9 @@ Before running the development server, you need to collect all static files to t
 Running the development server
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-After the database is created, create a super user so you can log into QATrack+:
+``poe dev-init`` already left you a superuser - ``superuser``, password
+``superuser``. If you set the database up by hand, or want an account of your
+own, create one:
 
 .. code-block:: shell
 
@@ -321,7 +725,7 @@ and then run the development server:
 
 .. code-block:: shell
 
-    uv run python manage.py runserver 
+    uv run poe run
 
 Once the development server is running you should be able to visit
 http://127.0.0.1:8000/ in your browser and log into QATrack+.
@@ -451,14 +855,28 @@ code:
 
     **Format only the files you changed.** The repository has never been formatted
     as a whole, so ``ruff format .`` rewrites hundreds of files and buries your
-    change:
+    change. ``poe format-changed`` formats the ones this branch touched and
+    nothing else:
+
+    .. code-block:: shell
+
+        uv run poe format-changed
+        uv run poe format-changed --check   # report them, change nothing
+
+    It works that set out from git - everything changed since the branch left
+    ``develop``, plus whatever is uncommitted or untracked - narrows it to the
+    ``.py`` and ``.pyi`` files, and prints the list before formatting, so you can
+    see what it decided. Naming a file yourself still works, and is what the task
+    runs underneath:
 
     .. code-block:: shell
 
         uv run ruff format path/to/the/file/you/changed.py
 
-``uv run pre-commit run --all-files`` before opening a pull request runs what CI
-runs.
+``uv run poe lint`` before opening a pull request runs what CI runs: it is
+``pre-commit run --all-files``, which puts ruff, the YAML and TOML checks and
+Django's system checks over every file in the tree, not only the ones you
+changed.
 
 .. note::
 
@@ -520,16 +938,167 @@ JavaScript files that are ours rather than vendored, 52 use 4 and 25 use 2. A pa
 that reindents a file to follow this page is a patch whose diff hides its own
 change.
 
-Using Make Commands
-~~~~~~~~~~~~~~~~~~~
+Using poe (and Make)
+~~~~~~~~~~~~~~~~~~~~
 
-QATrack+ includes a Makefile with convenient shortcuts for common development tasks like running tests, formatting code, and building documentation. You can see all available commands by running:
+Day-to-day commands - running the tests, building the documentation, setting up
+a development database - are ``poe`` tasks; see :ref:`the task runner
+<task-runner-poe>` for the ones you need. ``poe`` with no arguments lists them
+all:
 
 .. code-block:: shell
 
-    make help
+    poe
 
-For detailed information about using make and understanding Makefiles, refer to the `GNU Make Manual <https://www.gnu.org/software/make/manual/>`_.
+The ``Makefile`` is unchanged and frozen: it still carries its own
+implementations, ``make help`` still lists its targets, and **it is removed
+during the 4.1 cycle**. Nothing in it calls poe, deliberately - a recipe that
+ran ``uv run poe`` would sync the ``dev`` dependency group into whatever
+checkout it was run in, which on a site installed with ``--no-dev`` means 88
+packages it should not have. New work goes into the ``poe`` tasks, not the
+``Makefile``. Every target it has is mirrored as ``poe make-<target>``, so a
+Make habit keeps working on a host with no Make at all.
+
+.. _adding-a-poe-task:
+
+Adding a new poe task
+~~~~~~~~~~~~~~~~~~~~~
+
+**First, whether to.** A public task earns its name when it composes more than
+one command, hides a trap, or encodes something a newcomer could not guess - an
+environment variable, an ``--ignore``, an order that matters. A one-line alias
+of a ``manage.py`` command does not: that is a second spelling of something
+already documented, and it costs a line in every listing for everybody.
+
+Two consequences worth stating, because both have already happened here. **A
+variant is usually a parameter, not a task** - the browser for the GUI runs, the
+path for ``cover`` - and three copies of one command drift apart: ``cover``,
+``cover-qatrack`` and ``cover-module`` were three until 2026-11-08, and the
+third had quietly lost the ``--reuse-db`` the others carried. And **a step
+inside a composite does not need a public name**: prefix it with ``_`` and poe
+hides it from the list and refuses to run it directly, which is a real boundary
+rather than a convention.
+
+There is a test on the count - see ``test_poe_tasks.py`` - so raising it is a
+review decision rather than a side effect of adding a task.
+
+Task definitions live under ``poe_tasks/``, one file per theme, rather than
+directly in ``pyproject.toml``: ``dev.toml`` (dev environment setup),
+``tests.toml`` (running the suite, GUI/Selenium variants), ``coverage.toml``,
+``docs.toml`` (Sphinx, schema diagram, translation status), ``data.toml``
+(fixtures and destructive data commands), ``deploy.toml`` (Ubuntu/sudo
+deployment helpers), ``ci.toml`` (the ``poe ci`` pre-push check and its
+parts), ``test_databases.toml`` (throwaway database servers for
+``test-engine``) and ``translations.toml`` (the gettext catalogues).
+``pyproject.toml`` itself only lists them, via
+``[tool.poe] include``; it never grew a ``[tool.poe.tasks.*]`` table of its
+own. This split exists purely to stop ``pyproject.toml`` growing without
+bound as tasks are added - it changes nothing about how a task runs, or how
+``poe <task>``/``poe --help`` behave.
+
+``poe_tasks/make_compat.toml`` is different in kind, not just location: it
+holds the ``make-*`` tasks that mirror a ``Makefile`` target one-for-one, and
+there is one for **every** target the ``Makefile`` has (see the comment above
+``[tool.poe] include`` in ``pyproject.toml``). The documentation build fails
+if a target has no mirror, so the set stays complete without anyone
+remembering to check.
+
+Most mirrors are a ``ref`` to the successor task and carry no logic of their
+own, because a ``ref`` cannot drift - and it still receives the caller's
+arguments, so ``poe make-cover-module qatrack/units`` works. Three carry a
+body instead, where the ``Makefile``'s behaviour is the thing being mirrored:
+``make-docs`` goes through ``docs/Makefile`` and so needs Make,
+``make-dumpdata`` builds its timestamp with ``date``, and
+``make-docs-autobuild`` serves on the ``Makefile``'s port rather than the
+documented one. Three others deliberately do *not* reproduce what the
+``Makefile`` does, and say why in place: ``make-nginx-conf``,
+``make-supervisor-conf`` and ``make-schema`` delegate, because the
+``Makefile``'s own versions install configs that ``www-data`` can write, or
+can overwrite a committed diagram with a zero-byte file while reporting
+success.
+
+Two names lose a character on the way across: poe validates task names
+against ``^[^\W\d][\w:+-]*$``, which has no ``.`` in it, so ``nginx.conf``
+and ``supervisor.conf`` mirror as ``make-nginx-conf`` and
+``make-supervisor-conf``.
+
+Nothing new should be added there - a new task belongs in one of the theme
+files above, and the ``Makefile`` will not grow a target to mirror.
+
+**Name it for what it does, not for what it runs.** ``lint`` runs pre-commit,
+``format-changed`` runs ruff, and ``docs`` runs Sphinx - none of them say so,
+and that is deliberate. The tool behind a task changes more often than the job
+does, and a task named after its tool has to be renamed when the tool is
+replaced, taking every script and habit with it.
+
+This is the convention in the wider poe ecosystem rather than a local
+preference. poe's own project names every task for its purpose - ``lint`` for
+ruff, ``types`` for mypy, ``format``, ``check`` - and projects that do reach for
+tool names keep them **private**, behind the ``_`` prefix that marks an internal
+helper: ``django-postgres-extra`` has public ``lint``, ``lint_fix`` and
+``format`` over private ``_autoflake``, ``_autopep8`` and ``_isort_*``, and
+``tianshou`` has public ``lint``, ``format`` and ``type-check`` over private
+``_mypy``, ``_ruff_fix`` and ``_ruff_format``. So:
+
+- **public task, purpose name:** ``lint``, ``lint-fix``, ``format-changed``,
+  ``test``, ``docs``, ``deps``;
+- **private helper, tool name if it helps:** ``_ci-reminder``, and anything
+  else a composite task calls but nobody runs directly.
+
+Two established exceptions, both because the name *is* the purpose: the
+``make-*`` mirrors, which exist to be spelled like the ``Makefile`` target they
+stand in for, and ``poe`` itself in projects that wrap their own runner.
+
+When adding a task:
+
+1. Pick the theme file that matches, or add a new ``poe_tasks/<theme>.toml``
+   and list it in ``pyproject.toml``'s ``[tool.poe] include`` if none fit.
+2. Included files use bare ``[tasks.<name>]`` headers, **not**
+   ``[tool.poe.tasks.<name>]`` - poe treats a non-``pyproject.toml`` file
+   with no ``tool.poe`` table of its own as if its entire contents sat under
+   ``tool.poe``. Copy the header style already used in that file.
+3. Make it work on Windows: prefer a plain ``cmd`` task, or
+   ``interpreter = "python"`` with stdlib (``pathlib``/``shutil``/
+   ``subprocess``) if it needs any logic at all. Avoid a bare ``shell``
+   task (defaults to bash/POSIX, which fails outright on a Windows host
+   with no Git Bash or WSL) unless the task is genuinely Ubuntu/sudo-only
+   by nature (see ``deploy.toml``) - in that case, say so in the task's
+   ``help`` text the way ``nginx-conf`` and ``supervisor-conf`` do, and add
+   it to ``SHELL_TASKS_THAT_NEED_A_REAL_SHELL`` in ``test_poe_tasks.py``
+   with the reason, because the suite now fails on a bare ``shell`` task
+   that does not appear there. Inside an
+   ``interpreter = "python"`` body poe does **not** substitute ``${arg}``;
+   a declared argument arrives as an environment variable, so read
+   ``os.environ['arg']`` (see ``test-engine`` in ``tests.toml``).
+4. A ``cmd`` is not a shell command line. poe parses it itself and runs the
+   result directly, so ``&&``, ``|``, ``>`` and ``;`` are passed on as
+   ordinary arguments rather than interpreted - and the task still **exits
+   0**. ``cmd = 'manage.py check && echo ok'`` runs ``manage.py`` with
+   ``&&``, ``echo`` and ``ok`` in ``sys.argv``, never runs ``echo``, and
+   reports success. Anything that genuinely needs to chain, pipe or redirect
+   belongs either in a ``sequence`` or in a ``shell`` body with
+   ``interpreter = "python"``; the suite guards this one too.
+5. A ``cmd`` task forwards extra arguments; a ``shell`` body discards them.
+   ``poe test -- -k foo`` reaches pytest, because poe appends the extras to a
+   ``cmd``'s command line. A ``shell`` body assembles its own argument list,
+   so poe has nowhere to put them and they are silently gone - which is why
+   ``poe test-engine sqlite -- -k foo`` runs the whole suite. This has nothing
+   to do with declaring arguments, named or positional; see the note above
+   ``test-engine`` in ``poe_tasks/tests.toml`` for the measurements. If a task
+   with a body needs to pass flags onward, declare an argument for them and
+   split it in the body.
+6. A task's argument can declare ``choices = [...]`` to get real tab
+   completion of its allowed values (see `Shell Autocomplete for uv and poe`_
+   above) - worth adding for anything with a small, fixed set of valid
+   values (an engine name, a browser name, and so on).
+7. Run ``poe <task>`` for real, not just ``poe -d <task>`` (dry-run only
+   prints the resolved command/script - it does not catch a task that
+   parses fine but fails or misbehaves once actually invoked).
+8. Give it a one-line ``help`` - that line is what ``poe`` prints in its task
+   list and what the generated :ref:`appendix <poe_tasks_appendix>` shows; a
+   task without one fails the docs build. If contributors will reach for it,
+   add a row to the table in :ref:`the task runner <task-runner-poe>`; if it
+   is unverified, start the help text with ``WIP``.
 
 Setting Up Selenium Browser Testing
 -----------------------------------
@@ -596,6 +1165,9 @@ them:
 * `SELENIUM_FIREFOX_DRIVER_PATH` / `SELENIUM_CHROMIUM_DRIVER_PATH` - only
   needed if you want to pin a specific driver binary instead of letting
   Selenium Manager resolve one automatically.
+* `SELENIUM_SLOW_MO` - an environment variable, not a setting: a pause in
+  seconds between browser actions, so a visible run can be followed by eye.
+  ``poe test-gui --mode watch`` sets it; leave it unset when measuring.
 
 ``SELENIUM_SLOW_MO`` is the one knob that is **not** a setting. It is seconds to
 pause after each browser interaction so a person can follow a run - ``0``, the
@@ -685,7 +1257,15 @@ root QATrack+ directory:
 
 .. code-block:: shell
 
+    uv run poe test
+    # -or-
     uv run pytest
+
+``poe test`` *is* ``pytest`` - a one-line task with nothing added - and anything
+you put after it reaches pytest unchanged, flags included: ``poe test
+--run-selenium -m selenium`` collects exactly what the same pytest line collects.
+The rest of this section writes the plain command, because the flags are
+pytest's and knowing that is what lets you look them up.
 
 **The GUI tests are left out unless you ask for them.** They drive a real
 browser, they are the slowest part of the suite, and they need the setup in
@@ -703,6 +1283,29 @@ counted either way; it still works and now warns, and goes in 4.2.)
     uv run pytest --run-selenium         # those, and the GUI tests as well
     uv run pytest -m selenium --run-selenium   # only the GUI tests
 
+Each of those is also ``uv run poe test`` with the same flags.
+
+The ``poe`` tasks wrap the same commands with the browser and mode chosen for
+you, so nothing has to be edited into a settings file:
+
+.. code-block:: shell
+
+    uv run poe test-gui                   # only the GUI tests, nothing overridden
+    uv run poe test-gui                                    # your settings, unchanged
+    uv run poe test-gui --mode headless                    # no display needed
+    uv run poe test-gui --mode headless --browser edge     # or name a browser
+    uv run poe test-gui --browser edge                     # browser only, your mode
+    uv run poe test-gui --mode visible                     # a real window, needs a display
+    uv run poe test-gui --mode watch                       # visible and slowed down
+
+Omitting the browser uses **yours**: the argument has no default, so the task
+imposes only the window mode and leaves ``SELENIUM_BROWSER`` alone, which lets
+``local_test_settings.py`` or your environment decide. Naming one overrides
+that - unless you have pinned ``SELENIUM_BROWSER`` in
+``local_test_settings.py``, which is imported after ``settings.py`` has read
+the environment and therefore wins over both. That precedence is what makes
+the no-argument case work, and it is worth knowing in the other direction.
+
 .. note::
 
     ``-m "not selenium"`` still works and is **deprecated**: it was how you
@@ -714,12 +1317,148 @@ counted either way; it still works and now warns, and goes in 4.2.)
 For more on pytest itself, see the `pytest documentation
 <https://pytest.org>`__.
 
+Running one GUI test
+~~~~~~~~~~~~~~~~~~~~
+
+The ``poe test-gui-*`` tasks take **no pytest flags**. They set environment
+variables and then run the whole GUI suite, and poe discards extra arguments
+for a task with a body - ``poe test-gui --mode watch -- -k test_x`` filters
+nothing, and ``poe test-gui --mode watch -k test_x`` is refused outright. So to run
+one test, go through pytest and set the same variables yourself. They are the
+only thing the tasks were doing:
+
+.. code-block:: shell
+
+    # one test, headless firefox - the defaults, so nothing to set
+    uv run pytest -m selenium -k test_schedule_report
+
+    # one test, chromium, in a real window
+    SELENIUM_BROWSER=chromium SELENIUM_HEADLESS=False \
+        uv run pytest -m selenium -k test_schedule_report
+
+    # one test, chromium, visible and paused between actions
+    SELENIUM_BROWSER=chromium SELENIUM_HEADLESS=False SELENIUM_SLOW_MO=0.4 \
+        uv run pytest -m selenium -k test_schedule_report
+
+In PowerShell the variables are set first, on their own lines:
+
+.. code-block:: powershell
+
+    $env:SELENIUM_BROWSER = 'chromium'
+    $env:SELENIUM_HEADLESS = 'False'
+    $env:SELENIUM_SLOW_MO = '0.4'
+    uv run pytest -m selenium -k test_schedule_report
+
+This matters most for a watched run: every click and page load pauses, so a
+suite that takes about eight minutes takes appreciably longer, and watching one
+test is almost always what you want.
+
+.. _adding-a-selenium-browser:
+
+Adding another browser
+~~~~~~~~~~~~~~~~~~~~~~
+
+The harness drives **firefox**, **chromium** and **edge**; ``chrome`` is
+accepted as an alias of ``chromium``.
+
+**Google Chrome already works, with no change.** Chrome and Chromium are driven
+by the same driver, so ``SELENIUM_BROWSER=chrome`` - or
+``poe test-gui --mode headless --browser chromium`` - drives whichever of the
+two is installed.
+Verified on a machine with Google Chrome 156 and no Chromium at all. If the
+binary is somewhere a driver will not find it, such as a Flatpak install, set
+``SELENIUM_CHROMIUM_BINARY_PATH`` in your settings rather than changing code.
+
+**Edge works on Linux and on Windows.** Selenium Manager resolves a matching
+``msedgedriver`` from the installed Edge's version, so nothing needs downloading
+by hand. Measured on Windows 11: the GUI suite passes on Edge in four runs of
+four, Selenium Manager finds both the driver and the browser unaided, and
+``SELENIUM_EDGE_BINARY_PATH`` can stay empty - Edge's install under
+``C:\Program Files (x86)`` is not on ``PATH``, and Selenium Manager locates it
+anyway.
+
+.. note::
+
+    **On Windows, a msedgedriver already on PATH is the one that runs.**
+    Measured with a winget-installed driver at 156.0.4314.50 against browser
+    156.0.4314.58: Selenium Manager used the one on ``PATH`` rather than
+    downloading an exact match, because the major versions agree. That is
+    usually fine and occasionally not - if a GUI failure looks like a driver
+    problem, check ``msedgedriver --version`` against the browser's before
+    anything else, or set ``SELENIUM_EDGE_DRIVER_PATH`` to pin it.
+
+For a Flatpak Edge, point ``SELENIUM_EDGE_BINARY_PATH`` at the binary *inside*
+the install rather than at the ``exports/bin`` wrapper:
+
+.. code-block:: python
+
+    SELENIUM_EDGE_BINARY_PATH = os.path.expanduser(
+        '~/.local/share/flatpak/app/com.microsoft.Edge/current/active/files/extra/msedge'
+    )
+
+That differs from the Chrome advice in ``settings.py`` on purpose. The
+``exports/bin`` wrapper starts the browser inside the Flatpak sandbox, which is
+what makes the ``TMPDIR`` redirection documented there necessary; the inner
+``files/extra/msedge`` runs as an ordinary executable, so the sandbox - and
+that problem with it - does not arise.
+
+**Safari and the WebKit engines still need a harness change, and are possible.**
+What is possible is decided by the Selenium package, not by this project.
+Selenium 4.45.0 ships WebDriver support for:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 70
+
+   * - Browser
+     - Status here
+   * - ``firefox``, ``chromium``
+     - Driven. ``chrome`` is an alias of ``chromium``.
+   * - ``edge``
+     - Driven. Chromium-based, so it shares every option and flag with
+       ``chromium``, but it needs Microsoft's ``msedgedriver`` - the
+       chromedriver that drives Chrome will not drive Edge, which is why it is
+       its own value rather than another alias.
+   * - ``safari``
+     - Not wired up. macOS only, and neither development machine runs macOS.
+   * - ``webkitgtk``, ``wpewebkit``
+     - Not wired up. **The only way to get a third rendering engine**: the
+       suite currently covers Gecko (firefox) and Blink (chromium) only, and
+       WebKitGTK is what GNOME Web uses.
+   * - ``ie``
+     - Not wired up, and should stay that way.
+
+To add one - Safari, say, following how Edge was added:
+
+1. Add it to ``SELENIUM_BROWSERS`` in ``qatrack/qatrack_core/tests/live.py``.
+   That map is also what makes an unrecognised value **raise** instead of
+   quietly running firefox, which is a defect this harness has had twice.
+2. If it is Chromium-based, add it to ``CHROMIUM_FAMILY`` in the same file and
+   pick its ``Options``/``Service`` classes where Edge's are picked - that is
+   all Edge needed, because the family shares every flag, preference and the
+   headless and window-size handling. Anything not Chromium-based needs its own
+   branch beside ``firefox``.
+3. Give it its own binary and driver settings in ``qatrack/settings.py``,
+   beside ``SELENIUM_EDGE_*``. Sharing Chrome's would mean pointing one browser
+   at another's driver, which fails in ways that read like a broken test.
+4. Add the name to ``choices`` on each ``test-gui-*`` task in
+   ``poe_tasks/tests.toml``. Without that the task refuses the value, which is
+   the point of ``choices``, and you also get tab completion of it.
+5. Run the suite on it before advertising it. A browser that starts is not the
+   same as a browser the 43 GUI tests pass on; expect to fix waits.
+
+**What cannot be added.** A browser needs a WebDriver implementation, and not
+every browser has one. KDE's Falkon, and anything else built on QtWebEngine,
+ships no WebDriver server and is not in Selenium's list above - so it is not a
+matter of configuration. If the goal is a third engine on Linux, ``webkitgtk``
+is the one that exists.
+
 New code should come with tests covering as much of it as you can manage. You can
 measure coverage with:
 
 .. code-block:: shell
 
-    make cover
+    uv run poe cover
 
 .. tip::
 
@@ -836,21 +1575,30 @@ browser (at http://127.0.0.1:8008) by running one of the following commands:
 
 .. code-block:: shell
 
-    make docs-autobuild
+    uv run poe docs-serve
     # -or-
     sphinx-autobuild docs docs/_build/html --port 8008
 
 The documentation build treats warnings as errors, so a build that reports a
-warning fails. Run it the way CI does before you push:
+warning fails. ``poe docs`` is that build, and ``poe ci`` runs it; run one of
+them before you push:
 
 .. code-block:: shell
 
-    rm -rf docs/_build
+    uv run poe docs
+
+The command it runs is:
+
+.. code-block:: shell
+
     uv run sphinx-build -W --keep-going -a --fresh-env -b html docs docs/_build/html
 
-Removing ``docs/_build`` matters. Sphinx caches what it has already parsed, and an
-incremental build does not repeat a warning it reported last time - so a warning you
-introduced can be invisible to you and fail for the next person.
+``-a --fresh-env`` is the part of that worth knowing. Sphinx caches what it has
+already parsed, and an incremental build does not repeat a warning it reported
+last time - so a warning you introduced can be invisible to you and fail for the
+next person. Those two flags discard the cache and re-read the whole tree, which
+is why the task needs no ``rm -rf docs/_build``. If you call ``sphinx-build``
+yourself without them, delete that directory first.
 
 Fragments, and the leading underscore
 -------------------------------------

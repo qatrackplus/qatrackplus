@@ -1,0 +1,101 @@
+# Included from pyproject.toml's [tool.poe] include list - see the header
+# comment there for the overall poe/Makefile migration context.
+
+# ==========================================================================
+# Deployment helpers
+# ==========================================================================
+
+
+# These four are for a *deployment*, not a development checkout. The templates
+# under deploy/ hardcode /home/YOURUSERNAMEHERE/web/qatrackplus and substitute
+# only the username, so running them anywhere else installs config that points
+# at a directory which does not exist - valid nginx syntax serving nothing, and
+# supervisor programs whose interpreter is not there.
+#
+# Verified here as far as is possible without root: the templates carry the
+# placeholder (2, 3 and 4 occurrences), the substitution leaves none behind,
+# and the paths resolve to what the install docs prescribe. The sudo steps
+# themselves are unverified, which is what the WIP- marks.
+#
+# ==========================================================================
+# REQUIRED NEXT STEP, before 4.1 releases. Cody's decision, 2026-11-04.
+# ==========================================================================
+#
+# **These four are the only poe tasks written for a site rather than a
+# developer, and they are the reason poe's dependency group is still an open
+# question.** poe sits in the `dev` group (see [dependency-groups] in
+# pyproject.toml), which means a site installing with `uv sync --no-dev` - what
+# the production image does - does not get poe and so cannot run these at all.
+#
+# **That is a deferral, not a judgement that no task could serve an
+# installation.** The judgement cannot be made while the sudo steps are
+# unverified: documenting an unverified task that runs sudo and writes into
+# /etc would publish an instruction nobody has executed.
+#
+# **What has to happen, in this order:**
+#
+#   1. Run all four on a real Ubuntu host, as a deployment would - install,
+#      confirm nginx serves and supervisor starts gunicorn and django-q2, then
+#      run the two -remove tasks and confirm the host is back as it was.
+#   2. Then decide, and the two answers lead different ways:
+#      * **they work** -> move poe out of `dev` and into the base dependencies,
+#        and document these four in `docs/install/linux.rst` beside the manual
+#        steps they replace. Cody, 2026-11-04: *"those functions should be
+#        documented in the install guide."*
+#      * **they do not work, or are not wanted** -> drop the WIP- marks by
+#        deleting the tasks, and say in this file that deployment is a
+#        documented manual procedure. poe then stays in `dev` for good.
+#   3. Either way, remove this block. It exists to stop the question being
+#      lost, not to be carried.
+#
+# **Nothing is lost while this is open.** `docs/install/linux.rst` already
+# walks a site through nginx and supervisor by hand - `sites-available/
+# qatrack.conf`, `supervisorctl restart gunicorn` - so these tasks are a
+# convenience over a documented procedure that works, not the only route.
+#
+# **Validated and fixed in its own pull request as 4.1 approaches release**,
+# on Cody's instruction. It is not this branch's work.
+[tasks."nginx-conf"]
+help = "WIP- Ubuntu only: install the nginx site config (runs sudo); unverified here"
+shell = '''
+sudo sed "s/YOURUSERNAMEHERE/$USER/g" deploy/nginx/qatrack.conf > qatrack.conf
+sudo mv qatrack.conf /etc/nginx/sites-available/qatrack.conf
+sudo ln -sf /etc/nginx/sites-available/qatrack.conf /etc/nginx/sites-enabled/qatrack.conf
+sudo usermod -a -G $USER www-data
+sudo service nginx restart
+'''
+
+
+[tasks."supervisor-conf"]
+help = "WIP- Ubuntu only: install supervisor configs for django-q2/gunicorn (runs sudo); unverified here"
+shell = '''
+sudo sed "s/YOURUSERNAMEHERE/$USER/g" deploy/supervisor/django-q2.conf > django-q2.conf
+sudo sed "s/YOURUSERNAMEHERE/$USER/g" deploy/supervisor/gunicorn.conf > gunicorn.conf
+sudo mv django-q2.conf /etc/supervisor/conf.d/
+sudo mv gunicorn.conf /etc/supervisor/conf.d/
+sudo supervisorctl reread
+sudo supervisorctl update
+'''
+
+[tasks."nginx-conf-remove"]
+help = "WIP- Undo nginx-conf: remove the site config and restart nginx; unverified here"
+# Deliberately does not undo `usermod -a -G $USER www-data`. Taking a group
+# membership away again can break anything else that came to rely on it, and
+# an uninstall that quietly changes account permissions is worse than one that
+# leaves a harmless group in place. Remove it by hand if you want it gone:
+#   sudo gpasswd -d www-data $USER
+shell = """
+sudo rm -f /etc/nginx/sites-enabled/qatrack.conf
+sudo rm -f /etc/nginx/sites-available/qatrack.conf
+sudo service nginx restart
+"""
+
+[tasks."supervisor-conf-remove"]
+help = "WIP- Undo supervisor-conf: stop the processes, remove the configs, reload; unverified here"
+shell = """
+sudo supervisorctl stop django-q2 gunicorn
+sudo rm -f /etc/supervisor/conf.d/django-q2.conf
+sudo rm -f /etc/supervisor/conf.d/gunicorn.conf
+sudo supervisorctl reread
+sudo supervisorctl update
+"""
