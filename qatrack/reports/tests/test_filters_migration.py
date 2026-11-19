@@ -6,13 +6,18 @@ textarea back in Python format (`{'active': True}`), and `dumpdata` wrote the
 field the same way, so a site that had ever edited a saved report in the admin,
 or had moved its database with `dumpdata`/`loaddata`, failed `migrate` with an
 IntegrityError on SQL Server. 0009 now repairs those rows first.
+
+MySQL can't roll back schema changes, so a site whose 0009 had already failed
+there was left with the two columns 0009 adds first, and the rerun stopped on
+"Duplicate column name". 0009 now removes those before adding them again.
 """
 
 import json
 from importlib import import_module
+from unittest import mock
 
 from django.contrib.auth.models import User
-from django.db import connection
+from django.db import connection, migrations
 from django.db.migrations.executor import MigrationExecutor
 from django.test import SimpleTestCase, TransactionTestCase
 
@@ -98,3 +103,56 @@ class TestMigratingFrom31SavedReports(TransactionTestCase):
         assert SavedReport.objects.get(pk=unreadable).filters == {}
         assert SavedReport.objects.get(pk=with_a_set).filters == {}
         assert SavedReport.objects.get(pk=with_nan).filters == {}
+
+    def run_0009s_add_fields(self, backwards=False):
+        """Run 0009's own AddField steps, as a run that failed after them had (or undo them)."""
+        add_fields = [op for op in migration.Migration.operations if isinstance(op, migrations.AddField)]
+        assert [op.name for op in add_fields] == ['include_logo', 'paper_size']
+        states = [MigrationExecutor(connection).loader.project_state(BEFORE)]
+        for op in add_fields:
+            states.append(states[-1].clone())
+            op.state_forwards('reports', states[-1])
+        with connection.schema_editor() as editor:
+            steps = list(zip(add_fields, states, states[1:]))
+            for op, before, after in reversed(steps) if backwards else steps:
+                if backwards:
+                    op.database_backwards('reports', editor, after, before)
+                else:
+                    op.database_forwards('reports', editor, before, after)
+
+    def add_the_columns_a_failed_0009_leaves_on_mysql(self):
+        self.run_0009s_add_fields()
+
+    def savedreport_columns(self):
+        with connection.cursor() as cursor:
+            return {c.name for c in connection.introspection.get_table_description(cursor, 'reports_savedreport')}
+
+    def test_rerunning_0009_after_it_failed_on_mysql_succeeds(self):
+        report = self.save_old_report('saved before the failed upgrade', str({'unit': [1]}))
+        self.add_the_columns_a_failed_0009_leaves_on_mysql()
+        assert {'include_logo', 'paper_size'} <= self.savedreport_columns()
+
+        if connection.features.can_rollback_ddl:
+            # Only an engine without transactional DDL (MySQL) can be left in this state, and
+            # there the step runs inside the migrate below. Elsewhere, run it as MySQL would.
+            with mock.patch.object(connection.features, 'can_rollback_ddl', False):
+                with connection.schema_editor() as editor:
+                    migration.drop_columns_left_by_a_failed_0009(self.old_apps, editor)
+            assert not {'include_logo', 'paper_size'} & self.savedreport_columns()
+
+        self.migrate_to_latest()
+
+        report = SavedReport.objects.get(pk=report)
+        assert report.include_logo is True
+        assert report.paper_size == 'letter'
+        assert report.filters == {'unit': [1]}
+
+    def test_the_column_step_leaves_engines_that_roll_back_ddl_alone(self):
+        if not connection.features.can_rollback_ddl:
+            self.skipTest('this engine cannot roll back DDL, so the step is meant to act here')
+        self.add_the_columns_a_failed_0009_leaves_on_mysql()
+        with connection.schema_editor() as editor:
+            migration.drop_columns_left_by_a_failed_0009(self.old_apps, editor)
+        assert {'include_logo', 'paper_size'} <= self.savedreport_columns()
+        # put the table back the way 0008 left it, so the cleanup migration can add them
+        self.run_0009s_add_fields(backwards=True)

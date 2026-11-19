@@ -95,6 +95,44 @@ def repair_saved_report_filters(apps, schema_editor):
             cursor.executemany("UPDATE %s SET filters = %%s WHERE id = %%s" % table, repairs)
 
 
+def drop_columns_left_by_a_failed_0009(apps, schema_editor):
+    """Remove `include_logo` and `paper_size` if an earlier, failed run of this migration left them behind.
+
+    MySQL can't roll back schema changes, so when this migration failed there
+    (for example on the saved report filters fixed above), the two columns it
+    adds first stayed in the table, and running `migrate` again stopped on
+    "Duplicate column name". Every other supported engine rolls the whole
+    migration back, so there is nothing to do on them.
+
+    The columns can only exist at this point if a failed run of this migration
+    added them, so they normally hold nothing but the defaults they were added
+    with. (A paper size or logo choice is lost only if QATrack+ 4.0 was used
+    against the half-upgraded database in between.) The `AddField` steps below
+    add them again straight away, with the same defaults.
+    """
+    connection = schema_editor.connection
+    if connection.features.can_rollback_ddl:
+        return
+    SavedReport = apps.get_model("reports", "SavedReport")
+    with connection.cursor() as cursor:
+        columns = {
+            column.name
+            for column in connection.introspection.get_table_description(cursor, SavedReport._meta.db_table)
+        }
+    leftovers = {
+        "include_logo": models.BooleanField(default=True),
+        "paper_size": models.CharField(default="letter", max_length=10),
+    }
+    for name, field in leftovers.items():
+        if name in columns:
+            field.set_attributes_from_name(name)
+            print(
+                "\n  Removing column %s left in %s by an earlier failed run of this migration; "
+                "it is added again below." % (name, SavedReport._meta.db_table)
+            )
+            schema_editor.remove_field(SavedReport, field)
+
+
 class Migration(migrations.Migration):
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
@@ -104,6 +142,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RunPython(repair_saved_report_filters, migrations.RunPython.noop),
+        migrations.RunPython(drop_columns_left_by_a_failed_0009, migrations.RunPython.noop),
         migrations.AddField(
             model_name="savedreport",
             name="include_logo",
