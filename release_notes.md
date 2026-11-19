@@ -20,6 +20,8 @@ Release notes are located at http://docs.qatrackplus.com/en/latest/release_notes
 
   **Restart QATrack+ after any of this.** Python caches time zone data for the life of a process, so a web server or Django Q cluster that started before the update keeps the rules it loaded. On Windows restart the `QATrack+ Web Service` and the `QATrack+ Django Q Cluster` task; on Linux restart the supervisor programs; on Docker, `docker compose up -d` after the build recreates both services. Leaving the Django Q cluster running is the easiest one to miss, and it is the process that sends scheduled notices and reports.
 
+* **Service log**: Deleting a service event now checks the *Can delete Service Event* permission when the delete is submitted. The Delete button and link were already shown only to users with that permission, but the view never checked it, so anyone signed in could delete a service event with a hand-made request. Nothing changes for users who delete from the page. A delete submitted without a valid reason now returns to the dashboard with a warning that names the event, instead of a server error.
+
 ## 4.0.2
 
 * **QA**: The Test List admin shows each member test's name again, and the view and change icons beside it work ([#897](https://github.com/qatrackplus/qatrackplus/issues/897)).

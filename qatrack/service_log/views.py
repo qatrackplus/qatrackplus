@@ -813,7 +813,23 @@ class DetailsServiceEvent(DetailView):
             raise Http404
 
 
-class DeleteServiceEvent(DeleteView, FormView, PermissionRequiredMixin):
+class DeleteServiceEvent(PermissionRequiredMixin, DeleteView, FormView):
+    """`PermissionRequiredMixin` comes first, and the order is the whole point.
+
+    Django resolves `dispatch()` by method order. Listed after `DeleteView` and
+    `FormView`, the mixin never got to run: `View.dispatch` won, and
+    `permission_required` below was set and never consulted. Moving it to the front
+    is what makes the declaration take effect.
+
+    `FormView` stays. This view uses it - `form_class`, `get_form()`, `form_valid()`
+    and `form_invalid()` below are all form handling - so dropping it to shorten the
+    bases would take the delete form with it.
+
+    `TestPermissionMixinsActuallyRun` in
+    `qatrack/service_log/tests/test_permission_mixin_order.py` asserts this property
+    for every view in the project that declares `permission_required`, rather than for
+    this class alone, because the mistake is invisible at the point it is made.
+    """
 
     permission_required = 'service_log.delete_serviceevent'
     raise_exception = True
@@ -856,10 +872,22 @@ class DeleteServiceEvent(DeleteView, FormView, PermissionRequiredMixin):
         return HttpResponseRedirect(success_url)
 
     def form_invalid(self, form):
+        """A view returns a response, and this returned the URL as a string.
+
+        `reason` is a required ChoiceField over settings.DELETE_REASONS, so a
+        POST without it - or with a value outside the choices - takes this
+        path, and Django has nothing to do with a `str` from a view: the
+        request ended as a 500 for what is really a rejected input.
+
+        Redirecting with the warning is what the code already meant to do; the
+        URL was built and then not wrapped. Re-rendering the form with its
+        errors would be the more conventional answer and a larger change, and
+        is not what this line was written to do.
+        """
         messages.add_message(
-            self.request, messages.WARNING, f'Could not delete service event {form.instance.id}'
+            self.request, messages.WARNING, f'Could not delete service event {self.kwargs["pk"]}'
         )
-        return reverse('sl_dash')
+        return HttpResponseRedirect(reverse('sl_dash'))
 
     def get_success_url(self):
         return reverse('sl_dash')
