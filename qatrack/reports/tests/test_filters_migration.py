@@ -53,6 +53,16 @@ class TestFiltersAsDict(SimpleTestCase):
         assert migration._filters_as_dict("{'unit': b'1'}") is None
         assert migration._filters_as_dict("{(1, 2): 'unit'}") is None
 
+    def test_the_column_step_is_not_wrapped_in_a_transaction(self):
+        # On MySQL Django wraps an atomic RunPython in a transaction and then refuses the DDL
+        # inside it. Only the MySQL job reaches that through migrate, so check it here too.
+        step = next(
+            op
+            for op in migration.Migration.operations
+            if isinstance(op, migrations.RunPython) and op.code is migration.drop_columns_left_by_a_failed_0009
+        )
+        assert step.atomic is False
+
     def test_nan_is_not_treated_as_json(self):
         # json.loads accepts NaN, but the JSON check this migration adds does not
         assert migration._filters_as_dict('{"value": NaN}') is None

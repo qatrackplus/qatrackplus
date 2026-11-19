@@ -142,7 +142,10 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RunPython(repair_saved_report_filters, migrations.RunPython.noop),
-        migrations.RunPython(drop_columns_left_by_a_failed_0009, migrations.RunPython.noop),
+        # atomic=False: on MySQL, Django would otherwise run this step inside a transaction,
+        # and refuses DDL there because MySQL can't roll it back. On engines that can, the
+        # whole migration is one transaction regardless.
+        migrations.RunPython(drop_columns_left_by_a_failed_0009, migrations.RunPython.noop, atomic=False),
         migrations.AddField(
             model_name="savedreport",
             name="include_logo",
