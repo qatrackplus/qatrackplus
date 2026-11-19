@@ -29,8 +29,10 @@ def run_reports():
 @qatrack_task_wrapper
 def schedule_report(s, send_time):
 
-    logger.info("Scheduling report %s for %s" % (s.report_id, send_time))
-    name = "Send report %d %s" % (s.report_id, send_time.isoformat())
+    logger.info("Scheduling ReportSchedule %s (report %s) for %s" % (s.id, s.report_id, send_time))
+    # Named after the schedule, not the report: a report's schedule can be deleted and set up again
+    # while the old one's send is still queued, and the two must not share a name.
+    name = "Send %s %d %s" % (s._meta.object_name, s.id, send_time.isoformat())
     schedule(
         "qatrack.reports.tasks.send_report",
         s.id,

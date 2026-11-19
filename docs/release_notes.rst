@@ -109,6 +109,20 @@ Ordered by consequence, most serious first.
   it can still be retried. This applies to every installation, not only Docker
   (:issues:`#919 <919>`).
 
+* **Scheduled notices of different kinds no longer stop each other being sent.**
+  Every scheduled notice is queued under a name made from its id and its due time,
+  and the task queue refuses a name it already holds. Ids are only unique within one
+  kind of notice, so a QC Scheduling notice and a QC Review notice that shared an id
+  and a due time asked for the same name, and the second was never sent. The error
+  also escaped the loop that queues them, so **every other notice of that kind due in
+  the same 15 minutes was dropped with it**, and nothing outside the task log said
+  so. Sites that set up one notice of each kind, all at the same time of day, were
+  the most likely to meet this. Names now include the kind of notice. A scheduled
+  report's name now comes from its schedule rather than the report, which collided
+  the same way when a report's schedule was deleted and set up again. A notice or
+  report that still cannot be queued is logged and skipped, and the rest are queued
+  as normal. Anything already queued when you upgrade is sent as before.
+
 Other Changes
 ^^^^^^^^^^^^^
 

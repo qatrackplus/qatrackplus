@@ -27,7 +27,8 @@ def run_scheduling_notices():
 def schedule_scheduling_notice(notice, send_time):
 
     logger.info("Scheduling notification %s for %s" % (notice.pk, send_time))
-    name = "Send notification %d %s" % (notice.pk, send_time.isoformat())
+    # the type is part of the name because pks are only unique within one type of notice
+    name = "Send %s %d %s" % (notice._meta.object_name, notice.pk, send_time.isoformat())
 
     schedule(
         "qatrack.notifications.qcscheduling.tasks.send_scheduling_notice",
