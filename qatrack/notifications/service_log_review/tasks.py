@@ -7,6 +7,7 @@ from django_q.tasks import schedule
 
 from qatrack.notifications.models import ServiceEventReviewNotice
 from qatrack.qatrack_core.email import send_email_to_users
+from qatrack.qatrack_core.models import ScheduledDelivery
 from qatrack.qatrack_core.tasks import run_periodic_scheduler
 
 logger = logging.getLogger('django-q2')
@@ -62,8 +63,16 @@ def send_serviceeventreview_notice(notice_id, task_name=""):
         )
         return
 
+    claim = ScheduledDelivery.claim(notice, task_name)
+    if claim is None:
+        logger.info("ServiceEventReviewNotice %s (%s) was already sent, or is being sent by another worker" % (
+            notice_id, task_name,
+        ))
+        return
+
+    sent = False
     try:
-        send_email_to_users(
+        sent = send_email_to_users(
             recipients,
             "service_log_review/email.html",
             context={'notice': notice},
@@ -82,5 +91,6 @@ def send_serviceeventreview_notice(notice_id, task_name=""):
         if not fail_silently:
             raise
     finally:
+        claim.finish(sent)
         notice.last_sent = timezone.now()
         notice.save()

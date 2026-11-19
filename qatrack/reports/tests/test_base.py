@@ -951,6 +951,26 @@ class TestReportTasks(TestCase):
         assert self.schedule.last_sent >= now
         assert "QATrack+ Reports:" in mail.outbox[0].subject
 
+    def test_send_report_twice_sends_once(self):
+        """A second copy of the same scheduled task must not email the report again (#919)"""
+        task_name = "Send report %d 2026-11-19T08:00:00-05:00" % self.report.pk
+        tasks.send_report(self.schedule.pk, task_name)
+        tasks.send_report(self.schedule.pk, task_name)
+        assert len(mail.outbox) == 1
+
+    def test_send_report_next_occurrence_still_sends(self):
+        tasks.send_report(self.schedule.pk, "Send report %d 2026-11-19T08:00:00-05:00" % self.report.pk)
+        tasks.send_report(self.schedule.pk, "Send report %d 2026-11-20T08:00:00-05:00" % self.report.pk)
+        assert len(mail.outbox) == 2
+
+    def test_send_report_render_failure_can_be_retried(self):
+        task_name = "Send report %d 2026-11-19T08:00:00-05:00" % self.report.pk
+        with mock.patch.object(models.SavedReport, "render", side_effect=RuntimeError):
+            with self.assertRaises(RuntimeError):
+                tasks.send_report(self.schedule.pk, task_name)
+        tasks.send_report(self.schedule.pk, task_name)
+        assert len(mail.outbox) == 1
+
     def test_send_report_non_existent(self):
         tasks.send_report(self.schedule.pk + 1)
         self.schedule.refresh_from_db()

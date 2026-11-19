@@ -6,6 +6,7 @@ from django_q.models import Schedule
 from django_q.tasks import schedule
 
 from qatrack.qatrack_core.email import send_email_to_users
+from qatrack.qatrack_core.models import ScheduledDelivery
 from qatrack.qatrack_core.tasks import (
     qatrack_task_wrapper,
     run_periodic_scheduler,
@@ -57,10 +58,26 @@ def send_report(schedule_id, task_name=""):
         logger.info("Send of ReportSchedule %s requested, but no such ReportSchedule exists" % schedule_id)
         return
 
-    fname, attach = s.report.render(user=s.created_by)
+    claim = ScheduledDelivery.claim(s, task_name)
+    if claim is None:
+        logger.info("ReportSchedule %s (%s) was already sent, or is being sent by another worker" % (
+            schedule_id, task_name,
+        ))
+        return
 
+    sent = False
     try:
-        send_email_to_users(
+        fname, attach = s.report.render(user=s.created_by)
+        sent = _send_report_email(s, recipients, fname, attach, schedule_id, task_name)
+    finally:
+        claim.finish(sent)
+
+
+def _send_report_email(s, recipients, fname, attach, schedule_id, task_name):
+
+    sent = False
+    try:
+        sent = send_email_to_users(
             recipients,
             "reports/email.html",
             context={
@@ -86,3 +103,5 @@ def send_report(schedule_id, task_name=""):
     finally:
         s.last_sent = timezone.now()
         s.save()
+
+    return sent

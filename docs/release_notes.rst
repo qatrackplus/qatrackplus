@@ -100,6 +100,15 @@ Ordered by consequence, most serious first.
   A test saved with no name shows its id rather than nothing at all
   (:issues:`#897 <897>`).
 
+* **Scheduled reports and notices are no longer emailed twice when the task queue
+  backs up.** When background tasks pile up - several large PDF reports due at
+  once, say - a scheduled email could wait in the queue long enough for it to be
+  handed out a second time, and both copies sent it. Each scheduled report and
+  notice now records that it is being sent for that due time, and a second copy
+  finds the record and does nothing. A send that fails is not recorded as sent, so
+  it can still be retried. This applies to every installation, not only Docker
+  (:issues:`#919 <919>`).
+
 Other Changes
 ^^^^^^^^^^^^^
 

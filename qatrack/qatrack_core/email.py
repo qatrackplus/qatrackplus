@@ -27,9 +27,14 @@ def email_context(context):
 def send_email_to_users(
     recipients, template, context=None, subject_template=None, text_template=None, attachments=None
 ):
+    """Send an email to recipients, and return True if it was handed to the mail server.
+
+    With EMAIL_FAIL_SILENTLY on (the default), a failed send is logged and
+    False is returned instead of raising.
+    """
 
     if len(recipients) == 0:
-        return
+        return False
 
     attachments = attachments or []
 
@@ -71,3 +76,6 @@ def send_email_to_users(
         logger.exception("Error sending email.")
         if not fail_silently:
             raise
+        return False
+
+    return True
