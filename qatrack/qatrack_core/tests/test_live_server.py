@@ -140,9 +140,8 @@ class TestLiveServerBehaviour(live.StaticLiveServerSingleThreadedTestCase):
     """The two promises, checked on the server a GUI test actually gets."""
 
     def fetch(self, timeout):
-        # 127.0.0.1 rather than live_server_url's localhost: on Windows, localhost tries ::1
-        # first, and the refused IPv6 connection costs about 2 s before the IPv4 one is made,
-        # which would swamp what these tests measure. MIDDLEWARE is empty, so no Host check.
+        # 127.0.0.1 rather than live_server_url's localhost: QATrack+ doesn't support IPv6, and on
+        # Windows localhost tries ::1 first, costing about 2 s. MIDDLEWARE is empty, so no Host check.
         url = 'http://127.0.0.1:%d/slow/' % self.server_thread.port
         with urllib.request.urlopen(url, timeout=timeout) as response:
             return response.read()
@@ -171,12 +170,13 @@ class TestLiveServerBehaviour(live.StaticLiveServerSingleThreadedTestCase):
 
         A server that read connections in turn would wait on the idle one until it closed, which is
         after this fetch, so the fetch would time out. No tighter limit: loaded Windows runners took
-        up to 6 s to answer at all.
+        2.3 to 6.3 s to answer at all. The cost: a server that gave up on an idle connection in under
+        20 s would pass, though nothing in Django or QATrack+ does that.
         """
         idle = socket.create_connection(('127.0.0.1', self.server_thread.port))
         try:
             body = self.fetch(timeout=20)
-        except OSError as e:
+        except TimeoutError as e:
             self.fail('no answer while a connection that sent nothing was open: %r' % e)
         finally:
             idle.close()
