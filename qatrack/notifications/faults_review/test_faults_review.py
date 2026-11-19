@@ -174,6 +174,14 @@ class TestFaultsReviewEmails(TestCase):
         assert self.notice.last_sent >= now
         assert "QATrack+ Unreviewed Faults Notice:" in mail.outbox[0].subject
 
+    def test_send_notice_twice_sends_once(self):
+        """A second copy of the same scheduled task must not email the notice again (#919)"""
+        utils.create_fault()
+        task_name = "Send FaultsReviewNotice %d 2026-11-19T08:00:00-05:00" % self.notice.pk
+        tasks.send_faultsreview_notice(self.notice.pk, task_name)
+        tasks.send_faultsreview_notice(self.notice.pk, task_name)
+        assert len(mail.outbox) == 1
+
     def test_send_notice_empty(self):
         self.notice.send_empty = True
         self.notice.save()

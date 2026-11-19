@@ -419,6 +419,40 @@ class TestQCCompletedEmails(TestCase):
         tasks.send_follow_up_email(self.test_list_instance.id, notification.id)
         self.assertEqual(len(mail.outbox), 1)
 
+    def follow_up_notice(self):
+        return QCCompletedNotice.objects.create(
+            notification_type=QCCompletedNotice.FOLLOW_UP,
+            follow_up_days=1,
+            test_lists=self.testlist_group,
+            recipients=self.recipients,
+        )
+
+    def test_follow_up_email_scheduled_with_delivery_name(self):
+        """The scheduled follow up carries the name that guards it against being sent twice (#919)"""
+        notice = self.follow_up_notice()
+        signals.testlist_complete.send(sender=self, instance=self.test_list_instance, created=True)
+        follow_up = self.test_list_instance.work_completed + timezone.timedelta(days=1)
+        expected = tasks.follow_up_delivery_name(self.test_list_instance, notice, follow_up)
+        assert expected in Schedule.objects.get().kwargs
+
+    def test_send_follow_up_email_twice_sends_once(self):
+        """A second copy of the same scheduled follow up must not email it again (#919)"""
+        notice = self.follow_up_notice()
+        name = tasks.follow_up_delivery_name(self.test_list_instance, notice, timezone.now())
+        tasks.send_follow_up_email(self.test_list_instance.id, notice.id, name)
+        tasks.send_follow_up_email(self.test_list_instance.id, notice.id, name)
+        assert len(mail.outbox) == 1
+
+    def test_follow_ups_due_at_the_same_time_are_all_sent(self):
+        """Follow ups for different test list instances, or different notices, due at once all send"""
+        notice = self.follow_up_notice()
+        other_notice = self.follow_up_notice()
+        other_tli = self.create_test_list_instance()
+        follow_up = timezone.now()
+        for tli, n in [(self.test_list_instance, notice), (other_tli, notice), (self.test_list_instance, other_notice)]:
+            tasks.send_follow_up_email(tli.id, n.id, tasks.follow_up_delivery_name(tli, n, follow_up))
+        assert len(mail.outbox) == 3
+
     def test_send_follow_up_email_no_notice(self):
         tasks.send_follow_up_email(self.test_list_instance.id)
         self.assertEqual(len(mail.outbox), 0)

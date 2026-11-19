@@ -65,7 +65,7 @@ Then fetch the new version and rebuild:
 ``up -d`` is where the database is upgraded. The ``django`` container's entrypoint
 runs ``migrate`` before gunicorn on every start, and ``up -d`` does not return until
 ``django`` reports healthy, which it does only once the migrations and
-``collectstatic`` have finished. The nine lines the previous section describes are
+``collectstatic`` have finished. The eight lines the previous section describes are
 therefore printed in the container's log rather than in your terminal:
 
 .. code-block:: bash

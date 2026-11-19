@@ -12,22 +12,31 @@ logger = logging.getLogger('django-q2')
 # a month is generous.
 DELIVERY_RECORD_DAYS = 30
 
+# How much longer than django-q's `timeout` a claim holds. django-q2 doesn't
+# always stop a worker the moment `timeout` runs out: on Windows, which has no
+# SIGALRM, its guard process stops the worker a few seconds later (it adds 3
+# seconds and checks every half second). A minute covers that comfortably.
+CLAIM_MARGIN_SECONDS = 60
+
 
 def claim_lifetime():
     """How long a claim on a delivery holds before another copy may take it over.
 
     A copy that claims a delivery and is then stopped by django-q's `timeout`
-    never gets the chance to release its claim. Once `timeout` has passed the
-    claiming copy is certainly no longer running, so its claim can be treated
-    as abandoned. Without a timeout there is no such guarantee, so fall back to
+    never gets the chance to release its claim. Shortly after `timeout` has
+    passed the claiming copy is no longer running, so once `timeout` plus a
+    margin (CLAIM_MARGIN_SECONDS) has passed its claim can be treated as
+    abandoned. Without a timeout there is no such guarantee, so fall back to
     the broker's `retry` lease, and then to an hour. django-q2 treats a timeout
-    of None, 0 or a negative number as no timeout at all.
+    of None or a negative number as no timeout at all, so only a positive
+    timeout is used. (A timeout of 0 is set aside too; falling back to the
+    longer `retry` lease is the safe choice either way.)
     """
     q_cluster = getattr(settings, 'Q_CLUSTER', {})
     timeout = q_cluster.get('timeout')
     retry = q_cluster.get('retry')
     if timeout and timeout > 0:
-        seconds = timeout
+        seconds = timeout + CLAIM_MARGIN_SECONDS
     elif retry and retry > 0:
         seconds = retry
     else:
@@ -38,7 +47,7 @@ def claim_lifetime():
 def occurrence_from_task_name(task_name):
     """The due time a scheduled task's name ends with, e.g. 2026-11-19T08:00:00-05:00.
 
-    Task names changed in 4.0.2 (notices now include their type, and reports
+    Task names have changed (notices now include their type, and reports
     their schedule rather than the report), so a send queued before an upgrade
     and one queued after it can carry different names for the same due time.
     Keying the claim on the due time alone means both claim the same
@@ -98,8 +107,13 @@ class ScheduledDelivery(models.Model):
         return '%s %s %s' % (self.kind, self.object_id, self.occurrence)
 
     @classmethod
-    def claim(cls, instance, task_name):
+    def claim(cls, instance, task_name, occurrence=None):
         """Claim the right to send `instance`'s email for the task `task_name`.
+
+        The occurrence is normally the due time at the end of `task_name`.
+        Pass `occurrence` to key the claim on something else, for a sender
+        whose instance can have more than one email due at the same time
+        (a QC Completed follow-up, one per test list instance).
 
         Returns a `DeliveryClaim` if this copy should send, or None if the
         email has already been sent. Raises `DeliveryInProgress` if another
@@ -114,7 +128,7 @@ class ScheduledDelivery(models.Model):
         delivery, created = cls.objects.get_or_create(
             kind=instance._meta.label_lower,
             object_id=instance.pk,
-            occurrence=occurrence_from_task_name(task_name),
+            occurrence=occurrence or occurrence_from_task_name(task_name),
         )
         if created:
             cls.prune()

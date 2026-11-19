@@ -20,6 +20,7 @@ from django_q.models import OrmQ
 from qatrack.notifications.models import QCSchedulingNotice, RecipientGroup
 from qatrack.qa.tests import utils
 from qatrack.qatrack_core.models import (
+    CLAIM_MARGIN_SECONDS,
     DELIVERY_RECORD_DAYS,
     DeliveryInProgress,
     ScheduledDelivery,
@@ -54,7 +55,7 @@ class TestScheduledDeliveryClaim(TestCase):
         assert ScheduledDelivery.claim(self.unit, OCCURRENCE) is not None
 
     def test_old_and_new_task_names_claim_the_same_occurrence(self):
-        """A send queued before the 4.0.2 rename and one queued after it, for the same due time"""
+        """A send queued under the old task name and one queued under the new name, for the same due time"""
         ScheduledDelivery.claim(self.unit, OCCURRENCE).finish(sent=True)
         renamed = "Send Unit 1 2026-11-19T08:00:00-05:00"
         assert ScheduledDelivery.claim(self.unit, renamed) is None
@@ -133,8 +134,10 @@ class TestOccurrenceFromTaskName:
 class TestClaimLifetime:
 
     @override_settings(Q_CLUSTER={'timeout': 300, 'retry': 360})
-    def test_uses_task_timeout(self):
-        assert claim_lifetime() == timezone.timedelta(seconds=300)
+    def test_uses_task_timeout_plus_a_margin(self):
+        # django-q2 can stop a timed-out worker a few seconds after `timeout`
+        assert claim_lifetime() == timezone.timedelta(seconds=300 + CLAIM_MARGIN_SECONDS)
+        assert CLAIM_MARGIN_SECONDS >= 10
 
     @override_settings(Q_CLUSTER={'retry': 360})
     def test_falls_back_to_retry(self):

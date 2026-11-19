@@ -313,6 +313,15 @@ class TestServiceEventSchedulingEmails(TestCase):
         assert self.notice.last_sent >= now
         assert "QATrack+ Service Event Scheduling Notice:" in mail.outbox[0].subject
 
+    def test_send_notice_twice_sends_once(self):
+        """A second copy of the same scheduled task must not email the notice again (#919)"""
+        self.sch2.due_date = timezone.now()
+        self.sch2.save()
+        task_name = "Send ServiceEventSchedulingNotice %d 2026-11-19T08:00:00-05:00" % self.notice.pk
+        tasks.send_scheduling_notice(self.notice.pk, task_name)
+        tasks.send_scheduling_notice(self.notice.pk, task_name)
+        assert len(mail.outbox) == 1
+
     def test_send_notice_send_empty(self):
         now = timezone.now()
         self.notice.send_empty = True
