@@ -174,6 +174,7 @@ We can now upgrade the database schema and static media files to be compatible w
    >>  python manage.py collectstatic
 
 If you have issues with the migration, first check
+:ref:`win_upgrade_3_reports_0009` below.
 
 .. dropdown:: Side note: Migrations
 
@@ -184,6 +185,53 @@ If you have issues with the migration, first check
 .. dropdown:: Side Note: Testing the upgrade
 
    We now have a database, we have configured QATrack+ to use it, and we've loaded the default configuration data. Next, we could test that everything is working correctly by running the development server with `python manage.py runserver` and navigating to http://localhost:8000/ in a browser on the server. You should see a poor approximation of the QATrack+ login page (it won't look like this once we're finished!). If you see any errors, check the terminal output for details on what went wrong.  If you can log in successfully, then we know our database is configured correctly and we can move on to the next step.
+
+.. _win_upgrade_3_reports_0009:
+
+If ``migrate`` stops at ``reports.0009``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Earlier 4.0 releases could stop at ``Applying
+reports.0009_Auto_BigAuto_TimeZone_Django42...`` with an error like this
+(:issues:`#928 <928>`):
+
+.. code-block:: text
+
+    django.db.utils.IntegrityError: ... The ALTER TABLE statement conflicted with the CHECK
+    constraint "reports_savedreport_filters_..._check" ... table "dbo.reports_savedreport",
+    column 'filters'. (547)
+
+It happened when a saved report's filters had been edited in the 3.x admin, or
+when the database had been moved with ``dumpdata``/``loaddata``: either could
+leave those filters stored in a format that isn't JSON, and 4.0 needs JSON
+there.
+
+Current releases convert those filters as part of the upgrade, so ``migrate``
+should simply carry on. If a report's filters can't be read at all, they're
+cleared, and ``migrate`` tells you which report it was, with its old filters:
+
+.. code-block:: text
+
+    Saved report 12 ('Monthly summary') had filters that could not be read; they have been
+    cleared. Please open the report and set its filters again. They were:
+    ...
+
+Once QATrack+ is running, open each report it names and set its filters again.
+
+**If an earlier upgrade attempt already stopped here**, update to a current
+release and run ``python manage.py migrate`` again. SQL Server rolled the
+failed attempt back completely, so there's nothing else to do.
+
+To see beforehand which saved reports are affected, run this in SQL Server
+Management Studio against your QATrack+ database. It only reads; it changes
+nothing:
+
+.. code-block:: sql
+
+    SELECT id, title, filters FROM reports_savedreport WHERE ISJSON(filters) = 0;
+
+If none of this matches what you're seeing, please ask on the
+:mailinglist:`mailing list <>` and include the full error from ``migrate``.
 
 .. include:: win.rst
    :start-after: .. _`cherry_py_service`:

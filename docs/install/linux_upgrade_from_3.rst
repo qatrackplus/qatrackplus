@@ -172,6 +172,63 @@ and then we need to collect all our static media files:
 
     python manage.py collectstatic
 
+.. _linux_upgrade_3_reports_0009:
+
+If ``migrate`` stops at ``reports.0009``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Earlier 4.0 releases could stop at ``Applying
+reports.0009_Auto_BigAuto_TimeZone_Django42...`` with an error about the
+``filters`` column of ``reports_savedreport`` (:issues:`#928 <928>`). It
+happened when a saved report's filters had been edited in the 3.x admin, or
+when the database had been moved with ``dumpdata``/``loaddata``: either could
+leave those filters stored in a format that isn't JSON, and 4.0 needs JSON
+there.
+
+Current releases convert those filters as part of the upgrade, so ``migrate``
+should simply carry on. If a report's filters can't be read at all, they're
+cleared, and ``migrate`` tells you which report it was, with its old filters:
+
+.. code-block:: console
+
+    Saved report 12 ('Monthly summary') had filters that could not be read; they have been
+    cleared. Please open the report and set its filters again. They were:
+    ...
+
+Once QATrack+ is running, open each report it names and set its filters again.
+
+**If an earlier upgrade attempt already stopped here**, update to a current
+release and run ``python manage.py migrate`` again. On PostgreSQL the failed
+attempt was rolled back completely, so there's nothing else to do.
+
+.. dropdown:: For MySQL: after a failed attempt
+    :color: warning
+
+    MySQL can't roll back changes to the shape of a table, so the failed
+    attempt left two new columns behind, ``include_logo`` and ``paper_size``.
+    Current releases remove them and add them back automatically. ``migrate``
+    mentions it as it goes:
+
+    .. code-block:: console
+
+        Removing column include_logo left in reports_savedreport by an earlier failed run of this
+        migration; it is added again below.
+
+    If ``migrate`` still stops at ``reports.0009``, this time with ``(1060,
+    "Duplicate column name 'include_logo'")``, remove the two columns
+    yourself and run it again. Take a backup first (see above). At this point
+    the columns only hold their default values, and ``migrate`` adds them
+    straight back:
+
+    .. code-block:: console
+
+        mysql --user qatrack --password qatrackplus \
+            -e "ALTER TABLE reports_savedreport DROP COLUMN include_logo, DROP COLUMN paper_size;"
+        python manage.py migrate
+
+If none of this matches what you're seeing, please ask on the
+:mailinglist:`mailing list <>` and include the full error from ``migrate``.
+
 Update Service Configurations and Restart QATrack+
 --------------------------------------------------
 
