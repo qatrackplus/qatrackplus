@@ -115,7 +115,11 @@ class TestPermissionMixinsActuallyRun(TestCase):
     def test_there_are_views_to_check(self):
         """Guards the sweep itself: an empty sweep would pass everything below."""
         found = view_classes_declaring_a_permission()
-        assert len(found) > 20, "only found %d views declaring permission_required" % len(found)
+        # Close to the real count (41), so a views module that stops importing, which the sweep skips, fails here.
+        assert len(found) >= 38, (
+            "only found %d views declaring permission_required, against 41 when this floor was set; "
+            "a views module has probably stopped importing" % len(found)
+        )
 
     def test_every_declared_permission_is_reachable_by_dispatch(self):
         offenders = []
@@ -192,11 +196,13 @@ class TestDeleteServiceEventRefusesTheWrongUser(TestCase):
 
     def setUp(self):
         from django.contrib.auth.models import Permission, User
+        from django.urls import reverse
 
         from qatrack.service_log.tests import utils as sl_utils
 
         self.service_event = sl_utils.create_service_event()
-        self.url = '/service-log/delete/%d/' % self.service_event.pk
+        # By name and unguarded: if `se_delete` is renamed, this fails rather than skipping every test below.
+        self.url = reverse('se_delete', kwargs={'pk': self.service_event.pk})
 
         self.plain = User.objects.create_user('plain-sl', 'p@e.com', 'pw')
         self.allowed = User.objects.create_user('allowed-sl', 'a@e.com', 'pw')
@@ -205,38 +211,26 @@ class TestDeleteServiceEventRefusesTheWrongUser(TestCase):
                                    codename='delete_serviceevent'))
         self.allowed = User.objects.get(pk=self.allowed.pk)
 
-    def resolve(self):
-        """The URL name, rather than a hand-built path that may not match the conf."""
-        from django.urls import NoReverseMatch, reverse
-
-        for name in ('se_delete',):
-            try:
-                return reverse(name, kwargs={'pk': self.service_event.pk})
-            except NoReverseMatch:
-                continue
-        return None
-
     def test_a_user_without_the_permission_is_refused(self):
-        url = self.resolve()
-        if url is None:
-            self.skipTest("could not resolve the delete URL by name")
         self.client.force_login(self.plain)
-        assert self.client.get(url).status_code == 403
+        assert self.client.get(self.url).status_code == 403
 
-    def test_a_user_with_the_permission_is_not_refused(self):
-        """Without this the test above would pass if the view were simply broken."""
-        url = self.resolve()
-        if url is None:
-            self.skipTest("could not resolve the delete URL by name")
+    def test_a_user_with_the_permission_reaches_the_page(self):
+        """Without this the test above would pass if the view were simply broken.
+
+        The delete page itself, not merely "not 403": a 404 or a 500 would also leave the user unable to delete.
+        """
         self.client.force_login(self.allowed)
-        assert self.client.get(url).status_code == 200
+        response = self.client.get(self.url)
+        assert response.status_code == 200, "a permitted user got %s, not the delete page" % response.status_code
+        assert "form" in response.context, "the delete page rendered without its form"
+        assert any(t.name == "service_log/service_event_delete.html" for t in response.templates), (
+            "a permitted user reached %s" % [t.name for t in response.templates][:3]
+        )
 
     def test_a_user_without_the_permission_cannot_delete_by_post(self):
         """The request the fix is for: a valid delete, posted by someone not allowed to make it."""
-        url = self.resolve()
-        if url is None:
-            self.skipTest("could not resolve the delete URL by name")
         self.client.force_login(self.plain)
-        assert self.client.post(url, {'reason': 'Duplicate', 'comment': ''}).status_code == 403
+        assert self.client.post(self.url, {'reason': 'Duplicate', 'comment': ''}).status_code == 403
         self.service_event.refresh_from_db()
         assert self.service_event.is_active
