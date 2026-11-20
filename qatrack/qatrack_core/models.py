@@ -7,9 +7,9 @@ from django.utils import timezone
 
 logger = logging.getLogger('django-q2')
 
-# How long a delivery record is kept after it is created. Records only need to
-# outlive any copy of their task that could still be waiting in the queue, so
-# a month is generous.
+# How long a delivery record is kept: after it was sent, or, for one never
+# sent, after it was created. Records only need to outlive any copy of their
+# task that could still be waiting in the queue, so a month is generous.
 DELIVERY_RECORD_DAYS = 30
 
 # How much longer than django-q's `timeout` a claim holds. django-q2 doesn't
@@ -82,6 +82,12 @@ class DeliveryInProgress(Exception):
     (QATrack+ doesn't set `ack_failures`), and is handed out again once the
     broker's `retry` lease runs out. By then the claim has been either finished
     or abandoned.
+
+    django-q2's `max_attempts` counts each of these as a failed attempt, so it
+    has to stay at its default of 0 (no limit). A positive value would take the
+    task off the queue after that many, with the same effect as `ack_failures`:
+    the email is still never sent twice, but it is lost if the copy sending it
+    is stopped first.
     """
 
 
@@ -169,8 +175,20 @@ class ScheduledDelivery(models.Model):
 
     @classmethod
     def prune(cls):
-        cutoff = timezone.now() - timezone.timedelta(days=DELIVERY_RECORD_DAYS)
-        cls.objects.filter(created__lt=cutoff).delete()
+        """Delete the records no copy of their task can still need.
+
+        A sent record is kept for DELIVERY_RECORD_DAYS after it was sent. One
+        never sent is kept for that long after it was created, and for as long
+        as a copy holds a live claim on it: a task stuck in the queue for weeks
+        can still come back and claim its old record, and deleting that record
+        while it is sending would let a duplicate claim and send it too.
+        """
+        now = timezone.now()
+        cutoff = now - timezone.timedelta(days=DELIVERY_RECORD_DAYS)
+        no_live_claim = Q(claimed_at__isnull=True) | Q(claimed_at__lt=now - claim_lifetime())
+        cls.objects.filter(
+            Q(sent_at__lt=cutoff) | (Q(sent_at__isnull=True, created__lt=cutoff) & no_live_claim),
+        ).delete()
 
 
 class DeliveryClaim:

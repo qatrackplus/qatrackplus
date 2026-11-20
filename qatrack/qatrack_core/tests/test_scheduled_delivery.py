@@ -99,16 +99,44 @@ class TestScheduledDeliveryClaim(TestCase):
         claim.finish(sent=True)
         assert not ScheduledDelivery.objects.exists()
 
+    def prune_by_creating_another(self):
+        ScheduledDelivery.claim(self.unit, "Send notification 1 2026-12-25T08:00:00-05:00")
+        return set(ScheduledDelivery.objects.values_list('occurrence', flat=True)) - {"2026-12-25T08:00:00-05:00"}
+
     def test_old_records_are_pruned(self):
         ScheduledDelivery.claim(self.unit, OCCURRENCE).finish(sent=True)
         old = timezone.now() - timezone.timedelta(days=DELIVERY_RECORD_DAYS + 1)
+        ScheduledDelivery.objects.update(created=old, sent_at=old)
+
+        assert self.prune_by_creating_another() == set()
+
+    def test_old_unsent_records_nobody_is_sending_are_pruned(self):
+        ScheduledDelivery.claim(self.unit, OCCURRENCE).finish(sent=False)
+        old = timezone.now() - timezone.timedelta(days=DELIVERY_RECORD_DAYS + 1)
         ScheduledDelivery.objects.update(created=old)
 
-        ScheduledDelivery.claim(self.unit, "Send notification 1 2026-12-25T08:00:00-05:00")
+        assert self.prune_by_creating_another() == set()
 
-        assert list(ScheduledDelivery.objects.values_list('occurrence', flat=True)) == [
-            "2026-12-25T08:00:00-05:00",
-        ]
+    def test_a_record_sent_recently_is_kept_however_old(self):
+        """A record is kept for the full period after it was sent, not after it was created"""
+        old = timezone.now() - timezone.timedelta(days=DELIVERY_RECORD_DAYS + 1)
+        ScheduledDelivery.claim(self.unit, OCCURRENCE).finish(sent=True)
+        ScheduledDelivery.objects.update(created=old)
+
+        assert self.prune_by_creating_another() == {"2026-11-19T08:00:00-05:00"}
+
+    def test_an_old_record_being_sent_is_not_pruned(self):
+        """A late retry claims its old record afresh; pruning it mid-send would let a duplicate send too"""
+        old = timezone.now() - timezone.timedelta(days=DELIVERY_RECORD_DAYS + 1)
+        ScheduledDelivery.objects.create(
+            kind=self.unit._meta.label_lower, object_id=self.unit.pk, occurrence="2026-11-19T08:00:00-05:00",
+        )
+        ScheduledDelivery.objects.update(created=old)
+        assert ScheduledDelivery.claim(self.unit, OCCURRENCE) is not None
+
+        assert self.prune_by_creating_another() == {"2026-11-19T08:00:00-05:00"}
+        with pytest.raises(DeliveryInProgress):
+            ScheduledDelivery.claim(self.unit, OCCURRENCE)
 
     @override_settings(Q_CLUSTER={'timeout': -1, 'retry': 360})
     def test_disabled_timeout_still_blocks_a_second_claim(self):
@@ -255,5 +283,8 @@ class TestDuplicateStaysQueued(TestCase):
         assert not self.still_queued()
 
     def test_qatrack_leaves_failed_tasks_queued(self):
-        """Everything above relies on this django-q2 default; turning on ack_failures would undo it"""
+        """Everything above relies on these django-q2 defaults; turning on ack_failures would undo it"""
         assert not Conf.ACK_FAILURES
+        # each DeliveryInProgress counts as a failed attempt, so a limit would
+        # eventually take the task off the queue, the same as ack_failures
+        assert Conf.MAX_ATTEMPTS == 0

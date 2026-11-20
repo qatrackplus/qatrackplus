@@ -38,8 +38,9 @@ Bug Fixes
   already sent does nothing. One that finds it still being sent stays in the queue
   and tries again a few minutes later, so the email isn't lost if the first copy is
   stopped before it finishes. That retry depends on django-q's ``ack_failures``
-  setting staying off, as it is unless you have turned it on in ``Q_CLUSTER``; with
-  it on, the retry is lost, but the email is still not sent twice. If you have turned
+  staying off and ``max_attempts`` staying at 0, as they are unless you have
+  changed them in ``Q_CLUSTER``; otherwise the retry can be lost, but the email is
+  still not sent twice. If you have turned
   django-q's task ``timeout`` off, a send that was stopped part way may wait up to an
   hour before another copy sends it, so that a send that is only slow is never sent
   twice. A send that fails is not recorded as sent, so another
