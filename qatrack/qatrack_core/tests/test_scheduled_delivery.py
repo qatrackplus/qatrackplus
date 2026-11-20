@@ -22,6 +22,7 @@ from qatrack.qa.tests import utils
 from qatrack.qatrack_core.models import (
     CLAIM_MARGIN_SECONDS,
     DELIVERY_RECORD_DAYS,
+    NO_TIMEOUT_CLAIM_SECONDS,
     DeliveryInProgress,
     ScheduledDelivery,
     claim_lifetime,
@@ -116,6 +117,15 @@ class TestScheduledDeliveryClaim(TestCase):
         with pytest.raises(DeliveryInProgress):
             ScheduledDelivery.claim(self.unit, OCCURRENCE)
 
+    @override_settings(Q_CLUSTER={'timeout': -1, 'retry': 360})
+    def test_without_a_timeout_a_slow_send_is_not_taken_over_after_retry(self):
+        """With no timeout nothing stops a slow send, so its claim must outlast the `retry` lease"""
+        ScheduledDelivery.claim(self.unit, OCCURRENCE)
+        # the broker hands the task out again once `retry` has passed, while the first copy is still sending
+        ScheduledDelivery.objects.update(claimed_at=timezone.now() - timezone.timedelta(seconds=360 + 1))
+        with pytest.raises(DeliveryInProgress):
+            ScheduledDelivery.claim(self.unit, OCCURRENCE)
+
 
 class TestOccurrenceFromTaskName:
 
@@ -140,17 +150,22 @@ class TestClaimLifetime:
         assert CLAIM_MARGIN_SECONDS >= 10
 
     @override_settings(Q_CLUSTER={'retry': 360})
-    def test_falls_back_to_retry(self):
-        assert claim_lifetime() == timezone.timedelta(seconds=360)
+    def test_without_a_timeout_holds_for_an_hour(self):
+        assert claim_lifetime() == timezone.timedelta(seconds=NO_TIMEOUT_CLAIM_SECONDS)
+        assert NO_TIMEOUT_CLAIM_SECONDS >= 60 * 60
+
+    @override_settings(Q_CLUSTER={'retry': 2 * 60 * 60})
+    def test_without_a_timeout_a_longer_retry_is_used(self):
+        assert claim_lifetime() == timezone.timedelta(hours=2)
 
     @override_settings(Q_CLUSTER={})
     def test_falls_back_to_an_hour(self):
         assert claim_lifetime() == timezone.timedelta(hours=1)
 
     @pytest.mark.parametrize('timeout', [None, 0, -1])
-    def test_a_disabled_timeout_falls_back_to_retry(self, timeout):
+    def test_a_disabled_timeout_holds_for_an_hour(self, timeout):
         with override_settings(Q_CLUSTER={'timeout': timeout, 'retry': 360}):
-            assert claim_lifetime() == timezone.timedelta(seconds=360)
+            assert claim_lifetime() == timezone.timedelta(hours=1)
 
     @override_settings(Q_CLUSTER={'timeout': -1, 'retry': -1})
     def test_disabled_timeout_and_retry_fall_back_to_an_hour(self):

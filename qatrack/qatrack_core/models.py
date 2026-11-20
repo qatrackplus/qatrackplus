@@ -18,6 +18,10 @@ DELIVERY_RECORD_DAYS = 30
 # seconds and checks every half second). A minute covers that comfortably.
 CLAIM_MARGIN_SECONDS = 60
 
+# How long a claim holds when django-q's `timeout` is turned off, unless the
+# broker's `retry` lease is longer still.
+NO_TIMEOUT_CLAIM_SECONDS = 60 * 60
+
 
 def claim_lifetime():
     """How long a claim on a delivery holds before another copy may take it over.
@@ -26,21 +30,28 @@ def claim_lifetime():
     never gets the chance to release its claim. Shortly after `timeout` has
     passed the claiming copy is no longer running, so once `timeout` plus a
     margin (CLAIM_MARGIN_SECONDS) has passed its claim can be treated as
-    abandoned. Without a timeout there is no such guarantee, so fall back to
-    the broker's `retry` lease, and then to an hour. django-q2 treats a timeout
-    of None or a negative number as no timeout at all, so only a positive
-    timeout is used. (A timeout of 0 is set aside too; falling back to the
-    longer `retry` lease is the safe choice either way.)
+    abandoned.
+
+    Without a timeout there is no such guarantee: nothing stops a slow send,
+    and there is no cheap way to tell whether the copy holding the claim is
+    still running. The claim then has to choose between two risks. Too short,
+    and a send that is merely slow is taken over and the email goes twice. Too
+    long, and an email whose sender crashed waits that long before another copy
+    sends it. A claim then holds for an hour, or for the broker's `retry` lease
+    if that is longer: far longer than any send should take, and a delay rather
+    than a lost email if the sender did crash.
+
+    django-q2 treats a timeout of None or a negative number as no timeout at
+    all, so only a positive timeout is used. (A timeout of 0 is set aside too;
+    the longer fallback is the safe choice either way.)
     """
     q_cluster = getattr(settings, 'Q_CLUSTER', {})
     timeout = q_cluster.get('timeout')
     retry = q_cluster.get('retry')
     if timeout and timeout > 0:
         seconds = timeout + CLAIM_MARGIN_SECONDS
-    elif retry and retry > 0:
-        seconds = retry
     else:
-        seconds = 60 * 60
+        seconds = max(retry or 0, NO_TIMEOUT_CLAIM_SECONDS)
     return timezone.timedelta(seconds=seconds)
 
 

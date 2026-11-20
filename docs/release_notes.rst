@@ -37,7 +37,12 @@ Bug Fixes
   sent for that due time, in the new table above. A second copy that finds it
   already sent does nothing. One that finds it still being sent stays in the queue
   and tries again a few minutes later, so the email isn't lost if the first copy is
-  stopped before it finishes. A send that fails is not recorded as sent, so another
+  stopped before it finishes. That retry depends on django-q's ``ack_failures``
+  setting staying off, as it is unless you have turned it on in ``Q_CLUSTER``; with
+  it on, the retry is lost, but the email is still not sent twice. If you have turned
+  django-q's task ``timeout`` off, a send that was stopped part way may wait up to an
+  hour before another copy sends it, so that a send that is only slow is never sent
+  twice. A send that fails is not recorded as sent, so another
   copy of the same task can still send it. With ``EMAIL_FAIL_SILENTLY`` turned off,
   a failed send also stays in the queue and is tried again; with it on (the
   default), the failure is logged and the email is not retried, as before. You may
