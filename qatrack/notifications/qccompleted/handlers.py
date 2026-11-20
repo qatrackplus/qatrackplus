@@ -9,6 +9,7 @@ from django.utils import timezone
 from django_q.models import Schedule
 from django_q.tasks import schedule
 
+from qatrack.notifications.qccompleted.tasks import follow_up_delivery_name
 from qatrack.qa.models import TestListInstance
 from qatrack.qa.signals import testlist_complete
 from qatrack.qatrack_core.email import send_email_to_users
@@ -115,6 +116,7 @@ def follow_up_emails(signal, sender, instance, created, **kwargs):
             next_run=follow_up,
             test_list_instance_id=instance.pk,
             notification_id=notice.id,
+            delivery_name=follow_up_delivery_name(instance, notice, follow_up),
         )
 
 

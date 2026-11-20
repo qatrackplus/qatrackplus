@@ -1,3 +1,6 @@
+from smtplib import SMTPException
+from unittest import mock
+
 from django.contrib.admin.sites import AdminSite
 from django.core import mail
 from django.test import TestCase
@@ -375,6 +378,26 @@ class TestQCSchedulingEmails(TestCase):
         self.notice.refresh_from_db()
         assert self.notice.last_sent >= now
         assert "QATrack+ QC Scheduling Notice:" in mail.outbox[0].subject
+
+    def test_send_notice_twice_sends_once(self):
+        """A second copy of the same scheduled task must not email the notice again (#919)"""
+        self.notice.send_empty = True
+        self.notice.save()
+        task_name = "Send notification %d 2026-11-19T08:00:00-05:00" % self.notice.pk
+        tasks.send_scheduling_notice(self.notice.pk, task_name)
+        tasks.send_scheduling_notice(self.notice.pk, task_name)
+        assert len(mail.outbox) == 1
+
+    def test_send_notice_failed_send_can_be_retried(self):
+        """A send that fails silently must not stop a later copy from sending"""
+        self.notice.send_empty = True
+        self.notice.save()
+        task_name = "Send notification %d 2026-11-19T08:00:00-05:00" % self.notice.pk
+        with mock.patch("qatrack.qatrack_core.email.EmailMultiAlternatives.send", side_effect=SMTPException):
+            tasks.send_scheduling_notice(self.notice.pk, task_name)
+        assert len(mail.outbox) == 0
+        tasks.send_scheduling_notice(self.notice.pk, task_name)
+        assert len(mail.outbox) == 1
 
     def test_send_notice_no_send_empty(self):
         tasks.send_scheduling_notice(self.notice.pk)

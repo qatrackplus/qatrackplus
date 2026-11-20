@@ -184,6 +184,16 @@ class TestServiceEventReviewEmails(TestCase):
         assert self.notice.last_sent >= now
         assert "QATrack+ Unreviewed Service Event Notice:" in mail.outbox[0].subject
 
+    def test_send_notice_twice_sends_once(self):
+        """A second copy of the same scheduled task must not email the notice again (#919)"""
+        se = utils.create_service_event(unit_service_area=self.usa1)
+        se.is_review_required = True
+        se.save()
+        task_name = "Send ServiceEventReviewNotice %d 2026-11-19T08:00:00-05:00" % self.notice.pk
+        tasks.send_serviceeventreview_notice(self.notice.pk, task_name)
+        tasks.send_serviceeventreview_notice(self.notice.pk, task_name)
+        assert len(mail.outbox) == 1
+
     def test_send_notice_empty(self):
         self.notice.send_empty = True
         self.notice.save()

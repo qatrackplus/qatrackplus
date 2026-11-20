@@ -7,6 +7,7 @@ from django_q.tasks import schedule
 
 from qatrack.notifications.models import ServiceEventSchedulingNotice
 from qatrack.qatrack_core.email import send_email_to_users
+from qatrack.qatrack_core.models import ScheduledDelivery
 from qatrack.qatrack_core.tasks import run_periodic_scheduler
 
 logger = logging.getLogger('django-q2')
@@ -26,7 +27,8 @@ def run_scheduling_notices():
 def schedule_service_event_scheduling_notice(notice, send_time):
 
     logger.info("Service Event Scheduling notification %s for %s" % (notice.pk, send_time))
-    name = "Send notification %d %s" % (notice.pk, send_time.isoformat())
+    # the type is part of the name because pks are only unique within one type of notice
+    name = "Send %s %d %s" % (notice._meta.object_name, notice.pk, send_time.isoformat())
 
     schedule(
         "qatrack.notifications.service_log_scheduling.tasks.send_scheduling_notice",
@@ -64,8 +66,16 @@ def send_scheduling_notice(notice_id, task_name=""):
         )  # noqa: E501
         return
 
+    claim = ScheduledDelivery.claim(notice, task_name)
+    if claim is None:
+        logger.info("ServiceEventSchedulingNotice %s (%s) was already sent" % (
+            notice_id, task_name,
+        ))
+        return
+
+    sent = False
     try:
-        send_email_to_users(
+        sent = send_email_to_users(
             recipients,
             "service_log_scheduling/email.html",
             context={'notice': notice},
@@ -84,5 +94,6 @@ def send_scheduling_notice(notice_id, task_name=""):
         if not fail_silently:
             raise
     finally:
+        claim.finish(sent)
         notice.last_sent = timezone.now()
         notice.save()

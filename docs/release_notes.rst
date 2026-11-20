@@ -15,6 +15,57 @@ Release Notes
 QATrack+ 4.0
 ~~~~~~~~~~~~~
 
+Not yet released
+----------------
+
+.. These changes are on the development branch but in no release yet. When the
+   release that carries them is cut, give this section its version number (or move
+   these entries into that release's section), and describe the new migration in
+   that release's upgrade guide.
+
+**This release adds one database migration**, ``qatrack_core.0003_scheduleddelivery``.
+It creates one new, empty table and changes no existing ones.
+
+Bug Fixes
+^^^^^^^^^
+
+* **Scheduled reports and notices are no longer emailed twice when the task queue
+  backs up.** When background tasks pile up - several large PDF reports due at
+  once, say - a scheduled email could wait in the queue long enough for it to be
+  handed out a second time, and both copies sent it. Each scheduled report and
+  notice, including QC Completed follow-up notices, now records that it is being
+  sent for that due time, in the new table above. A second copy that finds it
+  already sent does nothing. One that finds it still being sent stays in the queue
+  and tries again a few minutes later, so the email isn't lost if the first copy is
+  stopped before it finishes. That retry depends on django-q's ``ack_failures``
+  staying off and ``max_attempts`` staying at 0, as they are unless you have
+  changed them in ``Q_CLUSTER``; otherwise the retry can be lost, but the email is
+  still not sent twice. If you have turned
+  django-q's task ``timeout`` off, a send that was stopped part way may wait up to an
+  hour before another copy sends it, so that a send that is only slow is never sent
+  twice. A send that fails is not recorded as sent, so another
+  copy of the same task can still send it. With ``EMAIL_FAIL_SILENTLY`` turned off,
+  a failed send also stays in the queue and is tried again; with it on (the
+  default), the failure is logged and the email is not retried, as before. You may
+  occasionally see a failed task in the task log saying a report or notice *is
+  being sent by another worker*; that is this check at work, not a problem. Rows in
+  the new table are removed after 30 days. This applies to every installation, not
+  only Docker (:issues:`#919 <919>`).
+
+* **Scheduled notices of different kinds no longer stop each other being sent.**
+  Every scheduled notice is queued under a name made from its id and its due time,
+  and the task queue refuses a name it already holds. Ids are only unique within one
+  kind of notice, so a QC Scheduling notice and a QC Review notice that shared an id
+  and a due time asked for the same name, and the second was never sent. The error
+  also escaped the loop that queues them, so **every other notice of that kind due in
+  the same 15 minutes was dropped with it**, and nothing outside the task log said
+  so. Sites that set up one notice of each kind, all at the same time of day, were
+  the most likely to meet this. Names now include the kind of notice. A scheduled
+  report's name now comes from its schedule rather than the report, which collided
+  the same way when a report's schedule was deleted and set up again. A notice or
+  report that still cannot be queued is logged and skipped, and the rest are queued
+  as normal. Anything already queued when you upgrade is sent as before.
+
 4.0.2
 ------
 

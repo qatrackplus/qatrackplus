@@ -6,6 +6,7 @@ from unittest import mock
 from django.contrib.admin.sites import AdminSite
 from django.contrib.sites.models import Site
 from django.core import mail
+from django.db import DatabaseError
 from django.http import Http404
 from django.test import RequestFactory, TestCase
 from django.test.utils import override_settings
@@ -950,6 +951,37 @@ class TestReportTasks(TestCase):
         self.schedule.refresh_from_db()
         assert self.schedule.last_sent >= now
         assert "QATrack+ Reports:" in mail.outbox[0].subject
+
+    def test_send_report_twice_sends_once(self):
+        """A second copy of the same scheduled task must not email the report again (#919)"""
+        task_name = "Send report %d 2026-11-19T08:00:00-05:00" % self.report.pk
+        tasks.send_report(self.schedule.pk, task_name)
+        tasks.send_report(self.schedule.pk, task_name)
+        assert len(mail.outbox) == 1
+
+    def test_send_report_next_occurrence_still_sends(self):
+        tasks.send_report(self.schedule.pk, "Send report %d 2026-11-19T08:00:00-05:00" % self.report.pk)
+        tasks.send_report(self.schedule.pk, "Send report %d 2026-11-20T08:00:00-05:00" % self.report.pk)
+        assert len(mail.outbox) == 2
+
+    def test_send_report_render_failure_can_be_retried(self):
+        task_name = "Send report %d 2026-11-19T08:00:00-05:00" % self.report.pk
+        with mock.patch.object(models.SavedReport, "render", side_effect=RuntimeError):
+            with self.assertRaises(RuntimeError):
+                tasks.send_report(self.schedule.pk, task_name)
+        tasks.send_report(self.schedule.pk, task_name)
+        assert len(mail.outbox) == 1
+
+    def test_send_report_stays_sent_if_saving_last_sent_fails(self):
+        """The email went out, so a redelivered copy must not send it again"""
+        task_name = "Send ReportSchedule %d 2026-11-19T08:00:00-05:00" % self.schedule.pk
+        with mock.patch.object(models.ReportSchedule, "save", side_effect=DatabaseError):
+            with self.assertRaises(DatabaseError):
+                tasks.send_report(self.schedule.pk, task_name)
+        assert len(mail.outbox) == 1
+
+        tasks.send_report(self.schedule.pk, task_name)
+        assert len(mail.outbox) == 1
 
     def test_send_report_non_existent(self):
         tasks.send_report(self.schedule.pk + 1)
