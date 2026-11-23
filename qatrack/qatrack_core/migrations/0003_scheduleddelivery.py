@@ -5,8 +5,9 @@ copy is still waiting in the queue or running. Each scheduled report and
 notice now claims a row here, keyed by its schedule and due time, before it
 sends, and only the copy that wins the claim sends the email.
 
-This creates one new, empty table and changes nothing else. Rows older than
-30 days are removed as new ones are created.
+This creates one new, empty table and changes nothing else. Old rows are
+removed as new ones are created: 30 days after their email was sent, or 30
+days after they were created if it never was (see ScheduledDelivery.prune).
 """
 from django.db import migrations, models
 
@@ -37,6 +38,9 @@ class Migration(migrations.Migration):
                 ("claimed_at", models.DateTimeField(blank=True, null=True)),
                 ("sent_at", models.DateTimeField(blank=True, null=True)),
             ],
+            options={
+                "default_permissions": (),
+            },
         ),
         migrations.AddConstraint(
             model_name="scheduleddelivery",

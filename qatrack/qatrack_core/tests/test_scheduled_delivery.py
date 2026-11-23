@@ -6,7 +6,8 @@ from multiprocessing import Value
 from unittest import mock
 
 import pytest
-from django.contrib.auth.models import Group, User
+from django.contrib.auth.models import Group, Permission, User
+from django.contrib.contenttypes.models import ContentType
 from django.core import mail
 from django.test import TestCase
 from django.test.utils import override_settings
@@ -153,6 +154,11 @@ class TestScheduledDeliveryClaim(TestCase):
         ScheduledDelivery.objects.update(claimed_at=timezone.now() - timezone.timedelta(seconds=360 + 1))
         with pytest.raises(DeliveryInProgress):
             ScheduledDelivery.claim(self.unit, OCCURRENCE)
+
+    def test_no_permissions_are_created(self):
+        """The table is internal bookkeeping, so it adds nothing to the permission pickers in the admin"""
+        content_type = ContentType.objects.get_for_model(ScheduledDelivery)
+        assert not Permission.objects.filter(content_type=content_type).exists()
 
 
 class TestOccurrenceFromTaskName:

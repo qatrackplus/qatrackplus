@@ -1,11 +1,7 @@
-import logging
-
 from django.conf import settings
 from django.db import models
 from django.db.models import Q
 from django.utils import timezone
-
-logger = logging.getLogger('django-q2')
 
 # How long a delivery record is kept: after it was sent, or, for one never
 # sent, after it was created. Records only need to outlive any copy of their
@@ -113,6 +109,9 @@ class ScheduledDelivery(models.Model):
     sent_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
+        # Internal bookkeeping only: nothing checks a permission on this table, so don't
+        # offer add/change/delete/view permissions for it in the group and user admin.
+        default_permissions = ()
         constraints = [
             models.UniqueConstraint(
                 fields=['kind', 'object_id', 'occurrence'],
