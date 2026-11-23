@@ -116,7 +116,12 @@ def follow_up_emails(signal, sender, instance, created, **kwargs):
             next_run=follow_up,
             test_list_instance_id=instance.pk,
             notification_id=notice.id,
-            delivery_name=follow_up_delivery_name(instance, notice, follow_up),
+            # The time of queueing is part of the name, so a follow-up queued again after an
+            # edit counts as a new email and is sent, as it always has been. Copies of one
+            # queued task share these kwargs, so they are still sent only once (#919).
+            delivery_name="%s queued %s" % (
+                follow_up_delivery_name(instance, notice, follow_up), timezone.now().isoformat(),
+            ),
         )
 
 

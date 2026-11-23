@@ -15,6 +15,10 @@ def follow_up_delivery_name(test_list_instance, notice, follow_up):
     A notice can have several follow-ups due at the same moment, one for each
     test list instance, so unlike the other notices the due time alone doesn't
     identify the email.
+
+    The handler that queues a follow-up adds the time it was queued. Editing a
+    test list instance queues its follow-ups afresh, and one queued again after
+    the first has gone out is a new email, not a second copy of the old one.
     """
     return "follow-up-for-tli-%d-notice-%d at %s" % (test_list_instance.pk, notice.pk, follow_up.isoformat())
 
