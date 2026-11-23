@@ -18,7 +18,7 @@ from unittest import mock
 
 from django.contrib.auth.models import Group, User
 from django.core import mail
-from django.db import IntegrityError
+from django.db import IntegrityError, OperationalError
 from django.test import TestCase
 from django.utils import timezone
 from django_q.models import Schedule
@@ -193,8 +193,8 @@ class TestRunPeriodicSchedulerIsolatesFailures(TestCase):
             for __ in range(3)
         ]
 
-    def test_one_failing_handler_does_not_stop_the_rest(self):
-        """A handler that raises for one instance is logged, and the remaining instances are still handled."""
+    def test_a_name_already_scheduled_does_not_stop_the_rest(self):
+        """A name django-q2 already holds is logged as a warning, and the remaining instances are still handled."""
         handled = []
 
         def handler(instance, send_time):
@@ -202,16 +202,64 @@ class TestRunPeriodicSchedulerIsolatesFailures(TestCase):
             if len(handled) == 1:
                 raise IntegrityError('A schedule with the same name already exists.')
 
-        with self.assertLogs('django-q2', level=logging.ERROR) as logs:
+        with self.assertLogs('django-q2', level=logging.WARNING) as logs:
             run_periodic_scheduler(QCSchedulingNotice, 'test', handler, recurrence_field='recurrences')
 
         assert sorted(handled) == sorted(n.pk for n in self.notices)
-        errors = [r for r in logs.records if r.levelno >= logging.ERROR]
-        assert len(errors) == 1
-        assert errors[0].exc_info is not None
+        # expected when a window is scheduled twice, so a warning and no traceback
+        assert [r.levelno for r in logs.records] == [logging.WARNING]
+        assert logs.records[0].exc_info is None
+
+    def test_any_other_error_stops_the_run(self):
+        """Anything but a refused name raises, so the task fails where an administrator will see it."""
+        handled = []
+
+        def handler(instance, send_time):
+            handled.append(instance.pk)
+            raise OperationalError('server closed the connection unexpectedly')
+
+        with self.assertRaises(OperationalError):
+            run_periodic_scheduler(QCSchedulingNotice, 'test', handler, recurrence_field='recurrences')
+
+        assert len(handled) == 1
+
+    def test_a_window_scheduled_twice_queues_each_notice_once(self):
+        """What a run_* task handed out twice does: every name is already held, so nothing is added or raised."""
+        sends = Schedule.objects.filter(func='qatrack.notifications.qcscheduling.tasks.send_scheduling_notice')
+        qcscheduling_tasks.run_scheduling_notices()
+        assert sends.count() == len(self.notices)
+
+        with self.assertLogs('django-q2', level=logging.WARNING) as logs:
+            qcscheduling_tasks.run_scheduling_notices()
+
+        assert sends.count() == len(self.notices)
+        assert [r.levelno for r in logs.records] == [logging.WARNING] * len(self.notices)
+        assert not any(r.exc_info for r in logs.records)
+
+    def test_a_run_that_failed_part_way_can_be_run_again(self):
+        """django-q hands a failed run_* task out again; that run skips what was queued and queues the rest."""
+        sends = Schedule.objects.filter(func='qatrack.notifications.qcscheduling.tasks.send_scheduling_notice')
+        real_save = Schedule.save
+        saves = []
+
+        def save(schedule, *args, **kwargs):
+            saves.append(schedule)
+            if len(saves) == 2:
+                raise OperationalError('server closed the connection unexpectedly')
+            return real_save(schedule, *args, **kwargs)
+
+        with mock.patch.object(Schedule, 'save', save), self.assertRaises(OperationalError):
+            qcscheduling_tasks.run_scheduling_notices()
+        assert sends.count() == 1
+
+        with self.assertLogs('django-q2', level=logging.WARNING) as logs:
+            qcscheduling_tasks.run_scheduling_notices()
+
+        assert sends.count() == len(self.notices)
+        assert [r.levelno for r in logs.records] == [logging.WARNING]
 
     def test_a_failing_handler_does_not_break_the_transaction_for_the_rest(self):
-        """A database error inside one handler is rolled back to a savepoint rather than poisoning the loop."""
+        """A write the database refuses inside one handler is rolled back rather than poisoning the loop."""
         handled = []
 
         def handler(instance, send_time):
@@ -221,7 +269,7 @@ class TestRunPeriodicSchedulerIsolatesFailures(TestCase):
                 Schedule.objects.create(id=first.id, name='y', func='f')  # duplicate primary key
             Schedule.objects.create(name='ok %d' % instance.pk, func='f')
 
-        with mock.patch.object(logging.getLogger('django-q2'), 'exception'):
+        with self.assertLogs('django-q2', level=logging.WARNING):
             run_periodic_scheduler(QCSchedulingNotice, 'test', handler, recurrence_field='recurrences')
 
         assert len(handled) == len(self.notices)

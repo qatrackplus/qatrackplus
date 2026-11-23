@@ -4,7 +4,7 @@ from functools import wraps
 from zoneinfo import ZoneInfo
 
 from django.conf import settings
-from django.db import ProgrammingError, connection, transaction
+from django.db import IntegrityError, ProgrammingError, connection, transaction
 from django.db.models import Q
 from django.utils import timezone
 from django_q.models import Schedule
@@ -141,19 +141,24 @@ def run_periodic_scheduler(model, log_name, handler, time_field="time", recurren
                 if occurrences:
                     send_time = dt.replace(tzinfo=tz)
                     try:
-                        # A savepoint, so a database error here can't leave the rest of the loop
-                        # running in a broken transaction.
+                        # Its own transaction (a savepoint when one is already open, as in the tests),
+                        # so a write the database refuses is rolled back and can't leave the rest of
+                        # the loop running in a broken transaction.
                         with transaction.atomic():
                             handler(instance, send_time)
-                    except Exception:
-                        # One instance that can't be scheduled must not stop every other one due in
-                        # this window from being scheduled too.
-                        logger.exception(
-                            "%s: unable to schedule %s %s for %s; carrying on with the rest" % (
+                    except IntegrityError as err:
+                        # django-q2 refuses a schedule name it already holds. That is expected whenever
+                        # the same window is scheduled twice (this task was handed out again, or the
+                        # cluster is catching up after being stopped), and it must not stop every
+                        # other instance due in this window from being scheduled too. Anything else
+                        # is left to raise, so the task fails where an administrator will see it.
+                        logger.warning(
+                            "%s: not scheduling %s %s for %s: %s" % (
                                 log_name,
                                 model._meta.model_name,
                                 instance.id,
                                 send_time,
+                                err,
                             )
                         )
                 
