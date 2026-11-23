@@ -156,4 +156,8 @@ backup script's environment variables changed in this release.
     tell you whether your backups contain a database or whether your groups have the
     permissions they need. Both are covered below.
 
+.. _docker_upgrade_root_owned_files:
+
+.. include:: _docker_root_owned_files.rst
+
 .. include:: _upgrade_4_0_after.rst

@@ -97,4 +97,6 @@ not happen. ``check --database default`` is the one worth reading: it reports
     first time. :ref:`docker_secret_key` says what the generated key is, why the nightly
     backup does not contain it, and how to copy it into your ``.env`` so that it does.
 
+.. include:: _docker_root_owned_files.rst
+
 .. include:: _upgrade_4_0_1_after.rst
