@@ -14,10 +14,10 @@ most of the Python code. A test site had several hundred such files.
 
 From 4.0.2, QATrack+ runs from the code built into its image rather than from
 this folder, so these files do not affect your running site, and you can leave
-them. They can get in your own way later, though. Your account cannot change or
-delete them, so ``git clean``, and moving or deleting the folder, stop with
-*Permission denied*, and anything that runs from this folder as you, such as the
-:ref:`development overlay <docker_development>`, cannot update them.
+them. They only matter if you later work in this folder as yourself. Your
+account cannot change them, or remove them from the ``root``-owned folders they
+are in, so anything that runs from this folder as you, such as the
+:ref:`development overlay <docker_development>`, cannot update them either.
 
 Once 4.0.2 or later is running, see how many there are:
 
@@ -35,9 +35,10 @@ account:
 
 **Both commands leave two folders alone, on purpose.** ``deploy/docker/backups``
 holds your nightly backups, which are kept readable by ``root`` only (see
-:ref:`docker_backups`), and ``deploy/docker/user-data`` holds the private key of
-your HTTPS certificate. A plain ``sudo chown -R`` over the whole QATrack+ folder
-would hand both to your account, so use the command above instead.
+:ref:`docker_backups`), and ``deploy/docker/user-data`` is where the private key
+of your HTTPS certificate is kept. A plain ``sudo chown -R`` over the whole
+QATrack+ folder would hand both to your account, so use the command above
+instead.
 
 Do this after the upgrade rather than before it: until 4.0.2 is running, the old
 containers keep writing new files as ``root``.

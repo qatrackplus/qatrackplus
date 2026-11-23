@@ -350,15 +350,15 @@ about a minute and a half, while a slower machine or a slower connection can
 take several minutes more. The ``django`` service is allowed up to ten minutes
 for its first start before Compose gives up on it.
 
-If the browser still cannot connect once ``nginx`` is up, check the name you
-typed: nginx gives no answer at all to a host name that is not in
-``ALLOWED_HOSTS``, which looks the same from the browser.
+If the browser still shows an error of its own once ``nginx`` is up, rather than
+a page from QATrack+, check the name you typed: nginx gives no answer at all to
+a host name that is not in ``ALLOWED_HOSTS``.
 
 Later on you may meet the page below instead. *502 Bad Gateway* comes from
 ``nginx`` when it is running but QATrack+ behind it is not ready, which happens
-for a short while whenever QATrack+ restarts: after a change to ``.env``, for
-example, or during an update. It clears by itself once ``django`` is ready
-again, usually within a minute.
+when QATrack+ restarts while ``nginx`` keeps running: after a change to
+``.env``, for example, or during an update. It clears by itself once ``django``
+is ready again.
 
 .. figure:: images/502_error.png
     :alt: The 502 Bad Gateway page nginx shows while QATrack+ restarts
@@ -451,7 +451,7 @@ Two things to know if you do this:
   another proxy in front of QATrack+ changes the host name or drops the port on
   the way. List the address people type, with ``http://`` or ``https://`` and
   the port, in ``CSRF_TRUSTED_ORIGINS`` in ``.env``, for example
-  ``CSRF_TRUSTED_ORIGINS=http://qatrack.myclinic.ca:8080``. QATrack+ 4.0.0 to
+  ``CSRF_TRUSTED_ORIGINS=http://qatrack.myclinic.ca:8080``. QATrack+ 4.0.1 and
   4.0.2 needed this on every site that changed its port; a setting you added
   then does no harm, and can stay.
 
