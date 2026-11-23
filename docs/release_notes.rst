@@ -41,16 +41,26 @@ Bug Fixes
   staying off and ``max_attempts`` staying at 0, as they are unless you have
   changed them in ``Q_CLUSTER``; otherwise the retry can be lost, but the email is
   still not sent twice. If you have turned
-  django-q's task ``timeout`` off, a send that was stopped part way may wait up to an
-  hour before another copy sends it, so that a send that is only slow is never sent
-  twice. A send that fails is not recorded as sent, so another
+  django-q's task ``timeout`` off, nothing stops a send that has stalled, so QATrack+
+  waits an hour (or ``retry``, if that is longer) before it lets another copy take a
+  send over. A send that was stopped part way is then delayed by a little over that
+  long rather than lost, and a send that stalls for longer than that and then finishes
+  can still be emailed twice. QATrack+ ships with the timeout on (300 seconds), which
+  avoids both. A send that fails is not recorded as sent, so another
   copy of the same task can still send it. With ``EMAIL_FAIL_SILENTLY`` turned off,
   a failed send also stays in the queue and is tried again; with it on (the
   default), the failure is logged and the email is not retried, as before. You may
   occasionally see a failed task in the task log saying a report or notice *is
-  being sent by another worker*; that is this check at work, not a problem. Rows in
-  the new table are removed after 30 days. This applies to every installation, not
-  only Docker (:issues:`#919 <919>`).
+  being sent by another worker*; that is this check at work, not a problem. This
+  applies to every installation, not only Docker.
+
+  The new table looks after itself, but not on a timer: old rows are cleared out
+  each time a new row is added. A row is removed once its email was sent more than
+  30 days ago. A row whose email was never sent is removed once the row itself is
+  more than 30 days old, unless a copy is still sending it. So you may see rows a
+  little older than 30 days on a quiet site, and a site that stops sending
+  scheduled emails keeps the rows it already has. They are small and do no harm
+  (:issues:`#919 <919>`).
 
 * **Scheduled notices of different kinds no longer stop each other being sent.**
   Every scheduled notice is queued under a name made from its id and its due time,
@@ -63,8 +73,9 @@ Bug Fixes
   the most likely to meet this. Names now include the kind of notice. A scheduled
   report's name now comes from its schedule rather than the report, which collided
   the same way when a report's schedule was deleted and set up again. A notice or
-  report that still cannot be queued is logged and skipped, and the rest are queued
-  as normal. Anything already queued when you upgrade is sent as before.
+  report that is already queued for that time is skipped, with a warning in
+  ``django-q2.log``, and the rest are queued as normal. Anything already queued when
+  you upgrade is sent as before.
 
 4.0.2
 ------
