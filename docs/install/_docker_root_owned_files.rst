@@ -9,8 +9,10 @@ Hand back the files 4.0.0 and 4.0.1 left owned by root (optional)
 
 QATrack+ 4.0.0 and 4.0.1 ran as ``root`` inside their containers, with your
 QATrack+ folder itself mounted into them. Everything they wrote there belongs to
-``root`` on the server: the ``logs`` folder, and a ``__pycache__`` folder beside
-most of the Python code. A test site had several hundred such files.
+``root`` on the server: the ``logs`` folder, a ``__pycache__`` folder beside
+most of the Python code, an empty ``qatrack/static`` folder, and one generated
+style sheet, ``site.css``. On a test site upgraded from 4.0.1 that came to 545
+files and folders, nearly all of them in ``__pycache__``.
 
 From 4.0.2, QATrack+ runs from the code built into its image rather than from
 this folder, so these files do not affect your running site, and you can leave

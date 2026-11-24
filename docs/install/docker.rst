@@ -357,8 +357,10 @@ a host name that is not in ``ALLOWED_HOSTS``.
 Later on you may meet the page below instead. *502 Bad Gateway* comes from
 ``nginx`` when it is running but QATrack+ behind it is not ready, which happens
 when QATrack+ restarts while ``nginx`` keeps running: after a change to
-``.env``, for example, or during an update. It clears by itself once ``django``
-is ready again.
+``.env``, for example, or during an update. In the first seconds of a restart a
+page may instead take a long time to load, or show a server error from QATrack+
+itself. All of these clear by themselves once ``django`` is ready again. After a
+change to ``.env``, that took about half a minute on a test server.
 
 .. figure:: images/502_error.png
     :alt: The 502 Bad Gateway page nginx shows while QATrack+ restarts
