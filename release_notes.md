@@ -2,6 +2,11 @@
 
 Release notes are located at http://docs.qatrackplus.com/en/latest/release_notes.html
 
+## v4.0.3 (unreleased)
+
+* **Docker**: Signing in works on a site published on a port other than 80 or 443 (for example `"8080:80"` in `compose.yaml`, as the Docker installation guide describes). nginx dropped the port from the address it passed to QATrack+, so every sign-in and form on such a site was refused with *CSRF verification failed* unless `CSRF_TRUSTED_ORIGINS` listed the address with its port. nginx now passes the address on as the browser sent it. A `CSRF_TRUSTED_ORIGINS` you set to work around this does no harm and can stay. With HTTPS on a port other than 443, give people the full `https://` address: nginx's redirect from plain HTTP cannot know the port you published ([#915](https://github.com/qatrackplus/qatrackplus/issues/915)).
+* **Docker**: The installation guide now describes what a browser really shows if you open the site before it has started (it cannot connect; the *502 Bad Gateway* page belongs to later restarts), and both Docker upgrade guides show how to hand back the root-owned files that 4.0.0 and 4.0.1 left in the QATrack+ folder, without touching the backups or the HTTPS key ([#915](https://github.com/qatrackplus/qatrackplus/issues/915)).
+
 ## v4.0.2
 
 * **QA**: The Test List admin shows each member test's name again, and the view and change icons beside it work ([#897](https://github.com/qatrackplus/qatrackplus/issues/897)).

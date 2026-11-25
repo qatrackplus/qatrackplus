@@ -499,6 +499,30 @@ jobs:
             [ "$size" = 10m ]
           done
 
+      - name: Verify sign-in works when the site is published on another port
+        # docs/install/docker.rst, "Changing from port 80 to a different port".
+        # With "8080:80" in compose.yaml, a browser sends Host and Origin with
+        # the port. nginx must pass that Host on unchanged, or QATrack+ refuses
+        # every sign-in ("Origin checking failed ... does not match any trusted
+        # origins"). Docker's port mapping changes nothing nginx can see, so a
+        # request to port 80 with the port in its Host header is the same
+        # request, without republishing nginx in the middle of this job.
+        working-directory: deploy/docker
+        run: |
+          set -euo pipefail
+          host='Host: qatrack.test:8080'
+          jar=$(mktemp)
+          curl -fsS -H "$host" -c "$jar" -o /dev/null http://127.0.0.1/accounts/login/
+          token=$(awk '$6 == "csrftoken" {print $7}' "$jar")
+          [ -n "$token" ]
+          # Wrong credentials redisplay the form (200); a CSRF failure is 403.
+          code=$(curl -sS -H "$host" -b "$jar" -o /dev/null -w '%{http_code}' \
+            -H 'Origin: http://qatrack.test:8080' -H 'Referer: http://qatrack.test:8080/accounts/login/' \
+            --data-urlencode "csrfmiddlewaretoken=$token" --data-urlencode username=nobody --data-urlencode password=wrong \
+            http://127.0.0.1/accounts/login/)
+          echo "sign-in POST as http://qatrack.test:8080: $code"
+          [ "$code" = 200 ]
+
       - name: Verify LDAP support and that the secret key survives recreation
         working-directory: deploy/docker
         run: |
