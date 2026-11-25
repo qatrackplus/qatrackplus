@@ -9,6 +9,7 @@ from django.utils import timezone
 from django_q.models import Schedule
 from django_q.tasks import schedule
 
+from qatrack.notifications.qccompleted.tasks import follow_up_delivery_name
 from qatrack.qa.models import TestListInstance
 from qatrack.qa.signals import testlist_complete
 from qatrack.qatrack_core.email import send_email_to_users
@@ -115,6 +116,12 @@ def follow_up_emails(signal, sender, instance, created, **kwargs):
             next_run=follow_up,
             test_list_instance_id=instance.pk,
             notification_id=notice.id,
+            # The time of queueing is part of the name, so a follow-up queued again after an
+            # edit counts as a new email and is sent, as it always has been. Copies of one
+            # queued task share these kwargs, so they are still sent only once (#919).
+            delivery_name="%s queued %s" % (
+                follow_up_delivery_name(instance, notice, follow_up), timezone.now().isoformat(),
+            ),
         )
 
 
