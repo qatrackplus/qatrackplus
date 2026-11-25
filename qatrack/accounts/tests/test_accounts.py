@@ -47,24 +47,13 @@ class TestAdminFilter(TestCase):
     def test_lookups(self):
         assert AdminFilter.lookups(None, None, None) == (('yes', 'Yes'), ('no', 'No'))
 
-    # These two filter `User.objects` down to the pair they create rather than
-    # counting the whole table. Counting everything made them depend on which
-    # accounts the database already held, which is not a property of the filter:
-    # `test_queryset_no` already carried a `1 + 1  # count Internal User` to
-    # absorb the account a migration creates, and `test_queryset_yes` failed
-    # outright under `poe test-integration` / `make test-integration`, which
-    # provisions the database the way a deployment does and so leaves the
-    # `superuser` account `createsuperuser` makes in it. @nsmela reported that
-    # on #868: a correct tree gave 1 failed, 1742 passed, with
-    # `assert 2 == 1` here.
-    #
-    # Scoping the queryset is the fix rather than dropping `createsuperuser`
-    # from that task, which exists precisely to exercise the real provisioning
-    # sequence.
+    # Each test asks about the pair it creates, so other accounts in the table (the superuser
+    # `make test-integration` provisions, for one) can't change the answer.
     OWN_USERS = ["admin-filter-admin", "admin-filter-regular"]
 
     def create_the_pair(self):
-        utils.create_user(uname=self.OWN_USERS[0], is_staff=True, is_superuser=True)
+        # Staff but not superuser, so a filter on is_superuser instead of is_staff fails.
+        utils.create_user(uname=self.OWN_USERS[0], is_staff=True, is_superuser=False)
         utils.create_user(uname=self.OWN_USERS[1], is_staff=False, is_superuser=False)
         return User.objects.filter(username__in=self.OWN_USERS)
 
@@ -82,14 +71,12 @@ class TestAdminFilter(TestCase):
 
         assert list(af.queryset(None, own).values_list('username', flat=True)) == [self.OWN_USERS[1]]
 
-    def test_the_answer_does_not_depend_on_other_accounts_in_the_table(self):
-        """The regression, stated as a property rather than left to the count.
+    def test_the_filter_narrows_the_queryset_it_is_given(self):
+        """An account outside the queryset handed to the filter never appears in its answer.
 
-        An account this test did not create must not change what the filter
-        returns. `poe test-integration` provisions the database the way a
-        deployment does, so a `superuser` account is sitting in the
-        `--reuse-db` database before the suite starts - and that is exactly
-        what the old whole-table count could not survive.
+        That catches a filter that queries `User.objects` instead of using its queryset. It
+        doesn't stop the tests above going back to counting the whole table; their own scoped
+        assertions are what do that.
         """
         utils.create_user(uname="provisioned-superuser", is_staff=True, is_superuser=True)
         own = self.create_the_pair()
