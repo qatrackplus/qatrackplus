@@ -338,16 +338,32 @@ names you set in ``ALLOWED_HOSTS`` in a browser, for example
 ``http://qatrack.myclinic.ca``. On the server itself, ``http://localhost`` works
 too.
 
-If you go to the website too early you will see the following error. This
-is not an issue, it just means that the QATrack+ server has not yet finished
-initialising. How long that takes depends on the machine and the connection: on
+If you go to the website too early, the browser says it cannot connect: *This
+site can't be reached*, *Unable to connect*, or that the server took too long to
+respond, depending on the browser and your network. This is not an issue, it
+just means that the QATrack+ server has not yet finished initialising: the web
+server (``nginx``) is only started once ``django`` is ready, so until then
+nothing answers on port 80 at all. Try again once ``docker compose ps`` lists
+``nginx``. How long that takes depends on the machine and the connection: on
 a 2 vCPU / 4 GB server the build took three and a half minutes and the start
-about a minute and a half, with no *502* at all, while a slower machine or a
-slower connection can take several minutes more. The ``django`` service is
-allowed up to ten minutes for its first start before Compose gives up on it.
+about a minute and a half, while a slower machine or a slower connection can
+take several minutes more. The ``django`` service is allowed up to ten minutes
+for its first start before Compose gives up on it.
+
+If the browser still shows an error of its own once ``nginx`` is up, rather than
+a page from QATrack+, check the name you typed: nginx gives no answer at all to
+a host name that is not in ``ALLOWED_HOSTS``.
+
+Later on you may meet the page below instead. *502 Bad Gateway* comes from
+``nginx`` when it is running but QATrack+ behind it is not ready, which happens
+when QATrack+ restarts while ``nginx`` keeps running: after a change to
+``.env``, for example, or during an update. In the first seconds of a restart a
+page may instead take a long time to load, or show a server error from QATrack+
+itself. All of these clear by themselves once ``django`` is ready again. After a
+change to ``.env``, that took about half a minute on a test server.
 
 .. figure:: images/502_error.png
-    :alt: Error visible while server is starting up
+    :alt: The 502 Bad Gateway page nginx shows while QATrack+ restarts
 
 .. note::
 
@@ -420,6 +436,26 @@ changed to ``"8080:80"`` then you would need to type
 same for ``"443:443"`` with HTTPS). Set ``SITE_DOMAIN`` with the port too, as
 described above. After editing ``compose.yaml``, apply it with
 ``docker compose up -d``.
+
+Nothing else needs to change for the new port. ``ALLOWED_HOSTS`` stays a list of
+names without ports, and signing in works as it did on port 80: nginx passes the
+address people typed, port included, on to QATrack+, which is what QATrack+
+checks each form against.
+
+Two things to know if you do this:
+
+* **With HTTPS on a port other than 443**, give people the full address,
+  ``https://qatrack.myclinic.ca:8443``. nginx still redirects plain HTTP to
+  HTTPS, but it cannot see which port you published, so its redirect always
+  points at the standard port 443.
+* **If signing in answers** *CSRF verification failed* **on the new port**, the
+  address in the browser is not the one that reached QATrack+. That happens when
+  another proxy in front of QATrack+ changes the host name or drops the port on
+  the way. List the address people type, with ``http://`` or ``https://`` and
+  the port, in ``CSRF_TRUSTED_ORIGINS`` in ``.env``, for example
+  ``CSRF_TRUSTED_ORIGINS=http://qatrack.myclinic.ca:8080``. QATrack+ 4.0.1 and
+  4.0.2 needed this on every site that changed its port; a setting you added
+  then does no harm, and can stay.
 
 ``compose.yaml`` comes with QATrack+, so this is a change of your own to one of
 its files. If a later ``git pull`` stops with *Your local changes to the
@@ -1413,7 +1449,8 @@ brings QATrack+ back as it was.
 To remove QATrack+ completely, run ``docker compose down -v --rmi all``, which
 also removes the images Docker built or downloaded for QATrack+. Then delete the
 ``qatrackplus`` folder once you are sure you have everything you need from it,
-including ``deploy/docker/backups``.
+including ``deploy/docker/backups``. Deleting it needs ``sudo``: the backups and
+certificates in it belong to ``root``.
 
 Don't use Docker's general clean-up commands that remove volumes, such as
 ``docker volume prune --all``, on a server running QATrack+. Once QATrack+'s
@@ -1439,4 +1476,7 @@ once, then start with the development overlay:
 Use the same ``-f compose.yaml -f compose.dev.yaml`` on every ``docker compose``
 command for that stack. QATrack+'s log files go to your checkout's ``logs``
 folder, which is given to your user when the stack starts, even if an earlier
-QATrack+ container created it as root.
+QATrack+ container created it as root. Other files that QATrack+ 4.0.0 or 4.0.1
+left in your checkout as root, such as its ``__pycache__`` folders, are not
+changed; :ref:`the upgrade guide <docker_upgrade_root_owned_files>` shows how to
+hand those back to your user.
