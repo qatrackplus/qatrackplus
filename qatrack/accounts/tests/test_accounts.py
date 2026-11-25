@@ -47,19 +47,45 @@ class TestAdminFilter(TestCase):
     def test_lookups(self):
         assert AdminFilter.lookups(None, None, None) == (('yes', 'Yes'), ('no', 'No'))
 
+    # Each test asks about the pair it creates, so other accounts in the table (the superuser
+    # `make test-integration` provisions, for one) can't change the answer.
+    OWN_USERS = ["admin-filter-admin", "admin-filter-regular"]
+
+    def create_the_pair(self):
+        # Staff but not superuser, so a filter on is_superuser instead of is_staff fails.
+        utils.create_user(uname=self.OWN_USERS[0], is_staff=True, is_superuser=False)
+        utils.create_user(uname=self.OWN_USERS[1], is_staff=False, is_superuser=False)
+        return User.objects.filter(username__in=self.OWN_USERS)
+
     def test_queryset_yes(self):
-        utils.create_user(uname="admin", is_staff=True, is_superuser=True)
-        utils.create_user(uname="reg", is_staff=False, is_superuser=False)
+        own = self.create_the_pair()
         af = AdminFilter(None, [], None, None)
         af.value = lambda: 'yes'
-        assert af.queryset(None, User.objects.all()).count() == 1
+
+        assert list(af.queryset(None, own).values_list('username', flat=True)) == [self.OWN_USERS[0]]
 
     def test_queryset_no(self):
-        utils.create_user(uname="admin", is_staff=True, is_superuser=True)
-        utils.create_user(uname="reg", is_staff=False, is_superuser=False)
+        own = self.create_the_pair()
         af = AdminFilter(None, [], None, None)
         af.value = lambda: 'no'
-        assert af.queryset(None, User.objects.all()).count() == 1 + 1  # count Internal User
+
+        assert list(af.queryset(None, own).values_list('username', flat=True)) == [self.OWN_USERS[1]]
+
+    def test_the_filter_narrows_the_queryset_it_is_given(self):
+        """An account outside the queryset handed to the filter never appears in its answer.
+
+        That catches a filter that queries `User.objects` instead of using its queryset. It
+        doesn't stop the tests above going back to counting the whole table; their own scoped
+        assertions are what do that.
+        """
+        utils.create_user(uname="provisioned-superuser", is_staff=True, is_superuser=True)
+        own = self.create_the_pair()
+        af = AdminFilter(None, [], None, None)
+
+        af.value = lambda: 'yes'
+        assert list(af.queryset(None, own).values_list('username', flat=True)) == [self.OWN_USERS[0]]
+        af.value = lambda: 'no'
+        assert list(af.queryset(None, own).values_list('username', flat=True)) == [self.OWN_USERS[1]]
 
 
 class TestADFSBackend(TestCase):
