@@ -1,5 +1,3 @@
-# Pull Request Template
-
 ## Summary
 
 _Enter PR description here... what is it supposed to do, and why?_
@@ -48,7 +46,9 @@ _Confirm which branch this targets (e.g. master)._
   exits 1 and prints *nothing*, which reads exactly like "no migrations needed".)
 - [ ] Docker builds succeed if touched.
 - [ ] Docs updated under `docs/` if behaviour, settings, or APIs changed.
-- [ ] `release_notes.md` updated if user-facing.
+- [ ] If you think this could be user-facing, please add a new file as
+  `changes/<user>_<purpose>.md`, rather than an edit to `release_notes.md`
+  (see `changes/README.md`, the previous behavior was leading to unnecessary commit conflicts).
 - [ ] No secrets, debug code, or stray `print`/`console.log` left in.
 
 ### Review Code

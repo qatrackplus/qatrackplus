@@ -2,6 +2,10 @@
 
 Release notes are located at http://docs.qatrackplus.com/en/latest/release_notes.html
 
+**Don't edit this file in a pull request.** Add a file to [`changes/`](changes/README.md)
+instead; each release moves those notes in here, and CI refuses a pull request
+that adds notes here any other way.
+
 ## 4.1.0
 
 * **Docker**: Signing in works on a site published on a port other than 80 or 443 (for example `"8080:80"` in `compose.yaml`, as the Docker installation guide describes). nginx dropped the port from the address it passed to QATrack+, so every sign-in and form on such a site was refused with *CSRF verification failed* unless `CSRF_TRUSTED_ORIGINS` listed the address with its port. nginx now passes the address on as the browser sent it. A `CSRF_TRUSTED_ORIGINS` you set to work around this does no harm and can stay. With HTTPS on a port other than 443, give people the full `https://` address: nginx's redirect from plain HTTP cannot know the port you published ([#915](https://github.com/qatrackplus/qatrackplus/issues/915)).

@@ -303,6 +303,8 @@ what Django decided.
 - Keep PRs focused — everyone's time is limited.
 - All PRs must target the `develop` branch, **not** `master`.
 - Fill in the pull request template completely (`.github/pull_request_template.md`).
+- A user-facing change adds its release note as a new file, `changes/<user>_<purpose>.md`
+  (see `changes/README.md`); never edit `release_notes.md` itself.
 - PRs that include tests, documentation updates, and a clear *why* are merged fastest.
 
 ### Dependencies
