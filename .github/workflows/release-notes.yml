@@ -1,0 +1,22 @@
+name: Release notes
+
+# Notes go in changes/<user>_<purpose>.md; only a release writes release_notes.md.
+# The rule is in scripts/check_release_notes.py.
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  release-notes:
+    name: release_notes.md is written only by a release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Check
+        run: python3 scripts/check_release_notes.py "origin/${GITHUB_BASE_REF}"

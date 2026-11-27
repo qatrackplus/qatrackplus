@@ -890,6 +890,14 @@ Give a fragment a comment at the top saying which pages include it. A reader who
 opens it directly has no other way to find out, and ``git grep`` for the filename is
 a poor substitute for a sentence.
 
+Release Notes
+-------------
+
+If you think your pull request could be user-facing, add a release note as a new
+file, ``changes/<user>_<purpose>.md``, rather than editing ``release_notes.md``. Each
+release moves the notes into that file. ``changes/README.md`` has the naming and
+format.
+
 Version Naming Convention
 -------------------------
 
