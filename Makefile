@@ -4,12 +4,10 @@
 # so a target here can reach a production database. Nothing in it should be a
 # shorter way to do something irreversible than doing it by hand.
 
-VERSION=4.0.2
-
-# The schema diagram covers a minor line, not a patch: the models do not change
-# between 4.0.0 and 4.0.2, and only ever one diagram per x.y has been published
-# (0.3.0, 3.1.0). $(basename) drops the last component, so 4.0.2 gives 4.0.
-SCHEMA_VERSION=$(basename $(VERSION))
+# VERSION and SCHEMA_VERSION are gone with the schema target below. They were a
+# fourth place the release version was written down by hand, after settings.py,
+# pyproject.toml and uv.lock - and nothing cross-checks those, which have already
+# been found dozens of commits stale at the same time.
 DATETIME=$(shell date '+%Y-%m-%d_%H-%M-%S')
 
 
@@ -17,9 +15,15 @@ DATETIME=$(shell date '+%Y-%m-%d_%H-%M-%S')
 # the two broken data-deleting targets came to be advertised alongside the
 # working ones: `make help` presented everything, so it presented those too.
 help:
+	@echo "make is RETIRED. These targets are frozen, and this file is removed"
+	@echo "during the 4.1 cycle. poe is the task runner:"
+	@echo "    uv run poe              list every task"
+	@echo "    uv run poe make-test    any target below, by the name you know"
+	@echo "A target that was broken now says so instead of running."
+	@echo
 	@echo "Tests"
-	@echo "  test              the whole suite, including the GUI/browser tests"
-	@echo "  test_simple       the suite without the GUI/browser tests"
+	@echo "  test              the suite (GUI/browser tests are skipped by default)"
+	@echo "  test_simple       identical to test; kept so existing scripts keep working"
 	@echo "  cover             the suite with a coverage report"
 	@echo "  cover-qatrack     coverage for the qatrack package only"
 	@echo "  cover-module      coverage for one module: make cover-module module=qatrack/units"
@@ -36,7 +40,7 @@ help:
 	@echo "  dumpdata          dump the database to a timestamped JSON fixture"
 	@echo
 	@echo "Release and deployment (read the target before running it)"
-	@echo "  schema            regenerate the schema diagram - see the note in the Makefile"
+	@echo "  schema            RETIRED and broken - use: uv run poe schema"
 	@echo "  nginx.conf        install an nginx site config - sudo, Ubuntu only"
 	@echo "  supervisor.conf   install supervisor configs - sudo, Ubuntu only"
 
@@ -222,10 +226,22 @@ supervisor.conf:
 	sudo supervisorctl reread
 	sudo supervisorctl update
 
+# RETIRED because it was broken in two ways that could destroy a release
+# artefact, and make is going away rather than being repaired. `poe schema`
+# renders to a staging file and replaces the diagram only if the render
+# succeeded, and takes the name from the installed package.
 schema:
-	uv run python ./manage.py graph_models -a -g \
-		-X Issue,IssueStatus,IssueType,IssuePriority,IssueTag \
-		-o docs/developer/images/qatrack_schema_$(SCHEMA_VERSION).svg
+	@echo "make schema is RETIRED. It was broken, and it is not being repaired:"
+	@echo "make support is removed during the 4.1 cycle."
+	@echo
+	@echo "It named the diagram from a version hardcoded in this Makefile, which"
+	@echo "goes stale, and it exited 0 even when the render failed - so it could"
+	@echo "report success while leaving the committed 838 KB diagram corrupted."
+	@echo "Measured on Ubuntu 24.04, whose Graphviz 2.42 fails -g with"
+	@echo "'trouble in init_rank'."
+	@echo
+	@echo "Use instead:   uv run poe schema"
+	@exit 1
 
 run:
 	uv run python ./manage.py runserver

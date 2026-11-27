@@ -3,6 +3,7 @@ from django.db import connections
 
 
 class Command(BaseCommand):
+    help = "MySQL only: convert every table that is not already InnoDB to the InnoDB engine (ALTER TABLE ... ENGINE=INNODB)"
 
     def handle(self, database="default", *args, **options):
 
