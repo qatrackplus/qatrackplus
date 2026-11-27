@@ -314,10 +314,8 @@ sys.exit(status)
 # is what you are choosing to do, which is why one is an argument and the other
 # is the task name.
 #
-# ONE TASK, TWO NAMED OPTIONS. Cody's decision, 2026-11-08: *"is there a way to
-# have something like test-gui <mode> <browser> be interpreted consistently?
-# Where missing one argument, or having the arguments out of order wouldn't be
-# issues"* - then *"do option 1"*. Named options are order-insensitive and
+# ONE TASK, TWO NAMED OPTIONS, so that a missing argument or arguments out of
+# order are not issues. Named options are order-insensitive and
 # optional by construction, which positionals are not: measured on poe 0.49.0,
 # two optional positionals with `choices` accept `headless chromium` and reject
 # `chromium headless` with *"argument mode: invalid choice: 'chromium'"* - true,
@@ -342,7 +340,7 @@ sys.exit(status)
 # forwards `poe test-gui-firefox-headless -- -k foo` straight to pytest, and
 # `-k`, `-x` and `--pdb` are exactly what you reach for on a failing browser
 # test. These are `ref`s to a body, so they drop extras - see the note above
-# `test-engine`. Cody chose the argument form on 2026-11-05 and accepted that
+# `test-engine`. The argument form accepts that
 # cost: six names for two axes was the worse trade, and once you are filtering
 # to a single test you are better off calling pytest directly. The block below
 # the tasks gives those commands for bash and PowerShell, and so does the
@@ -358,8 +356,7 @@ sys.exit(status)
 # effect - which looks exactly like the task being broken.
 
 # WHY THIS EXISTS, given that it is exactly `uv run pytest -m selenium` and
-# adds no behaviour whatsoever. Cody was asked and decided to keep it,
-# 2026-11-05, for two reasons:
+# adds no behaviour whatsoever. It is kept for two reasons:
 #
 # 1. **It is the only task here that overrides nothing.** The three
 #    `test-gui-<mode>` tasks below always impose the window mode; omitting
@@ -375,8 +372,7 @@ sys.exit(status)
 # If it is ever removed, the developer guide needs one line pointing at
 # `uv run pytest -m selenium`, and the three mode tasks need help text saying
 # that plain pytest is the unmodified form - otherwise that knowledge leaves
-# with the task. The full decision is in aviary,
-# projects/qatrackplus/decisions/2026-11-05-poe-task-naming-and-test-gui.md.
+# with the task.
 [tasks.test-gui]
 help = "Run ONLY the GUI/Selenium tests: poe test-gui [--mode headless|visible|watch] [--browser firefox|chromium|edge]"
 ref = "_test-gui-run"

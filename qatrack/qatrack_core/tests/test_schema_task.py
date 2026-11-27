@@ -12,7 +12,7 @@ The poe task now reads the name from the installed package metadata, truncated
 to the minor line because the schema is identical across every patch of a line.
 That is the one correct implementation.
 
-`make schema` is now RETIRED, by Cody's decision of 2026-11-05: since make
+`make schema` is now RETIRED: since make
 support is going away, a target that was broken prints that it is retired and
 names the poe task instead of running. So there is once again exactly one
 implementation and one place the version comes from - and the Makefile's

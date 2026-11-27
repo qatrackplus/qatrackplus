@@ -18,7 +18,7 @@
 # themselves are unverified, which is what the WIP- marks.
 #
 # ==========================================================================
-# REQUIRED NEXT STEP, before 4.1 releases. Cody's decision, 2026-11-04.
+# REQUIRED NEXT STEP, before 4.1 releases.
 # ==========================================================================
 #
 # **These four are the only poe tasks written for a site rather than a
@@ -40,8 +40,7 @@
 #   2. Then decide, and the two answers lead different ways:
 #      * **they work** -> move poe out of `dev` and into the base dependencies,
 #        and document these four in `docs/install/linux.rst` beside the manual
-#        steps they replace. Cody, 2026-11-04: *"those functions should be
-#        documented in the install guide."*
+#        steps they replace.
 #      * **they do not work, or are not wanted** -> drop the WIP- marks by
 #        deleting the tasks, and say in this file that deployment is a
 #        documented manual procedure. poe then stays in `dev` for good.
@@ -53,8 +52,8 @@
 # qatrack.conf`, `supervisorctl restart gunicorn` - so these tasks are a
 # convenience over a documented procedure that works, not the only route.
 #
-# **Validated and fixed in its own pull request as 4.1 approaches release**,
-# on Cody's instruction. It is not this branch's work.
+# **Validated and fixed in its own pull request as 4.1 approaches release.** It
+# is not this branch's work.
 [tasks."nginx-conf"]
 help = "WIP- Ubuntu only: install the nginx site config (runs sudo); unverified here"
 shell = '''

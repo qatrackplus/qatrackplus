@@ -199,9 +199,8 @@ dev = [
     #
     # Note it is pre-1.0, so the `<1.0` ceiling is doing real work.
     #
-    # STILL AN OPEN QUESTION, and this placement is a deferral. Cody,
-    # 2026-11-04: *"leave poe in dev until those four are verified ... this will
-    # need to be validated and fixed in a later pr as 4.1 approaches release."*
+    # STILL AN OPEN QUESTION, and this placement is a deferral: poe stays in dev
+    # until those four are verified, in a later PR as 4.1 approaches release.
     # The four are nginx-conf, supervisor-conf and their -remove counterparts in
     # poe_tasks/deploy.toml - the only tasks written for a site rather than a
     # developer, and all four unverified. If they are made to work, poe belongs
@@ -412,10 +411,10 @@ include = [
 # **The Makefile is frozen, and it is removed in the 4.1 cycle.** It is
 # byte-identical to the one on `develop`; this branch does not touch it.
 # An earlier commit here reduced it to a file of aliases forwarding to poe,
-# and Cody reversed that on 2026-11-05. The reason that matters beyond
+# and that was reversed. The reason that matters beyond
 # tidiness: `POE = uv run poe` inside a recipe means a site synced
-# `--no-dev` pulls the whole dev group the moment it runs one - crane
-# measured 112 packages to 200 on Ubuntu 24.04 - and a Makefile with no
+# `--no-dev` pulls the whole dev group the moment it runs one - 112 packages
+# to 200, measured on Ubuntu 24.04 - and a Makefile with no
 # mention of poe in it cannot do that. So until the Makefile goes, both
 # ways work: `poe <task>` is the cross-platform successor, and
 # `poe make-<target>` is what the Makefile does.

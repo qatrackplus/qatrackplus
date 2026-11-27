@@ -286,8 +286,8 @@ def test_the_autobuild_ports_are_each_what_their_runner_documents():
     keeps whatever `make docs-autobuild` actually does, which is 8009.
 
     An earlier commit on this branch took the port out of the Makefile
-    altogether. That was part of reducing the Makefile to aliases, which Cody
-    reversed on 2026-11-05.
+    altogether. That was part of reducing the Makefile to aliases, which was
+    reversed.
     """
     assert TASKS['docs-serve']['args'][0]['default'] == '8008'
     makefile = (REPO_ROOT / 'Makefile').read_text(encoding='utf-8')
@@ -304,18 +304,17 @@ def test_the_makefile_does_not_depend_on_poe():
     """A Makefile recipe that calls poe drags the dev group into production.
 
     An earlier commit on this branch made every target an alias for
-    `$(POE) <task>`. crane measured what that costs on Ubuntu 24.04: `make
+    `$(POE) <task>`. Measured on Ubuntu 24.04, that costs this: `make
     supervisor.conf` on a site synced `--no-dev` took the environment from 112
     packages to 200, because `uv run poe` syncs the default groups first, and
     the removal tasks leave all 88 behind. `--no-dev` on the outer command does
     not help either - poe's uv executor wraps each task in its own `uv run`.
 
-    Cody reversed the alias decision on 2026-11-05. This test is what keeps poe
+    The alias approach was reversed. This test is what keeps poe
     out of the Makefile's recipes until the file is removed in the 4.1 cycle.
 
     NAMING poe is fine; CALLING it is not. Since make is retired, a target that
-    was broken now prints the poe task to use instead of running (Cody,
-    2026-11-05), and `make help` says the same at the top. An `@echo` that
+    was broken now prints the poe task to use instead of running, and `make help` says the same at the top. An `@echo` that
     mentions poe starts no process and syncs no dependency group, so the test
     looks at what the recipe *executes*.
     """
@@ -516,8 +515,8 @@ def shell_task_specs():
 def test_every_shell_task_runs_python_or_says_why_not():
     """A shell task without `interpreter = "python"` needs bash to exist.
 
-    Cody now runs an agent on Windows, so "it works on my machine" has two
-    answers. This is the guard that keeps the default honest: reach for a
+    The suite is developed on Windows as well as Linux, so "it works on my
+    machine" has two answers. This is the guard that keeps the default honest: reach for a
     POSIX shell only when the command itself is POSIX, and name the task here
     with the reason when you do.
     """
@@ -582,15 +581,14 @@ def test_no_cmd_task_relies_on_shell_syntax():
     assert not offenders, offenders
 
 
-# The number Cody is reacting to, and the only one a reader of `poe` sees:
+# The number that matters, and the only one a reader of `poe` sees:
 # public tasks that are not Makefile mirrors. 38 at 2026-11-08, after `cover`
 # absorbed `cover-qatrack` and `cover-module` and `dev-clean` went private.
 #
 # Raising it is a review decision. That is the whole point of the number being
 # here: adding a task is easy, and without this the surface grows by default
-# and nobody has to argue for it. swift counted 41 on 2026-11-06 and said so -
-# `projects/qatrackplus/evidence/2026-11-06-swift-poe-task-architecture-review.md` -
-# and the guide's *Adding a new poe task* now says what earns a public name.
+# and nobody has to argue for it. A review counted 41 public tasks, and the
+# guide's *Adding a new poe task* now says what earns a public name.
 MAX_PUBLIC_TASKS = 35
 
 

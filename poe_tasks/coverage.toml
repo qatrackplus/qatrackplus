@@ -23,8 +23,8 @@ help = "optional: qatrack, qatrack/qa, or any path - omit it for the whole suite
 
 # `cover`, `cover-qatrack` and `cover-module` were three copies of one command
 # differing only in what they measured, which is a parameter rather than a job
-# - the rule tests.toml already states for the browser argument. swift counted
-# the cost on 2026-11-06: `cover-module` had lost the `--reuse-db` the other
+# - the rule tests.toml already states for the browser argument. The cost
+# showed: `cover-module` had lost the `--reuse-db` the other
 # two carried, which is what three copies of a command do to each other.
 # Merging them restores it for the module case.
 [tasks.cover]

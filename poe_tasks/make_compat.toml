@@ -12,8 +12,8 @@
 # needing Sphinx.
 #
 # **The Makefile itself is frozen.** An earlier commit on this branch reduced
-# it to a file of aliases that forwarded to poe. Cody reversed that on
-# 2026-11-05: the Makefile is not touched by this pull request at all, it is
+# it to a file of aliases that forwarded to poe. That was reversed: the
+# Makefile is not touched by this pull request at all, it is
 # byte-identical to the one on `develop`, and **it is removed in the 4.1
 # cycle** rather than rewritten now. So for as long as it exists there are two
 # implementations - the Makefile's own, and poe's - and this file is how the
@@ -22,8 +22,8 @@
 #
 # Why that is a better trade than the aliases it replaces: an alias made the
 # Makefile depend on poe, and `POE = uv run poe` in a recipe means a site that
-# synced `--no-dev` pulls the whole dev group in the moment it runs one - crane
-# measured 112 packages to 200 on Ubuntu 24.04. A frozen Makefile with no
+# synced `--no-dev` pulls the whole dev group in the moment it runs one -
+# measured as 112 packages to 200 on Ubuntu 24.04. A frozen Makefile with no
 # mention of poe in it cannot do that.
 #
 # **Nothing new belongs here.** A new task goes in one of the theme files, and
@@ -49,8 +49,7 @@
 # it by hand. Copying a trap into a second runner so that the mirror is literal
 # would be the wrong reading of "both ways work".
 #
-# **`make schema` is retired in the Makefile itself**, by Cody's decision of
-# 2026-11-05: since make support is going away, a target that was broken prints
+# **`make schema` is retired in the Makefile itself**: since make support is going away, a target that was broken prints
 # that it is retired and names the poe task instead of running. `make-schema`
 # is retired with it, and prints the same thing: a mirror that kept the
 # withdrawn name working would leave the retirement half done, with every
@@ -199,8 +198,8 @@ ref = "run"
 
 # `make nginx.conf` writes the config as the invoking user and `sudo mv`s it
 # into place, which keeps the user's ownership: the installed file is then
-# writable by `www-data`, a process that reads it as root. crane measured that
-# on Ubuntu 24.04 on 2026-11-04, in shipped 4.0.x as well as here, and there
+# writable by `www-data`, a process that reads it as root. That was measured
+# on Ubuntu 24.04, in shipped 4.0.x as well as here, and there
 # is a 4.0.3 candidate patch for the Makefile's own copy. Reproducing it here
 # would add a second way to install a world-editable root-read config, so this
 # mirror delegates to the task that writes a root-owned 644 file instead. The

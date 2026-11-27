@@ -119,7 +119,7 @@ print('wrote %s (%d bytes)' % (OUT, OUT.stat().st_size))
 # computes the same coverage in Python from the .po files, so all three go at
 # once.
 #
-# An `i18n-status` alias of it used to live here. Cody removed it on 2026-11-05:
+# An `i18n-status` alias of it used to live here, and was removed:
 # two names for one command is redundant, and the two used different
 # vocabularies (`i18n-*` against `*-messages`) while sitting in different theme
 # files. `check-messages` is the one name.

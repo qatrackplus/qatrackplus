@@ -27,7 +27,7 @@ This order was reversed until 2026-11-05. The Makefile was frozen and could not
 be edited, so two stale ``help`` lines could not be fixed there - ``test``
 claimed to include the GUI tests ``conftest.py`` now skips by default, and
 ``test_simple`` claimed to be the one without them. Since make support is being
-retired, a broken target is now edited to say so (Cody, 2026-11-05), both stale
+retired, a broken target is now edited to say so, both stale
 lines are corrected, and the Makefile is the better source again. The mirror
 stays as the fallback for the five engine targets ``make help`` has never
 listed.

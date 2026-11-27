@@ -50,7 +50,7 @@ cmd = "ruff check . --fix"
 # see that rather than take it on trust.
 #
 # `--check` exists because this can be a big diff even when scoped correctly -
-# measured on the q#868 branch, where the 28 changed Python files came back
+# measured on this branch, where the 28 changed Python files came back
 # 2804 insertions and 2597 deletions, since none of them had been formatted
 # before. Looking first is worth one flag.
 #
