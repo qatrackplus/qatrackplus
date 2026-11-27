@@ -232,6 +232,127 @@ class TestCheckMediaFolderPermissions(SimpleTestCase):
                     )
 
 
+class TestRealFilesystemPermissions(SimpleTestCase):
+    """The permission checks, against real modes rather than a mocked os.access.
+
+    Every other test in this file mocks the two things that make this check
+    OS-dependent: `os.geteuid` is pinned to 1000 in `setUp`, and the unwritable
+    case patches `os.access` to return False. That keeps those tests
+    deterministic, which is right - but it means nothing exercises the kernel,
+    and two claims go unverified:
+
+    1. that a genuinely unwritable directory is reported at all, rather than only
+       a directory that `os.access` has been told to lie about; and
+    2. that the hint is *correct* - the check tells an administrator to run
+       `chown`, `chmod 2775` and `chmod 664`, and the existing tests assert that
+       text appears, never that following it fixes anything.
+
+    The second is the one that matters to a deployer: the hint is the part they
+    will act on, and advice that does not work is worse than no advice.
+
+    These skip when running as root, rather than mocking the uid, because root
+    bypasses mode-based denial entirely: a 0o555 directory is still writable by
+    root, so the condition under test cannot be created. That is also why the
+    other tests pin a non-root euid - under Docker or a CI container the real one
+    is 0.
+    """
+
+    def setUp(self):
+        # POSIX only, for two independent reasons. Windows has no os.geteuid at
+        # all - which is why the check itself guards with hasattr(os, 'geteuid') -
+        # and NTFS does not honour the mode bits these tests set, so chmod(0o555)
+        # would not deny writing and the condition under test could not be
+        # created even if the uid call existed.
+        if not hasattr(os, 'geteuid'):
+            self.skipTest(
+                'POSIX only: no os.geteuid on this platform, and its filesystem does '
+                'not honour the mode bits these tests rely on'
+            )
+        if os.geteuid() == 0:
+            self.skipTest(
+                'running as root, which bypasses directory modes - a 0o555 directory '
+                'is still writable, so an unwritable directory cannot be created'
+            )
+
+    def _media_tree(self, temp_dir):
+        """MEDIA_ROOT with the uploads/tmp tree the check looks for."""
+        media_path = Path(temp_dir) / 'media'
+        (media_path / 'uploads' / 'tmp').mkdir(parents=True)
+        return media_path
+
+    def test_a_really_unwritable_media_root_is_reported(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            media_path = self._media_tree(temp_dir)
+            media_path.chmod(0o555)
+            try:
+                with override_settings(MEDIA_ROOT=str(media_path)):
+                    errors = check_media_folder_permissions(None)
+            finally:
+                # Always restore write permission, or TemporaryDirectory cannot
+                # clean up and the failure is reported against the wrong thing.
+                media_path.chmod(0o755)
+
+        assert any(e.id == 'qatrack.E001' for e in errors), (
+            'a directory with mode 0o555 was not reported: %r' % [(e.id, e.msg) for e in errors]
+        )
+
+    def test_following_the_hint_makes_the_check_pass(self):
+        """The advice the check prints must actually fix the condition.
+
+        Applies exactly what the hint says - 2775 on directories, 664 on files -
+        and asserts the check falls silent. Without this, the hint is only ever
+        checked as a string.
+        """
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            media_path = self._media_tree(temp_dir)
+            a_file = media_path / 'uploads' / 'existing.txt'
+            a_file.write_text('x', encoding='utf-8')
+
+            # Break it the way a bad deployment does.
+            for directory in (media_path / 'uploads' / 'tmp', media_path / 'uploads', media_path):
+                directory.chmod(0o555)
+
+            try:
+                with override_settings(MEDIA_ROOT=str(media_path)):
+                    before = check_media_folder_permissions(None)
+                assert any(e.id == 'qatrack.E001' for e in before), (
+                    'the broken state was not detected, so this test proves nothing: %r'
+                    % [(e.id, e.msg) for e in before]
+                )
+
+                # Now do what the hint tells an administrator to do.
+                for directory in (media_path, media_path / 'uploads', media_path / 'uploads' / 'tmp'):
+                    directory.chmod(0o2775)
+                a_file.chmod(0o664)
+
+                with override_settings(MEDIA_ROOT=str(media_path)):
+                    after = check_media_folder_permissions(None)
+            finally:
+                # Each restore on its own, and none of them allowed to raise.
+                # A chmod that failed used to abandon the loop and replace
+                # whatever the test was actually failing on, so a real failure
+                # in the check or the assertions above was reported as a
+                # permission error in the cleanup - and the remaining
+                # directories were left broken. There is nothing to fall back
+                # on here either: 3.12's TemporaryDirectory already retries
+                # permission failures during its own cleanup. Raised by
+                # CodeRabbit.
+                for directory in (media_path, media_path / 'uploads', media_path / 'uploads' / 'tmp'):
+                    try:
+                        directory.chmod(0o755)
+                    except OSError:
+                        pass
+
+        assert after == [], (
+            'the check still reports a problem after its own advice was followed: %r'
+            % [(e.id, e.msg) for e in after]
+        )
+
+
 class TestRunningUserName(SimpleTestCase):
     """The ownership hint must never be able to stop a deployment.
 

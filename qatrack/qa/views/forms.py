@@ -354,7 +354,12 @@ class BaseTestListInstanceForm(forms.ModelForm):
 
     class Meta:
         model = models.TestListInstance
-        exclude = ("day",)
+        # `due_date` is excluded because it is derived from the collection's
+        # schedule and is never posted. A ModelForm that excludes one field
+        # includes every other, so leaving it out of this tuple made it a form
+        # field that no template renders - it arrived empty on every submission
+        # and the form wrote None over it. See #650.
+        exclude = ("day", "due_date")
 
     def __init__(self, *args, **kwargs):
 

@@ -46,8 +46,8 @@ Running the test suite against an installed server
 
 You do not need to, and most sites never will. It is worth knowing how, because
 "the suite passes on my server" is the most direct answer to *did this upgrade
-land cleanly*, and two things stop it working on a deployment that was set up by
-following this guide.
+land cleanly*. One thing stops it working on a deployment that was set up by
+following this guide, and one more looks like a problem and is not.
 
 **The database user cannot create the test database.** ``pytest`` reads your
 ``local_settings.py``, so it talks to your real database server, and then asks it
@@ -90,6 +90,14 @@ class and define browser-driven tests of their own:
 
 On Windows that is ``.venv\Scripts\python.exe -m pytest -m "not selenium"``, and the
 grant above is the SQL Server one.
+
+.. note::
+
+    This page ends with your site on 4.0.2, which has no ``conftest.py`` and so
+    neither skips the GUI tests for you nor understands ``--run-selenium``. The
+    marker is what works there. From 4.1 a plain ``pytest`` skips them itself;
+    the marker goes on working until it is removed in 4.2, so the command above
+    is correct on both.
 
 .. warning::
 

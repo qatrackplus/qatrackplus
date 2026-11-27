@@ -109,3 +109,60 @@ class TestLinuxUpgradePagesStopTheWebServer(unittest.TestCase):
                         page.name, ", ".join(sorted(started - stopped)),
                     )
                 )
+
+
+class TestInstallDocsDoNotTeachTheDeprecatedSeleniumForm(unittest.TestCase):
+    """`-m "not selenium"` works today, warns, and goes away in 4.2.
+
+    Since #867 plain `pytest` skips the GUI tests, and the conftest raises a
+    `PytestDeprecationWarning` for the marker expression. An install page that
+    still tells a site administrator to type it hands them a command that will
+    stop working, and - worse here - the paragraph that carried it also told
+    them the GUI tests *error at setup*, which is the behaviour from before that
+    change. A reader following an upgrade page has no way to know which of the
+    two they are on.
+
+    `docs/developer/` is deliberately excluded: those pages document the
+    deprecation itself and have to name the form to deprecate it.
+
+    **The pages that upgrade a site *to* a pre-4.1 release are excluded too**,
+    and for the opposite reason. A reader of
+    `*_upgrade_from_4_0*.rst` ends the page on 4.0.x, which has no
+    `conftest.py`: there, plain `pytest` errors at setup on ~40 GUI tests and
+    `--run-selenium` is not understood. The marker expression is the only form
+    that works on the release those pages deliver, and it keeps working on 4.1
+    until it is removed in 4.2 - so it is correct for that audience on both
+    sides of the upgrade, which plain `pytest` is not.
+
+    Banning it there made those three pages tell operators to run a command
+    that fails on the code they are running. The ban is right everywhere a
+    reader is already on 4.1 or later.
+    """
+
+    #: Pages whose reader finishes on a release older than the conftest change.
+    #: Matched on the whole filename, not as a substring, because
+    #: `linux_upgrade_from_4_0_2.rst` upgrades *to* 4.1 and must stay checked
+    #: while `linux_upgrade_from_4_0_1.rst` upgrades to 4.0.2 and must not.
+    #: A loose `"upgrade_from_4_0" in name` test cannot tell those apart.
+    PRE_CONFTEST_SUFFIXES = ("_upgrade_from_3.rst", "_upgrade_from_4_0.rst",
+                             "_upgrade_from_4_0_1.rst")
+    PRE_CONFTEST_FRAGMENTS = ("_upgrade_4_0_before.rst", "_upgrade_4_0_after.rst",
+                              "_upgrade_4_0_1_before.rst", "_upgrade_4_0_1_after.rst")
+
+    @classmethod
+    def delivers_a_pre_conftest_release(cls, name):
+        return name.endswith(cls.PRE_CONFTEST_SUFFIXES) or name in cls.PRE_CONFTEST_FRAGMENTS
+
+    def test_there_are_pages_to_check(self):
+        assert sorted(DOCS.glob("*.rst")), "no install pages found under %s" % DOCS
+
+    def test_no_install_page_asks_for_the_marker_expression(self):
+        for page in sorted(DOCS.glob("*.rst")):
+            if self.delivers_a_pre_conftest_release(page.name):
+                continue
+            with self.subTest(page=page.name):
+                assert "not selenium" not in page.read_text(encoding="utf-8"), (
+                    '%s tells the reader to pass `-m "not selenium"`, which is '
+                    "deprecated for removal in 4.2 - plain `pytest` already "
+                    "skips the GUI tests" % page.name
+                )
