@@ -1272,7 +1272,13 @@ class TestPerformQA(TestCase):
         self.unit_test_list.refresh_from_db()
         expected_due_date = self.unit_test_list.due_date
 
-        data['work_started'] = (timezone.now() - timezone.timedelta(days=1)).strftime("%Y-%m-%d %H:%M")
+        # The form parses this string as local wall-clock time, so format a local time
+        # rather than a UTC one, and pin the clock to midday. A DST transition leaves one
+        # local hour ambiguous and another nonexistent, and neither can be interpreted:
+        # on 2026-11-01 this read "2026-11-01 01:37", the hour America/Toronto repeated
+        # when EDT ended, and the field errored with the view answering 200, not 302.
+        yesterday = timezone.localtime(timezone.now()) - timezone.timedelta(days=1)
+        data['work_started'] = yesterday.replace(hour=12, minute=0).strftime("%Y-%m-%d %H:%M")
         data['include_for_scheduling'] = False
         self.set_form_data(data)
 
@@ -1808,6 +1814,48 @@ class TestEditTestListInstance(TestCase):
 
         self.assertEqual(302, response.status_code)
         self.assertEqual(88, models.TestInstance.objects.get(pk=self.ti.pk).value)
+
+    def test_editing_does_not_clear_the_due_date(self):
+        """#650: the due date was lost when an in-progress list was completed.
+
+        Reported by bobred on 2023-07-05 against 3.1.0, who also found the cause,
+        and confirmed by them as still broken in 4.0.0 on 2026-10-02.
+
+        `BaseTestListInstanceForm.Meta` excluded only `day`, and a ModelForm that
+        excludes one field includes every other - so `due_date` was a form field.
+        No perform or edit template renders it, so it posted empty and the form
+        wrote None over a date the user could not see and had not touched.
+
+        Creating was spared by accident: `PerformQA.form_valid` reassigns
+        `self.object.due_date` from the collection after the form has saved,
+        repairing the blank it just wrote. Nothing does that on the edit path,
+        which is why the symptom was "completing an in-progress list".
+
+        Both views are covered because `ContinueTestListInstance` is
+        `EditTestListInstance` with a different permission, and the continue view
+        is the one the report describes.
+        """
+        due = timezone.now() + timezone.timedelta(days=7)
+
+        for view_name in ("edit_tli", "continue_tli"):
+            with self.subTest(view=view_name):
+                models.TestListInstance.objects.filter(pk=self.tli.pk).update(
+                    due_date=due, in_progress=True
+                )
+                before = models.TestListInstance.objects.get(pk=self.tli.pk).due_date
+                assert before is not None, "the fixture did not set a due date"
+
+                url = reverse(view_name, kwargs={"pk": self.tli.pk})
+                response = self.client.post(url, data=self.base_data)
+                assert response.status_code == 302, (
+                    "%s answered %s, so the form was rejected and this test proves "
+                    "nothing about the due date" % (view_name, response.status_code)
+                )
+
+                after = models.TestListInstance.objects.get(pk=self.tli.pk).due_date
+                assert after == before, (
+                    "%s changed the due date from %s to %s" % (view_name, before, after)
+                )
 
     def test_edit_and_flag(self):
 

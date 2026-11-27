@@ -170,8 +170,29 @@ td.qa-status {
 .qa-history{
     min-width: 325px;
 }
-th.qa-history .label {
-    color: black;
+/* Both `th` and `td`, which is the whole point of the selector.
+ *
+ * Bootstrap's `.label` sets `color: #fff`, and every history label sits on one
+ * of the five pass/fail backgrounds at the top of this file. White fails WCAG
+ * AA on all five - measured 1.93:1 (not_done, #b5bbc8) through 2.15:1 (no_tol),
+ * 2.19:1 (tolerance), 3.18:1 (ok) to 4.09:1 (action), against the 4.5:1 a
+ * label's 11px text needs. #111 passes on all five, 4.62:1 to 9.81:1.
+ *
+ * This was `th.qa-history .label`, so only the header's date labels were
+ * covered. `td.qa-history` appears in testlistinstance_detail.html,
+ * testlistinstance_review.html and qavalue_form.html, and in those cells
+ * numeric values and the `N/A` label have always rendered white on colour.
+ * String and date values were the one case that had been patched, by
+ * `text-black` in history.html - and removing that (the same commit fixed an
+ * unclosed `<span>` there) is what made the rest visible.
+ *
+ * Two classes beats Bootstrap's one, so no `!important` and no dependence on
+ * stylesheet order. qatrack/qa/tests/test_history_contrast.py computes the
+ * ratios from this file, so a new pass/fail colour that fails AA breaks a test
+ * rather than shipping.
+ */
+.qa-history .label {
+    color: #111;
 }
 th.qa-history div{
 /* hack to fix IE7 min-width*/

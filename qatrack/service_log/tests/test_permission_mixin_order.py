@@ -36,7 +36,7 @@ from django.views.generic import DeleteView, FormView, View
 # login.** The second version swept for any *access* mixin, which let a
 # `LoginRequiredMixin` in front of the view base vouch for a
 # `PermissionRequiredMixin` behind it: the login was enforced, the permission was not,
-# and the sweep passed. @copilot found that on c#12. So the names below are the three
+# and the sweep passed. So the names below are the three
 # classes that actually test a permission, and nothing else counts as one.
 PERMISSION_MIXINS = (
     DjangoPermissionRequiredMixin,
@@ -135,7 +135,7 @@ class TestPermissionMixinsActuallyRun(TestCase):
     def test_the_sweep_rejects_a_view_whose_permission_mixin_is_behind_the_view(self):
         """The negative control, without which the test above proves nothing.
 
-        This is the shape @copilot named on c#12: a login mixin in front, which the
+        This is the shape review named: a login mixin in front, which the
         earlier version of the sweep accepted on the permission mixin's behalf, and the
         permission mixin itself behind `DeleteView`, where `View.dispatch` - which does
         not call `super()` - ends the chain before it is reached.
